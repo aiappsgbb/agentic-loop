@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agentic Loop · Build with Copilot, run with Foundry</title>
+    <meta name="description" content="The Agentic Loop combines GitHub Copilot to build and Microsoft Foundry to run enterprise-grade AI agents." />
+    <link rel="preconnect" href="https://rsms.me/" />
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module">
+      // Workaround for @vitejs/plugin-react not injecting the React Refresh
+      // preamble under Vite 8 (rolldown) in dev. Wrapped in try/catch so it
+      // is a no-op in production where /@react-refresh does not exist.
+      try {
+        if (import.meta.hot) {
+          const RefreshRuntime = await import('/@react-refresh');
+          RefreshRuntime.default.injectIntoGlobalHook(window);
+          window.$RefreshReg$ = () => {};
+          window.$RefreshSig$ = () => (type) => type;
+          window.__vite_plugin_react_preamble_installed__ = true;
+        }
+      } catch (e) { /* production: no HMR, no preamble needed */ }
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
