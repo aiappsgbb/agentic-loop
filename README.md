@@ -1,73 +1,49 @@
-# React + TypeScript + Vite
+# Agentic Loop Site
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A static marketing and learning site for the **Agentic Loop**: building and running AI agents with **GitHub Copilot** + **Microsoft Foundry** on **Azure**.
 
-Currently, two official plugins are available:
+It is content-only — no backend, no LLM calls at runtime. Its job is to inspire, educate, and hand off to GitHub Copilot for the actual build.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## What's inside
 
-## React Compiler
+- **Home** — pick Capabilities, Building blocks, and Themes; craft a mock prompt; preview suggested Build/Run skills; open the **Make it real** modal that points to the Copilot CLI (`/lean:implement`, `/lean:deploy`, `azd up`).
+- **Scenarios** — filterable gallery of industry scenarios; each opens a Build / Run / Scale playbook stepper.
+- **Playbooks** — markdown-driven slide decks rendered from `playbooks/<slug>/README.md` with chapter rail, code copy, callouts, and a pinnable TOC.
+- **Skills catalog** — skills grouped by Build (Copilot) and Run (Foundry) phases.
+- **Concepts** — Agentic Loop, Agents, Skills, Tools.
+- **Platform** — Foundry capabilities and Azure building blocks with deep-linkable cards.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech stack
 
-## Expanding the ESLint configuration
+React 19 · TypeScript (strict) · Vite 8 · React Router 7 · `react-markdown` + `remark-gfm` + `rehype-highlight` · `lucide-react` · hand-authored CSS with light/dark/system theming.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Scripts
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev      # Vite dev server on http://localhost:5173
+npm run build    # tsc -b && vite build  →  dist/
+npm run preview  # serve the production build locally
+npm run lint     # eslint .
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Project layout
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+src/
+  components/   Hero, Sidebar, CapabilityPicker, ScenariosGallery, MakeItRealModal, ThemeProvider
+  pages/        Home, Scenarios, ScenarioPlaybook, Playbooks, PlaybookPage, SkillsCatalog, concepts/*
+  data/         scenarios.json
+  styles/       app.css
+playbooks/      <slug>/README.md  (rendered as slide decks at /playbooks/:slug)
+public/         images/*, playbooks/<slug>/images/*, Foundry.svg, Azure.svg
+docs/spec.md    Full functional spec
+```
+
+## Deployment
+
+Produces a single static bundle (`dist/`) suitable for Azure Static Web Apps or any CDN. See [deploy.ps1](deploy.ps1) and [docs/spec.md](docs/spec.md).
+
+## License
+
+See [LICENSE](LICENSE).
