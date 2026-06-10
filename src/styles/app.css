@@ -2684,7 +2684,7 @@
 /* Two-choice layout: build-your-own vs ready-to-use */
 .wtuw-duo {
   display: grid; gap: 16px;
-  grid-template-columns: 1.4fr 1fr;
+  grid-template-columns: 1fr 1.5fr;
   align-items: stretch;
 }
 .wtuw-choice {
@@ -2869,4 +2869,182 @@
 
 @media (max-width: 720px) {
   .scenario-bridge { grid-template-columns: 1fr; }
+}
+
+/* ── Kratos launcher (embedded in tile + on Kratos page) ── */
+.wtuw-choice.ready { padding: 0; overflow: hidden; }
+.kratos-launcher { display: flex; flex-direction: column; padding: 22px 24px; height: 100%; }
+.kratos-launcher-head { display: flex; gap: 14px; align-items: flex-start; }
+.kratos-launcher-mark {
+  width: 44px; height: 44px; flex-shrink: 0;
+  border-radius: 12px; display: grid; place-items: center;
+  background: var(--gradient); color: #fff;
+}
+.kratos-launcher-head h3 {
+  margin: 0 0 4px; font-size: 17px;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.kratos-launcher-head p { margin: 0; font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+.kratos-field-label {
+  display: block; margin: 18px 0 6px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-muted);
+}
+.kratos-select-wrap { position: relative; }
+.kratos-select {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--bg-1);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-size: 13.5px; font-weight: 500;
+  cursor: pointer;
+  appearance: auto;
+}
+.kratos-select:focus { outline: none; border-color: var(--accent-2); }
+.kratos-launcher-input {
+  display: flex; align-items: flex-end; gap: 8px;
+  margin-top: 12px;
+  padding: 8px 8px 8px 14px;
+  border-radius: 14px;
+  background: var(--bg-1);
+  border: 1px solid var(--border-strong);
+  transition: border-color 0.18s;
+}
+.kratos-launcher-input:focus-within { border-color: var(--accent-2); }
+.kratos-launcher-input textarea {
+  flex: 1; resize: none; border: 0; background: transparent;
+  color: var(--text); font: inherit; font-size: 14px; line-height: 1.5;
+  padding: 6px 0; max-height: 120px;
+}
+.kratos-launcher-input textarea:focus { outline: none; }
+.kratos-launcher-input textarea::placeholder { color: var(--text-muted); }
+.kratos-send {
+  flex-shrink: 0;
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border: 0; border-radius: 10px;
+  background: var(--gradient); color: #fff;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.kratos-send:hover:not(:disabled) { transform: translateY(-1px); }
+.kratos-send:disabled { opacity: 0.45; cursor: not-allowed; }
+.kratos-launcher-hint { margin-top: 10px; font-size: 11.5px; color: var(--text-muted); }
+.kratos-launcher-hint kbd {
+  font: inherit; font-size: 10.5px;
+  padding: 1px 5px; border-radius: 5px;
+  background: var(--surface); border: 1px solid var(--border-strong);
+}
+
+/* On the Kratos page, give the launcher a card surface */
+.kratos-try {
+  max-width: 620px;
+  margin: 8px 0 8px;
+  border-radius: var(--radius);
+  background: var(--gradient-soft);
+  border: 1px solid var(--border-strong);
+}
+
+/* ── Kratos full chat view (mock) ───────────────────────── */
+.kratos-chat {
+  display: flex; flex-direction: column;
+  height: calc(100vh - 80px);
+  max-height: 880px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.kratos-chat-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.kratos-chat-brand { display: flex; align-items: center; gap: 12px; }
+.kratos-chat-brand strong { display: block; font-size: 14.5px; }
+.kratos-chat-sub { font-size: 11.5px; color: var(--text-muted); }
+.kratos-chat-actions { display: flex; gap: 8px; }
+.kratos-chip-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: 999px;
+  background: var(--bg-1); border: 1px solid var(--border-strong);
+  color: var(--text); font-size: 12px; font-weight: 600;
+  text-decoration: none; cursor: pointer;
+  transition: border-color 0.18s;
+}
+.kratos-chip-btn:hover { border-color: var(--accent-2); }
+.kratos-chat-skills {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.kratos-skill-pill {
+  font-size: 11px; padding: 3px 9px; border-radius: 999px;
+  background: var(--gradient-soft); border: 1px solid var(--border);
+  color: var(--accent-2);
+}
+.kratos-chat-scroll {
+  flex: 1; overflow-y: auto;
+  padding: 22px 18px;
+  display: flex; flex-direction: column; gap: 18px;
+}
+.kratos-msg { display: flex; gap: 12px; max-width: 760px; }
+.kratos-msg.user { align-self: flex-end; flex-direction: row-reverse; }
+.kratos-msg-avatar {
+  width: 28px; height: 28px; flex-shrink: 0;
+  border-radius: 8px; display: grid; place-items: center;
+  background: var(--gradient); color: #fff;
+}
+.kratos-msg-body {
+  padding: 12px 16px; border-radius: 14px;
+  font-size: 14px; line-height: 1.6;
+}
+.kratos-msg.user .kratos-msg-body { background: var(--gradient); color: #fff; border-top-right-radius: 4px; }
+.kratos-msg.assistant .kratos-msg-body { background: var(--bg-1); border: 1px solid var(--border); border-top-left-radius: 4px; }
+.kratos-msg-text { margin: 0; }
+.kratos-msg-steps { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+.kratos-step { font-size: 11.5px; color: var(--text-muted); }
+.kratos-step b { color: var(--accent-2); font-weight: 600; }
+.kratos-typing { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); }
+.kratos-typing .spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.kratos-chat-suggestions { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 18px 12px; }
+.kratos-suggestion {
+  font-size: 12px; padding: 8px 12px; border-radius: 10px;
+  background: var(--bg-1); border: 1px solid var(--border);
+  color: var(--text-dim); text-align: left; cursor: pointer;
+  transition: border-color 0.18s;
+}
+.kratos-suggestion:hover:not(:disabled) { border-color: var(--accent-2); }
+.kratos-suggestion:disabled { opacity: 0.5; cursor: not-allowed; }
+.kratos-chat-input {
+  display: flex; align-items: flex-end; gap: 8px;
+  margin: 0 18px;
+  padding: 8px 8px 8px 14px;
+  border-radius: 14px;
+  background: var(--bg-1); border: 1px solid var(--border-strong);
+  transition: border-color 0.18s;
+}
+.kratos-chat-input:focus-within { border-color: var(--accent-2); }
+.kratos-chat-input textarea {
+  flex: 1; resize: none; border: 0; background: transparent;
+  color: var(--text); font: inherit; font-size: 14px; line-height: 1.5;
+  padding: 6px 0; max-height: 140px;
+}
+.kratos-chat-input textarea:focus { outline: none; }
+.kratos-chat-input textarea::placeholder { color: var(--text-muted); }
+.kratos-chat-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 18px 16px;
+}
+.kratos-back-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; font-weight: 600; color: var(--accent-2); text-decoration: none;
+}
+.kratos-chat-tag { font-size: 11px; color: var(--text-muted); }
+
+@media (max-width: 720px) {
+  .kratos-msg { max-width: 100%; }
 }

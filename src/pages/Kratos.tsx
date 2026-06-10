@@ -1,8 +1,11 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import {
   Bot, Boxes, RefreshCw, Cloud, Code2 as Github, Database, Eye, ArrowRight,
   ExternalLink, Construction, Plug, Layers, BookOpen, Sparkles,
 } from 'lucide-react';
+import KratosChatMock from '../components/KratosChatMock';
+import KratosLauncher from '../components/KratosLauncher';
 
 const KRATOS_REPO = 'https://github.com/kmavrodis/kratos-agent';
 
@@ -16,17 +19,33 @@ const PILLARS = [
 ];
 
 export default function Kratos() {
+  const location = useLocation();
+  const navState = location.state as { personaId?: string; prompt?: string } | null;
+  const [session, setSession] = useState(
+    navState?.prompt ? { personaId: navState.personaId ?? 'generic-assistant', prompt: navState.prompt } : null
+  );
+
+  if (session) {
+    return (
+      <KratosChatMock
+        initialPersonaId={session.personaId}
+        initialPrompt={session.prompt}
+        onReset={() => setSession(null)}
+      />
+    );
+  }
+
   return (
     <>
       <div className="page-head">
         <div className="page-eyebrow">Reference app · Kratos</div>
-        <span className="kratos-badge"><Construction size={13} /> Placeholder · coming soon</span>
+        <span className="kratos-badge"><Construction size={13} /> Live mock · prebuilt agent</span>
         <h1>Kratos — the Agentic Loop, in one reference app.</h1>
         <p className="lede">
           <strong>Kratos</strong> is a production-shaped reference implementation of the Agentic Loop: a single
           agent with persona switching, backed by swappable <strong>MCP skills</strong>, powered by the
-          <strong> GitHub Copilot SDK</strong> and hosted on <strong>Microsoft Foundry</strong>. This page is a
-          placeholder — a full walkthrough, architecture deep-dive, and live demo are on the way.
+          <strong> GitHub Copilot SDK</strong> and hosted on <strong>Microsoft Foundry</strong>. Pick a persona
+          and start a chat below to experience it — this preview is mocked.
         </p>
         <div className="kratos-cta-row">
           <a className="kratos-cta primary" href={KRATOS_REPO} target="_blank" rel="noreferrer">
@@ -37,6 +56,10 @@ export default function Kratos() {
           </Link>
         </div>
       </div>
+
+      <section className="kratos-try">
+        <KratosLauncher />
+      </section>
 
       <section className="concept-section">
         <div className="section-eyebrow">What it shows</div>

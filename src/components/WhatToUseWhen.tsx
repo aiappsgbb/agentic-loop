@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Hammer, Rocket, Layers, BookOpen, Sparkles, ArrowRight, ArrowUpRight } from 'lucide-react';
+import { Hammer, Layers, BookOpen, Sparkles, ArrowRight } from 'lucide-react';
+import KratosLauncher from './KratosLauncher';
 
 const BUILD_PATHS = [
   { label: 'Scenarios', sub: 'Pre-defined, industry-proven blueprints', to: '/scenarios', icon: Layers, hash: false },
@@ -47,23 +48,9 @@ export default function WhatToUseWhen() {
           </div>
         </div>
 
-        <Link to="/kratos" className="wtuw-choice ready">
-          <div className="wtuw-choice-head">
-            <div className="wtuw-choice-ic"><Rocket size={20} /></div>
-            <div>
-              <h3>Ready to use — Kratos <span className="wtuw-badge">Live</span></h3>
-              <p>A prebuilt reference agent for demo, experiment, and prototype. No build, no setup — just try it.</p>
-            </div>
-          </div>
-          <div className="wtuw-ready-tags">
-            <span>Demo</span>
-            <span>Experiment</span>
-            <span>Prototype</span>
-          </div>
-          <span className="wtuw-choice-cta">
-            Open Kratos <ArrowUpRight size={15} />
-          </span>
-        </Link>
+        <div className="wtuw-choice ready">
+          <KratosLauncher />
+        </div>
       </div>
     </section>
   );
