@@ -1,55 +1,66 @@
 import { Link } from 'react-router-dom';
-import { BookOpen, Rocket, ShieldCheck, GitBranch, Database, Eye } from 'lucide-react';
+import {
+  BookOpen, Rocket, ShieldCheck, GitBranch, Database, Eye, ArrowRight, Layers,
+} from 'lucide-react';
+import { playbooks, playbookHasDeck, scenariosForPlaybook } from '../data/links';
 
-interface PlaybookEntry {
-  icon: typeof Rocket;
-  name: string;
-  description: string;
-  steps: number;
-  level: string;
-  slug?: string;
-}
-
-const PLAYBOOKS: PlaybookEntry[] = [
-  { icon: Rocket, name: 'Getting started', description: 'Spin up a simple Weather Agent powered by Foundry Hosted Agents.', steps: 6, level: 'Starter', slug: 'getting-started' },
-  { icon: GitBranch, name: 'Multi-Agent Orchestration', description: 'Design a planner-executor topology with hand-offs, shared memory, and budget controls.', steps: 9, level: 'Intermediate' },
-  { icon: Database, name: 'Enterprise Knowledge Grounding', description: 'Bring your data into Foundry with hybrid retrieval, ACL-aware indexing, and citations.', steps: 7, level: 'Intermediate' },
-  { icon: ShieldCheck, name: 'Governance & Safety Baseline', description: 'Wire content safety, policy guardrails, jailbreak detection, and red-team evals from day one.', steps: 8, level: 'Advanced' },
-  { icon: Eye, name: 'Continuous Evaluation Loop', description: 'Move from offline scoring to production traces, regression sets, and automated improvement PRs.', steps: 10, level: 'Advanced' },
-  { icon: BookOpen, name: 'Voice-First Agent Blueprint', description: 'Combine real-time STT, TTS, and frontier reasoning for low-latency conversational experiences.', steps: 6, level: 'Intermediate' },
-];
+const ICONS: Record<string, typeof Rocket> = {
+  Rocket, GitBranch, Database, ShieldCheck, Eye, BookOpen,
+};
 
 export default function Playbooks() {
   return (
     <>
       <div className="page-head">
-        <div className="page-eyebrow">Playbooks</div>
-        <h1>Opinionated paths to production.</h1>
+        <div className="page-eyebrow">Playbooks · the HOW</div>
+        <h1>Master a reusable technique.</h1>
         <p className="lede">
-          Curated, step-by-step guides that combine GitHub Copilot for development with Microsoft Foundry for runtime — so your team always has a paved road.
+          Playbooks are horizontal, step-by-step guides to a single capability — grounding, orchestration, governance, evaluation, voice. Combine several and you get a <Link to="/scenarios">Scenario</Link>. Use a playbook when you want to learn <em>how</em> to do one thing well.
         </p>
       </div>
+
       <div className="playbook-list">
-        {PLAYBOOKS.map(p => {
+        {playbooks.map(p => {
+          const Icon = ICONS[p.icon] ?? BookOpen;
+          const usedIn = scenariosForPlaybook(p, 3);
+          const totalUsedIn = scenariosForPlaybook(p).length;
+          const interactive = playbookHasDeck(p.slug);
           const inner = (
             <>
-              <div className="ic"><p.icon size={20} /></div>
-              <div>
+              <div className="ic"><Icon size={20} /></div>
+              <div className="playbook-row-main">
                 <h3>{p.name}</h3>
-                <p>{p.description}</p>
+                <p>{p.summary}</p>
+                <p className="playbook-use-when"><strong>Use when:</strong> {p.use_when}</p>
+                {usedIn.length > 0 && (
+                  <div className="playbook-backlinks">
+                    <span className="playbook-backlinks-label"><Layers size={12} /> Used in {totalUsedIn} scenarios:</span>
+                    {usedIn.map(s => (
+                      <Link
+                        key={s.id}
+                        to={`/scenarios/${s.id}`}
+                        className="playbook-scenario-chip"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        {s.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="meta">
                 <span className="difficulty">{p.level}</span>
                 <span>{p.steps} steps</span>
+                {interactive && <span className="playbook-open">Open <ArrowRight size={12} /></span>}
               </div>
             </>
           );
-          return p.slug ? (
-            <Link key={p.name} to={`/playbooks/${p.slug}`} className="playbook-row interactive">
+          return interactive ? (
+            <Link key={p.slug} to={`/playbooks/${p.slug}`} className="playbook-row interactive">
               {inner}
             </Link>
           ) : (
-            <div key={p.name} className="playbook-row">{inner}</div>
+            <div key={p.slug} className="playbook-row">{inner}</div>
           );
         })}
       </div>

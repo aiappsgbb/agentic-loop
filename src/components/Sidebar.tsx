@@ -32,11 +32,18 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
       </div>
 
       <nav className="nav">
-        <div className="nav-section-title">Discover</div>
+        <div className="nav-section-title">Start here</div>
         <NavLink to="/" end className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <Home className="icon" size={18} />
           <span className="nav-label">Home</span>
         </NavLink>
+        <NavLink to="/kratos" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <Rocket className="icon" size={18} />
+          <span className="nav-label">Kratos</span>
+          <span className="nav-badge">Live</span>
+        </NavLink>
+
+        <div className="nav-section-title">Build</div>
         <NavLink to="/scenarios" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <Layers className="icon" size={18} />
           <span className="nav-label">Scenarios</span>
@@ -48,11 +55,6 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
         <NavLink to="/skills" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <Library className="icon" size={18} />
           <span className="nav-label">Skills catalog</span>
-        </NavLink>
-        <NavLink to="/kratos" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-          <Rocket className="icon" size={18} />
-          <span className="nav-label">Kratos</span>
-          <span className="nav-badge">New</span>
         </NavLink>
 
         <div className="nav-section-title">Learn</div>

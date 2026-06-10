@@ -121,7 +121,8 @@ export default function Hero() {
         </button>
       </div>
 
-      <div className="prompt-shell">
+      <div className="prompt-shell" id="prompt">
+        <div className="prompt-lane-tag"><Sparkles size={13} /> Build from scratch · the greenfield lane</div>
         <div className="prompt-box">
           <textarea
             placeholder="Describe your AI agentic app and let copilot cook it for you"

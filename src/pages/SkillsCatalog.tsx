@@ -241,10 +241,10 @@ export default function SkillsCatalog() {
   return (
     <>
       <div className="page-head">
-        <div className="page-eyebrow">Skills catalog</div>
+        <div className="page-eyebrow">Skills catalog · Reference</div>
         <h1>Every capability the Agentic Loop ships with.</h1>
         <p className="lede">
-          Browse the building blocks that GitHub Copilot brings to <strong>build</strong> phase and that Microsoft Foundry brings to <strong>run</strong> phase — one consistent contract, two sides of the loop.
+          The reference you consult while building — browse the building blocks that GitHub Copilot brings to the <strong>build</strong> phase and that Microsoft Foundry brings to the <strong>run</strong> phase. One consistent contract, two sides of the loop.
         </p>
       </div>
 

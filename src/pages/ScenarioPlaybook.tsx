@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Hammer, Cloud, TrendingUp, CheckCircle2, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Hammer, Cloud, TrendingUp, CheckCircle2, ExternalLink, BookOpen, Rocket, ArrowRight } from 'lucide-react';
 import scenarios from '../data/scenarios.json';
+import { playbooksForScenario, playbookHasDeck } from '../data/links';
 
 interface Scenario {
   id: string; name: string; industry: string; description: string; image: string; tags: string[]; link?: string;
@@ -76,13 +77,14 @@ export default function ScenarioPlaybook() {
     );
   }
   const chapters = buildChapters(scenario);
+  const relatedPlaybooks = playbooksForScenario(scenario);
 
   return (
     <>
       <Link to="/scenarios" className="back-link"><ArrowLeft size={14} /> Back to scenarios</Link>
       <div className="playbook-hero">
         <div className="playbook-hero-body">
-          <div className="page-eyebrow">{scenario.industry} · Playbook</div>
+          <div className="page-eyebrow">{scenario.industry} · Scenario</div>
           <h1>{scenario.name}</h1>
           <p className="lede">{scenario.description}</p>
           <div className="scenario-tags" style={{ marginTop: 14 }}>
@@ -103,6 +105,43 @@ export default function ScenarioPlaybook() {
           <img src={resolveImage(scenario.image)} alt={scenario.name} />
         </div>
       </div>
+
+      <section className="scenario-bridge">
+        <div className="scenario-bridge-card built-from">
+          <div className="scenario-bridge-head">
+            <BookOpen size={16} />
+            <div>
+              <h2>Built from these playbooks</h2>
+              <p>This vertical outcome is assembled from horizontal techniques. Master each one on its own.</p>
+            </div>
+          </div>
+          <div className="scenario-bridge-links">
+            {relatedPlaybooks.map(p => (
+              playbookHasDeck(p.slug) ? (
+                <Link key={p.slug} to={`/playbooks/${p.slug}`} className="scenario-bridge-pill">
+                  {p.name} <ArrowRight size={13} />
+                </Link>
+              ) : (
+                <Link key={p.slug} to="/playbooks" className="scenario-bridge-pill">
+                  {p.name} <ArrowRight size={13} />
+                </Link>
+              )
+            ))}
+          </div>
+        </div>
+        <div className="scenario-bridge-card try-live">
+          <div className="scenario-bridge-head">
+            <Rocket size={16} />
+            <div>
+              <h2>Prefer to try it live first?</h2>
+              <p>Experience a prebuilt agent in Kratos before you build your own version.</p>
+            </div>
+          </div>
+          <Link to="/kratos" className="scenario-bridge-cta">
+            Try live in Kratos <ArrowRight size={14} />
+          </Link>
+        </div>
+      </section>
 
       {chapters.map(c => {
         const Icon = c.icon;

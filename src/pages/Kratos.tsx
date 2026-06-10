@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import {
   Bot, Boxes, RefreshCw, Cloud, Code2 as Github, Database, Eye, ArrowRight,
-  ExternalLink, Construction, Plug,
+  ExternalLink, Construction, Plug, Layers, BookOpen, Sparkles,
 } from 'lucide-react';
 
 const KRATOS_REPO = 'https://github.com/kmavrodis/kratos-agent';
@@ -70,6 +70,31 @@ export default function Kratos() {
           </p>
         </div>
       </div>
+
+      <section className="concept-section">
+        <div className="section-eyebrow">Ready to build your own?</div>
+        <h2>From experiencing to building</h2>
+        <p className="lede">
+          Kratos is the <em>experience</em> lane — try the loop live, no setup. When you're ready to build your own version, take one of the three on-ramps.
+        </p>
+        <div className="kratos-next-grid">
+          <Link to="/scenarios" className="kratos-next-card">
+            <Layers size={18} />
+            <h3>Start from a scenario</h3>
+            <p>Fork a proven, industry-shaped blueprint and adapt it. <span className="kratos-next-go">Scenarios <ArrowRight size={13} /></span></p>
+          </Link>
+          <Link to="/playbooks" className="kratos-next-card">
+            <BookOpen size={18} />
+            <h3>Learn a technique</h3>
+            <p>Master grounding, orchestration, governance, or voice step by step. <span className="kratos-next-go">Playbooks <ArrowRight size={13} /></span></p>
+          </Link>
+          <Link to="/#prompt" className="kratos-next-card">
+            <Sparkles size={18} />
+            <h3>Build from a prompt</h3>
+            <p>Describe a novel idea and let Copilot scaffold it from scratch. <span className="kratos-next-go">Home <ArrowRight size={13} /></span></p>
+          </Link>
+        </div>
+      </section>
     </>
   );
 }
