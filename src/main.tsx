@@ -13,6 +13,7 @@ import AgenticLoopConcept from './pages/concepts/AgenticLoop';
 import Agents from './pages/concepts/Agents';
 import Skills from './pages/concepts/Skills';
 import Tools from './pages/concepts/Tools';
+import PlatformOverview from './pages/concepts/PlatformOverview';
 import Foundry from './pages/concepts/Foundry';
 import Azure from './pages/concepts/Azure';
 import './index.css';
@@ -36,7 +37,8 @@ createRoot(document.getElementById('root')!).render(
               <Route path="skills" element={<Skills />} />
               <Route path="tools" element={<Tools />} />
               <Route path="platform">
-                <Route index element={<Navigate to="foundry" replace />} />
+                <Route index element={<PlatformOverview />} />
+                <Route path="overview" element={<PlatformOverview />} />
                 <Route path="foundry" element={<Foundry />} />
                 <Route path="azure" element={<Azure />} />
               </Route>

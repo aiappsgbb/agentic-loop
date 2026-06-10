@@ -1,8 +1,8 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Home, Layers, BookOpen, Sparkles, Bot, Wrench, Workflow,
-  ChevronRight, PanelLeftClose, PanelLeft, Sun, Moon, Monitor, Infinity, Library, Cpu, Lightbulb
+  ChevronRight, PanelLeftClose, PanelLeft, Sun, Moon, Monitor, Infinity as InfinityIcon, Library, Cpu, Lightbulb, Compass
 } from 'lucide-react';
 import { useTheme, type ThemePref } from './ThemeProvider';
 
@@ -14,10 +14,9 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
   const platformActive = location.pathname.startsWith('/concepts/platform');
   const [conceptsOpen, setConceptsOpen] = useState(true);
   const [platformOpen, setPlatformOpen] = useState(true);
+  const conceptsExpanded = conceptsOpen || conceptsActive;
+  const platformExpanded = platformOpen || platformActive;
   const { pref, setPref } = useTheme();
-
-  useEffect(() => { if (conceptsActive) setConceptsOpen(true); }, [conceptsActive]);
-  useEffect(() => { if (platformActive) setPlatformOpen(true); }, [platformActive]);
 
   const themeOptions: { value: ThemePref; icon: typeof Sun; label: string }[] = [
     { value: 'light', icon: Sun, label: 'Light' },
@@ -28,7 +27,7 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
   return (
     <aside className="sidebar">
       <div className="brand">
-        <div className="brand-mark"><Infinity size={20} strokeWidth={2.5} /></div>
+        <div className="brand-mark"><InfinityIcon size={20} strokeWidth={2.5} /></div>
         {!collapsed && <span className="brand-text">Agentic Loop</span>}
       </div>
 
@@ -53,7 +52,7 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
 
         <div className="nav-section-title">Learn</div>
         <div
-          className={`nav-item ${conceptsActive ? 'active' : ''} ${conceptsOpen ? 'open' : ''}`}
+          className={`nav-item ${conceptsActive ? 'active' : ''} ${conceptsExpanded ? 'open' : ''}`}
           onClick={() => setConceptsOpen(v => !v)}
           role="button"
         >
@@ -61,7 +60,7 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
           <span className="nav-label">Concepts</span>
           <ChevronRight className="chev" size={14} />
         </div>
-        {conceptsOpen && !collapsed && (
+        {conceptsExpanded && !collapsed && (
           <div className="sub-nav">
             <NavLink to="/concepts/agentic-loop" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <Workflow className="icon" size={16} />
@@ -83,7 +82,7 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
         )}
 
         <div
-          className={`nav-item ${platformActive ? 'active' : ''} ${platformOpen ? 'open' : ''}`}
+          className={`nav-item ${platformActive ? 'active' : ''} ${platformExpanded ? 'open' : ''}`}
           onClick={() => setPlatformOpen(v => !v)}
           role="button"
         >
@@ -91,8 +90,16 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
           <span className="nav-label">Platform</span>
           <ChevronRight className="chev" size={14} />
         </div>
-        {platformOpen && !collapsed && (
+        {platformExpanded && !collapsed && (
           <div className="sub-nav">
+            <NavLink
+              to="/concepts/platform"
+              end
+              className={({ isActive }) => `nav-item ${isActive || location.pathname === '/concepts/platform/overview' ? 'active' : ''}`}
+            >
+              <Compass className="icon" size={16} />
+              <span className="nav-label">Overview</span>
+            </NavLink>
             <NavLink to="/concepts/platform/foundry" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <img src="/Foundry.svg" alt="" className="icon nav-asset" />
               <span className="nav-label">Foundry</span>
