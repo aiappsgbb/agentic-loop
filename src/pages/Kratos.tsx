@@ -1,0 +1,75 @@
+import { Link } from 'react-router-dom';
+import {
+  Bot, Boxes, RefreshCw, Cloud, Code2 as Github, Database, Eye, ArrowRight,
+  ExternalLink, Construction, Plug,
+} from 'lucide-react';
+
+const KRATOS_REPO = 'https://github.com/kmavrodis/kratos-agent';
+
+const PILLARS = [
+  { icon: Bot, title: 'One agent, N skills', desc: 'A single agent backed by swappable MCP skills — simpler to reason about, debug, and extend than multi-agent handoffs.' },
+  { icon: RefreshCw, title: 'Reason → Act → Observe', desc: 'Every turn runs the Copilot SDK agentic loop: plan an approach, invoke tools, inspect results, and iterate to a complete answer.' },
+  { icon: Cloud, title: 'Dual-compute architecture', desc: 'A Foundry-hosted agent runs the SDK loop; an Azure Container Apps proxy handles the frontend API, persistence, and admin.' },
+  { icon: Plug, title: 'MCP skills, no redeploy', desc: 'Configure, toggle, and install remote skill packages and MCP servers per persona from a curated registry — live.' },
+  { icon: Database, title: 'Stateful conversations', desc: 'Azure Cosmos DB persists conversations, messages, and session mappings; gateway session pinning keeps multi-turn state intact.' },
+  { icon: Eye, title: 'Traced end to end', desc: 'OpenTelemetry with GenAI semantic conventions streams traces into Foundry for full request-flow observability.' },
+];
+
+export default function Kratos() {
+  return (
+    <>
+      <div className="page-head">
+        <div className="page-eyebrow">Reference app · Kratos</div>
+        <span className="kratos-badge"><Construction size={13} /> Placeholder · coming soon</span>
+        <h1>Kratos — the Agentic Loop, in one reference app.</h1>
+        <p className="lede">
+          <strong>Kratos</strong> is a production-shaped reference implementation of the Agentic Loop: a single
+          agent with persona switching, backed by swappable <strong>MCP skills</strong>, powered by the
+          <strong> GitHub Copilot SDK</strong> and hosted on <strong>Microsoft Foundry</strong>. This page is a
+          placeholder — a full walkthrough, architecture deep-dive, and live demo are on the way.
+        </p>
+        <div className="kratos-cta-row">
+          <a className="kratos-cta primary" href={KRATOS_REPO} target="_blank" rel="noreferrer">
+            <Github size={16} /> View the repo <ExternalLink size={13} />
+          </a>
+          <Link className="kratos-cta" to="/concepts/agentic-loop">
+            Learn the loop <ArrowRight size={14} />
+          </Link>
+        </div>
+      </div>
+
+      <section className="concept-section">
+        <div className="section-eyebrow">What it shows</div>
+        <h2>Why this architecture</h2>
+        <p className="lede">
+          Instead of orchestrating handoffs between specialized agents, Kratos uses one agent and many skills —
+          the simplest shape that still scales across personas and capabilities.
+        </p>
+        <div className="feature-grid">
+          {PILLARS.map(p => {
+            const Icon = p.icon;
+            return (
+              <div key={p.title} className="feature-card">
+                <div className="ic"><Icon size={18} /></div>
+                <h3>{p.title}</h3>
+                <p>{p.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <div className="callout">
+        <div className="ic"><Boxes size={20} /></div>
+        <div>
+          <h3>This is a placeholder</h3>
+          <p>
+            Content for Kratos — guided playbook, dual-compute diagram, and persona demos — is being authored.
+            In the meantime, explore the source on{' '}
+            <a href={KRATOS_REPO} target="_blank" rel="noreferrer">github.com/kmavrodis/kratos-agent</a>.
+          </p>
+        </div>
+      </div>
+    </>
+  );
+}

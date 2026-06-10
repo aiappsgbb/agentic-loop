@@ -8,6 +8,7 @@ import Playbooks from './pages/Playbooks';
 import PlaybookPage from './pages/PlaybookPage';
 import SkillsCatalog from './pages/SkillsCatalog';
 import ScenarioPlaybook from './pages/ScenarioPlaybook';
+import Kratos from './pages/Kratos';
 import { ThemeProvider } from './components/ThemeProvider';
 import AgenticLoopConcept from './pages/concepts/AgenticLoop';
 import Agents from './pages/concepts/Agents';
@@ -30,6 +31,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="playbooks" element={<Playbooks />} />
             <Route path="playbooks/:slug" element={<PlaybookPage />} />
             <Route path="skills" element={<SkillsCatalog />} />
+            <Route path="kratos" element={<Kratos />} />
             <Route path="concepts">
               <Route index element={<Navigate to="agentic-loop" replace />} />
               <Route path="agentic-loop" element={<AgenticLoopConcept />} />

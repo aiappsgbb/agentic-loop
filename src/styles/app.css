@@ -2564,3 +2564,84 @@
 .hljs-variable, .hljs-template-variable, .hljs-attr, .hljs-params { color: #93c5fd; }
 .hljs-emphasis { font-style: italic; }
 .hljs-strong { font-weight: 600; }
+
+/* ── Kratos placeholder + nav ───────────────────────────── */
+.nav-badge {
+  margin-left: auto;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--gradient);
+  color: #fff;
+  line-height: 1.4;
+}
+.app-shell.is-collapsed .nav-badge { display: none; }
+
+.kratos-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-bottom: 12px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: var(--gradient-soft);
+  border: 1px solid var(--border-strong);
+  color: var(--accent-2);
+  font-size: 12px; font-weight: 600;
+}
+
+.kratos-cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+.kratos-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-1);
+  color: var(--text);
+  font-size: 13.5px; font-weight: 600;
+  text-decoration: none;
+  transition: all 0.18s;
+}
+.kratos-cta:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+.kratos-cta.primary { background: var(--gradient); color: #fff; border: 0; }
+.kratos-cta.primary:hover { box-shadow: 0 10px 24px rgba(124,92,255,0.35); }
+
+.kratos-banner {
+  display: flex; align-items: center; gap: 18px;
+  margin: 28px 0 8px;
+  padding: 20px 24px;
+  border-radius: var(--radius);
+  background: var(--gradient-soft);
+  border: 1px solid var(--border-strong);
+}
+.kratos-banner-mark {
+  width: 44px; height: 44px; flex-shrink: 0;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  background: var(--gradient);
+  color: #fff;
+}
+.kratos-banner-body { flex: 1; min-width: 0; }
+.kratos-banner-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--accent-2);
+}
+.kratos-banner-body h3 { margin: 4px 0 4px; font-size: 17px; }
+.kratos-banner-body p { margin: 0; color: var(--text-dim); font-size: 13.5px; line-height: 1.55; }
+.kratos-banner-cta {
+  display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: var(--gradient);
+  color: #fff;
+  font-size: 13px; font-weight: 600;
+  text-decoration: none;
+  transition: all 0.18s;
+}
+.kratos-banner-cta:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(124,92,255,0.35); }
+
+@media (max-width: 720px) {
+  .kratos-banner { flex-direction: column; align-items: flex-start; }
+  .kratos-banner-cta { align-self: stretch; justify-content: center; }
+}
