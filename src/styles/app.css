@@ -2681,6 +2681,77 @@
   font-size: 12px; font-weight: 600; color: var(--accent-2);
 }
 
+/* Two-choice layout: build-your-own vs ready-to-use */
+.wtuw-duo {
+  display: grid; gap: 16px;
+  grid-template-columns: 1.4fr 1fr;
+  align-items: stretch;
+}
+.wtuw-choice {
+  display: flex; flex-direction: column;
+  padding: 22px 24px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  transition: border-color 0.18s, transform 0.18s;
+}
+.wtuw-choice.ready { background: var(--gradient-soft); border-color: var(--border-strong); }
+.wtuw-choice.ready:hover { border-color: var(--accent-2); transform: translateY(-2px); }
+.wtuw-choice-head { display: flex; gap: 14px; align-items: flex-start; }
+.wtuw-choice-ic {
+  width: 44px; height: 44px; flex-shrink: 0;
+  border-radius: 12px; display: grid; place-items: center;
+  background: var(--gradient); color: #fff;
+}
+.wtuw-choice-head h3 {
+  margin: 0 0 4px; font-size: 17px;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.wtuw-choice-head p { margin: 0; font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+.wtuw-badge {
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 999px;
+  background: var(--gradient); color: #fff; line-height: 1.4;
+}
+.wtuw-choice-paths { display: grid; gap: 8px; margin-top: 16px; }
+.wtuw-path {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  transition: border-color 0.18s, transform 0.18s;
+}
+.wtuw-path:hover { border-color: var(--accent-2); transform: translateX(2px); }
+.wtuw-path-ic { color: var(--accent-2); flex-shrink: 0; }
+.wtuw-path-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.wtuw-path-label { font-size: 13.5px; font-weight: 600; color: var(--text); }
+.wtuw-path-sub { font-size: 11.5px; color: var(--text-muted); }
+.wtuw-path-go { color: var(--text-muted); flex-shrink: 0; }
+.wtuw-choice-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: auto; padding-top: 18px;
+  font-size: 14px; font-weight: 600; color: var(--accent-2);
+}
+.wtuw-ready-tags {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-top: 18px;
+}
+.wtuw-ready-tags span {
+  font-size: 12px; font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--bg-1);
+  border: 1px solid var(--border-strong);
+  color: var(--text-dim);
+}
+
+@media (max-width: 720px) {
+  .wtuw-duo { grid-template-columns: 1fr; }
+}
+
 /* ── Greenfield builder (Home, moved below router) ──────── */
 .greenfield {
   margin-top: 44px;

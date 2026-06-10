@@ -1,23 +1,10 @@
 import { Link } from 'react-router-dom';
-import {
-  Rocket, Layers, BookOpen, Sparkles, Lightbulb, Library, ArrowRight,
-} from 'lucide-react';
+import { Hammer, Rocket, Layers, BookOpen, Sparkles, ArrowRight, ArrowUpRight } from 'lucide-react';
 
-interface Path {
-  want: string;
-  to: string;
-  dest: string;
-  icon: typeof Rocket;
-  external?: boolean;
-}
-
-const PATHS: Path[] = [
-  { want: 'See a working agent right now — no setup', to: '/kratos', dest: 'Kratos', icon: Rocket },
-  { want: 'Start from a proven outcome for my industry', to: '/scenarios', dest: 'Scenarios', icon: Layers },
-  { want: 'Learn a specific technique (grounding, eval, voice…)', to: '/playbooks', dest: 'Playbooks', icon: BookOpen },
-  { want: 'Build my own idea from a blank prompt', to: '#prompt', dest: 'Build from scratch', icon: Sparkles },
-  { want: 'Look up a specific Build or Run capability', to: '/skills', dest: 'Skills catalog', icon: Library },
-  { want: 'Understand the model and the platform', to: '/concepts/agentic-loop', dest: 'Concepts', icon: Lightbulb },
+const BUILD_PATHS = [
+  { label: 'Scenarios', sub: 'Pre-defined, industry-proven blueprints', to: '/scenarios', icon: Layers, hash: false },
+  { label: 'Playbooks', sub: 'Reusable techniques to compose', to: '/playbooks', icon: BookOpen, hash: false },
+  { label: 'Build from scratch', sub: 'Custom — describe it, Copilot scaffolds it', to: '#prompt', icon: Sparkles, hash: true },
 ];
 
 export default function WhatToUseWhen() {
@@ -26,26 +13,57 @@ export default function WhatToUseWhen() {
       <div className="wtuw-head">
         <div className="section-eyebrow">Find your starting point</div>
         <h2>What to use when</h2>
-        <p>Six surfaces, one question: what are you trying to do right now?</p>
+        <p>Two ways in: build &amp; run your own solution, or experiment instantly with a ready-to-use one.</p>
       </div>
-      <div className="wtuw-grid">
-        {PATHS.map(p => {
-          const Icon = p.icon;
-          const inner = (
-            <>
-              <div className="wtuw-ic"><Icon size={18} /></div>
-              <div className="wtuw-body">
-                <span className="wtuw-want">{p.want}</span>
-                <span className="wtuw-dest">{p.dest} <ArrowRight size={13} /></span>
-              </div>
-            </>
-          );
-          return p.to.startsWith('#') ? (
-            <a key={p.want} href={p.to} className="wtuw-card">{inner}</a>
-          ) : (
-            <Link key={p.want} to={p.to} className="wtuw-card">{inner}</Link>
-          );
-        })}
+
+      <div className="wtuw-duo">
+        <div className="wtuw-choice build">
+          <div className="wtuw-choice-head">
+            <div className="wtuw-choice-ic"><Hammer size={20} /></div>
+            <div>
+              <h3>Build &amp; run your own</h3>
+              <p>Pre-defined or fully custom solutions you deploy yourself with GitHub Copilot + Microsoft Foundry.</p>
+            </div>
+          </div>
+          <div className="wtuw-choice-paths">
+            {BUILD_PATHS.map(p => {
+              const Icon = p.icon;
+              const inner = (
+                <>
+                  <Icon size={16} className="wtuw-path-ic" />
+                  <span className="wtuw-path-text">
+                    <span className="wtuw-path-label">{p.label}</span>
+                    <span className="wtuw-path-sub">{p.sub}</span>
+                  </span>
+                  <ArrowRight size={14} className="wtuw-path-go" />
+                </>
+              );
+              return p.hash ? (
+                <a key={p.label} href={p.to} className="wtuw-path">{inner}</a>
+              ) : (
+                <Link key={p.label} to={p.to} className="wtuw-path">{inner}</Link>
+              );
+            })}
+          </div>
+        </div>
+
+        <Link to="/kratos" className="wtuw-choice ready">
+          <div className="wtuw-choice-head">
+            <div className="wtuw-choice-ic"><Rocket size={20} /></div>
+            <div>
+              <h3>Ready to use — Kratos <span className="wtuw-badge">Live</span></h3>
+              <p>A prebuilt reference agent for demo, experiment, and prototype. No build, no setup — just try it.</p>
+            </div>
+          </div>
+          <div className="wtuw-ready-tags">
+            <span>Demo</span>
+            <span>Experiment</span>
+            <span>Prototype</span>
+          </div>
+          <span className="wtuw-choice-cta">
+            Open Kratos <ArrowUpRight size={15} />
+          </span>
+        </Link>
       </div>
     </section>
   );
