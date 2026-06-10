@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Sparkles, Mic, Plus, Brain, ImageIcon, Volume2, Headphones, MessagesSquare,
   FileSearch, BookOpen, Eye, ShieldCheck, Network, Database, Workflow,
-  Building2, GraduationCap, Wrench, Rocket, X, ArrowRight,
+  Building2, GraduationCap, Wrench, Rocket, X,
   Plug, Waypoints, KeyRound, HardDrive,
 } from 'lucide-react';
 import CapabilityPicker, { type PickerOption } from './CapabilityPicker';
@@ -26,7 +26,7 @@ const BUILDING_BLOCKS: PickerOption[] = [
   { id: 'private-net', label: 'Private Networking', description: 'VNet, Private Endpoints', icon: Network, link: '/concepts/platform/azure#private-net' },
   { id: 'data', label: 'Data Persistence', description: 'Cosmos DB, Postgres', icon: Database, link: '/concepts/platform/azure#data' },
   { id: 'storage', label: 'Storage', description: 'Blobs, files, vectors', icon: HardDrive, link: '/concepts/platform/azure#storage' },
-];;
+];
 
 const THEMES: PickerOption[] = [
   { id: 'workflow', label: 'Workflow Automation', description: 'Multi-step orchestration', icon: Workflow },
@@ -54,7 +54,7 @@ function pick<T>(arr: T[], n: number): T[] {
   return out;
 }
 
-export default function Hero() {
+export default function GreenfieldBuilder() {
   const [capabilities, setCapabilities] = useState<string[]>(['frontier-models']);
   const [blocks, setBlocks] = useState<string[]>(['observability']);
   const [themes, setThemes] = useState<string[]>([]);
@@ -102,15 +102,14 @@ export default function Hero() {
   }
 
   return (
-    <section className="hero">
-      <h1>
-        Ship your ideas with the <span className="gradient-text">Agentic Loop</span>
-        <span className="sparkle" aria-hidden />
-      </h1>
-      <p className="lede">
-        Build, Run and Scale AI apps &amp; agents with GitHub Copilot + Microsoft Foundry<br />
-        <ArrowRight size={16} className="lede-arrow" aria-hidden /> in one continuous loop.
-      </p>
+    <section className="greenfield" id="prompt">
+      <div className="greenfield-head">
+        <div className="section-eyebrow">Build from scratch · the greenfield lane</div>
+        <h2>Have a novel idea? Let Copilot cook it for you.</h2>
+        <p>
+          No template fits? Compose the capabilities and building blocks you need, craft a prompt, and hand off to GitHub Copilot. For most starts, a <a href="/scenarios">scenario</a> or <a href="/playbooks">playbook</a> above will get you there faster.
+        </p>
+      </div>
 
       <div className="picker-bar">
         <CapabilityPicker label="Capabilities" options={CAPABILITIES} selected={capabilities} onChange={setCapabilities} triggerIcon={Brain} />
@@ -121,8 +120,7 @@ export default function Hero() {
         </button>
       </div>
 
-      <div className="prompt-shell" id="prompt">
-        <div className="prompt-lane-tag"><Sparkles size={13} /> Build from scratch · the greenfield lane</div>
+      <div className="prompt-shell">
         <div className="prompt-box">
           <textarea
             placeholder="Describe your AI agentic app and let copilot cook it for you"

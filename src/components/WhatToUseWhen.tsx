@@ -15,7 +15,7 @@ const PATHS: Path[] = [
   { want: 'See a working agent right now — no setup', to: '/kratos', dest: 'Kratos', icon: Rocket },
   { want: 'Start from a proven outcome for my industry', to: '/scenarios', dest: 'Scenarios', icon: Layers },
   { want: 'Learn a specific technique (grounding, eval, voice…)', to: '/playbooks', dest: 'Playbooks', icon: BookOpen },
-  { want: 'Build my own idea from a blank prompt', to: '#prompt', dest: 'Start below', icon: Sparkles },
+  { want: 'Build my own idea from a blank prompt', to: '#prompt', dest: 'Build from scratch', icon: Sparkles },
   { want: 'Look up a specific Build or Run capability', to: '/skills', dest: 'Skills catalog', icon: Library },
   { want: 'Understand the model and the platform', to: '/concepts/agentic-loop', dest: 'Concepts', icon: Lightbulb },
 ];
