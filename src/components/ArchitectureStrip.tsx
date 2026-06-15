@@ -10,6 +10,7 @@ import {
   Plug,
   Sparkles,
   ShieldCheck,
+  Waypoints,
   Wrench,
 } from 'lucide-react';
 
@@ -104,6 +105,14 @@ const COMPLEMENTARY_NODES: ArchitectureNode[] = [
     caption: 'Prompt shields, safety filters, and policy enforcement.',
     href: '/concepts/platform/foundry#frontier-models',
     icon: ShieldCheck,
+    weight: 'complementary',
+  },
+  {
+    id: 'ai-gateway',
+    label: 'AI Gateway',
+    caption: 'API Management for routing, quotas, caching, and policy.',
+    href: '/concepts/platform/azure#ai-gateway',
+    icon: Waypoints,
     weight: 'complementary',
   },
   {
@@ -289,7 +298,7 @@ function FullArchitecture() {
     },
     {
       title: 'Control Plane',
-      nodes: COMPLEMENTARY_NODES.filter(node => ['evals', 'content-safety', 'observability'].includes(node.id)),
+      nodes: COMPLEMENTARY_NODES.filter(node => ['evals', 'content-safety', 'ai-gateway', 'observability'].includes(node.id)),
     },
   ];
 
