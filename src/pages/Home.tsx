@@ -1,11 +1,15 @@
-import Hero from '../components/Hero';
-import ScenariosGallery from '../components/ScenariosGallery';
+import HomeHeadline from '../components/HomeHeadline';
+import WhatToUseWhen from '../components/WhatToUseWhen';
+import AgenticBackbone from '../components/AgenticBackbone';
+import GreenfieldBuilder from '../components/GreenfieldBuilder';
 
 export default function Home() {
   return (
     <>
-      <Hero />
-      <ScenariosGallery />
+      <HomeHeadline />
+      <WhatToUseWhen />
+      <AgenticBackbone />
+      <GreenfieldBuilder />
     </>
   );
 }

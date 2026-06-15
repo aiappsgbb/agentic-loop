@@ -1,0 +1,74 @@
+[
+  {
+    "slug": "getting-started",
+    "name": "Getting started",
+    "icon": "Rocket",
+    "level": "Starter",
+    "steps": 6,
+    "summary": "Spin up a simple Weather Agent powered by Foundry Hosted Agents.",
+    "use_when": "You're new to the loop and want the shortest path from zero to a running agent.",
+    "techniques": ["*"],
+    "buildSkills": ["agent-framework-azure-ai-py", "azure-ai-projects-py", "azure-identity-py"],
+    "deploymentSkills": ["aigbb-azd-compliance", "bicep-azd-patterns", "containerization", "aigbb-azure-security", "aigbb-observability"]
+  },
+  {
+    "slug": "multi-agent-orchestration",
+    "name": "Multi-Agent Orchestration",
+    "icon": "GitBranch",
+    "level": "Intermediate",
+    "steps": 9,
+    "summary": "Design a planner-executor topology with hand-offs, shared memory, and budget controls.",
+    "use_when": "Your task needs several specialized agents collaborating, not one monolith.",
+    "techniques": ["Domain-Specific Agents", "Workflow Automation"],
+    "buildSkills": ["copilot-sdk", "agent-framework-azure-ai-py", "mcp-builder", "pydantic-models-py"],
+    "deploymentSkills": ["aigbb-azd-compliance", "bicep-azd-patterns", "containerization", "aigbb-observability"]
+  },
+  {
+    "slug": "enterprise-knowledge-grounding",
+    "name": "Enterprise Knowledge Grounding",
+    "icon": "Database",
+    "level": "Intermediate",
+    "steps": 7,
+    "summary": "Bring your data into Foundry with hybrid retrieval, ACL-aware indexing, and citations.",
+    "use_when": "Answers must be grounded in your own documents with citations and access control.",
+    "techniques": ["Knowledge Grounding", "Forms Recognition"],
+    "buildSkills": ["azure-ai-projects-py", "agent-framework-azure-ai-py", "azure-storage-blob-py", "azure-identity-py"],
+    "deploymentSkills": ["bicep-azd-patterns", "aigbb-azure-security", "aigbb-observability"]
+  },
+  {
+    "slug": "governance-safety-baseline",
+    "name": "Governance & Safety Baseline",
+    "icon": "ShieldCheck",
+    "level": "Advanced",
+    "steps": 8,
+    "summary": "Wire content safety, policy guardrails, jailbreak detection, and red-team evals from day one.",
+    "use_when": "You operate in a regulated domain or must enforce policy on every tool call.",
+    "techniques": ["Governance"],
+    "buildSkills": ["azure-ai-projects-py", "aigbb-azure-security", "pydantic-models-py"],
+    "deploymentSkills": ["aigbb-azure-security", "aigbb-observability", "bicep-azd-patterns", "aigbb-azd-compliance"]
+  },
+  {
+    "slug": "continuous-evaluation-loop",
+    "name": "Continuous Evaluation Loop",
+    "icon": "Eye",
+    "level": "Advanced",
+    "steps": 10,
+    "summary": "Move from offline scoring to production traces, regression sets, and automated improvement PRs.",
+    "use_when": "You need to catch regressions in production and close the improvement loop automatically.",
+    "techniques": ["Observability", "Predictive Analytics"],
+    "buildSkills": ["azure-ai-projects-py", "pydantic-models-py", "copilot-sdk"],
+    "deploymentSkills": ["aigbb-observability", "aigbb-azd-compliance", "bicep-azd-patterns"]
+  },
+  {
+    "slug": "voice-first-agent-blueprint",
+    "name": "Voice-First Agent Blueprint",
+    "icon": "BookOpen",
+    "level": "Intermediate",
+    "steps": 6,
+    "summary": "Combine real-time STT, TTS, and frontier reasoning for low-latency conversational experiences.",
+    "use_when": "Your experience is spoken or real-time conversational, not text-first.",
+    "techniques": ["Real-Time Conversations", "Frontier Models"],
+    "buildSkills": ["azure-ai-voicelive-py", "agent-framework-azure-ai-py", "azure-ai-projects-py"],
+    "deploymentSkills": ["containerization", "aigbb-azd-compliance", "aigbb-observability"]
+  }
+]

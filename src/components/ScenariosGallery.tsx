@@ -126,16 +126,18 @@ export default function ScenariosGallery({ carousel = true, showExplore = true }
                   {s.tags.map(t => <span key={t} className="scenario-tag">{t}</span>)}
                 </div>
                 {s.link && (
-                  <a
+                  <button
+                    type="button"
                     className="scenario-learn-more"
-                    href={s.link}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={e => e.stopPropagation()}
+                    onClick={e => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      window.open(s.link, '_blank', 'noopener,noreferrer');
+                    }}
                     onMouseDown={e => e.stopPropagation()}
                   >
                     Learn more <ExternalLink size={12} />
-                  </a>
+                  </button>
                 )}
               </div>
             </Link>

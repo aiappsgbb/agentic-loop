@@ -1,7 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Hammer, Cloud, TrendingUp, CheckCircle2, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Hammer, Cloud, TrendingUp, CheckCircle2, ExternalLink, BookOpen, Rocket, ArrowRight, Sparkles } from 'lucide-react';
 import scenarios from '../data/scenarios.json';
+import { playbooksForScenario, playbookHasDeck } from '../data/links';
+import MakeItRealModal from '../components/MakeItRealModal';
+import { buildAdvisorPackage, inferRequirementsFromSelections } from '../data/advisor';
 
 interface Scenario {
   id: string; name: string; industry: string; description: string; image: string; tags: string[]; link?: string;
@@ -66,7 +69,17 @@ function buildChapters(s: Scenario): Chapter[] {
 
 export default function ScenarioPlaybook() {
   const { id } = useParams();
+  const [modalOpen, setModalOpen] = useState(false);
   const scenario = useMemo(() => (scenarios as Scenario[]).find(s => s.id === id), [id]);
+  const advisorPackage = useMemo(() => {
+    if (!scenario) return null;
+    return buildAdvisorPackage({
+      path: 'scenario',
+      intent: `Build the "${scenario.name}" scenario as a production-ready agentic solution for ${scenario.industry}. ${scenario.description}`,
+      scenario,
+      requirementIds: inferRequirementsFromSelections(scenario.tags, scenario.description),
+    });
+  }, [scenario]);
   if (!scenario) {
     return (
       <div className="page-head">
@@ -76,13 +89,14 @@ export default function ScenarioPlaybook() {
     );
   }
   const chapters = buildChapters(scenario);
+  const relatedPlaybooks = playbooksForScenario(scenario);
 
   return (
     <>
       <Link to="/scenarios" className="back-link"><ArrowLeft size={14} /> Back to scenarios</Link>
       <div className="playbook-hero">
         <div className="playbook-hero-body">
-          <div className="page-eyebrow">{scenario.industry} · Playbook</div>
+          <div className="page-eyebrow">{scenario.industry} · Scenario</div>
           <h1>{scenario.name}</h1>
           <p className="lede">{scenario.description}</p>
           <div className="scenario-tags" style={{ marginTop: 14 }}>
@@ -103,6 +117,82 @@ export default function ScenarioPlaybook() {
           <img src={resolveImage(scenario.image)} alt={scenario.name} />
         </div>
       </div>
+
+      <section className="scenario-bridge">
+        <div className="scenario-bridge-card built-from">
+          <div className="scenario-bridge-head">
+            <BookOpen size={16} />
+            <div>
+              <h2>Built from these playbooks</h2>
+              <p>This vertical outcome is assembled from horizontal techniques. Master each one on its own.</p>
+            </div>
+          </div>
+          <div className="scenario-bridge-links">
+            {relatedPlaybooks.map(p => (
+              playbookHasDeck(p.slug) ? (
+                <Link key={p.slug} to={`/playbooks/${p.slug}`} className="scenario-bridge-pill">
+                  {p.name} <ArrowRight size={13} />
+                </Link>
+              ) : (
+                <Link key={p.slug} to="/playbooks" className="scenario-bridge-pill">
+                  {p.name} <ArrowRight size={13} />
+                </Link>
+              )
+            ))}
+          </div>
+        </div>
+        <div className="scenario-bridge-card try-live">
+          <div className="scenario-bridge-head">
+            <Rocket size={16} />
+            <div>
+              <h2>Prefer to try it live first?</h2>
+              <p>Experience a prebuilt agent in Kratos before you build your own version.</p>
+            </div>
+          </div>
+          <Link to="/kratos" className="scenario-bridge-cta">
+            Try live in Kratos <ArrowRight size={14} />
+          </Link>
+        </div>
+      </section>
+
+      {advisorPackage && (
+        <section className="scenario-advisor-card">
+          <div className="scenario-bridge-head">
+            <Sparkles size={16} />
+            <div>
+              <div className="page-eyebrow">Path 3 · Scenario Advisor</div>
+              <h2>Build this scenario with Copilot</h2>
+              <p>
+                This package is pre-seeded from the scenario tags, related playbooks, upstream Build SKILLs,
+                Deployment SKILLs, and Foundry/Azure run recommendations.
+              </p>
+            </div>
+          </div>
+          <div className="scenario-advisor-grid">
+            <div>
+              <h3>Build SKILLs</h3>
+              <div className="advisor-chip-list">
+                {advisorPackage.buildSkills.slice(0, 6).map(skill => <span key={skill} className="skill-pill">{skill}</span>)}
+              </div>
+            </div>
+            <div>
+              <h3>Deployment SKILLs</h3>
+              <div className="advisor-chip-list">
+                {advisorPackage.deploymentSkills.slice(0, 6).map(skill => <span key={skill} className="skill-pill run">{skill}</span>)}
+              </div>
+            </div>
+            <div>
+              <h3>Playbooks</h3>
+              <div className="advisor-chip-list">
+                {advisorPackage.playbooks.map(p => <span key={p.slug} className="scenario-bridge-pill">{p.name}</span>)}
+              </div>
+            </div>
+          </div>
+          <button className="scenario-bridge-cta" onClick={() => setModalOpen(true)}>
+            Open Copilot package <ArrowRight size={14} />
+          </button>
+        </section>
+      )}
 
       {chapters.map(c => {
         const Icon = c.icon;
@@ -131,6 +221,12 @@ export default function ScenarioPlaybook() {
           </section>
         );
       })}
+
+      <MakeItRealModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        advisorPackage={advisorPackage}
+      />
     </>
   );
 }
