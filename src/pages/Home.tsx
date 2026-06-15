@@ -1,6 +1,6 @@
 import HomeHeadline from '../components/HomeHeadline';
 import WhatToUseWhen from '../components/WhatToUseWhen';
-import ScenariosGallery from '../components/ScenariosGallery';
+import AgenticBackbone from '../components/AgenticBackbone';
 import GreenfieldBuilder from '../components/GreenfieldBuilder';
 
 export default function Home() {
@@ -8,7 +8,7 @@ export default function Home() {
     <>
       <HomeHeadline />
       <WhatToUseWhen />
-      <ScenariosGallery />
+      <AgenticBackbone />
       <GreenfieldBuilder />
     </>
   );

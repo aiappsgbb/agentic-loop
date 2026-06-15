@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import {
-  BookOpen, Rocket, ShieldCheck, GitBranch, Database, Eye, ArrowRight, Layers,
+  BookOpen, Rocket, ShieldCheck, GitBranch, Database, Eye, ArrowRight, Layers, Wrench, Cloud,
 } from 'lucide-react';
 import { playbooks, playbookHasDeck, scenariosForPlaybook } from '../data/links';
 
@@ -47,6 +47,20 @@ export default function Playbooks() {
                     ))}
                   </div>
                 )}
+                <div className="playbook-skill-bindings">
+                  <div>
+                    <span className="playbook-skill-label"><Wrench size={13} /> Build SKILLs</span>
+                    <div className="advisor-chip-list compact">
+                      {(p.buildSkills ?? []).slice(0, 4).map(skill => <span key={skill} className="skill-pill">{skill}</span>)}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="playbook-skill-label"><Cloud size={13} /> Deployment SKILLs</span>
+                    <div className="advisor-chip-list compact">
+                      {(p.deploymentSkills ?? []).slice(0, 4).map(skill => <span key={skill} className="skill-pill run">{skill}</span>)}
+                    </div>
+                  </div>
+                </div>
               </div>
               <div className="meta">
                 <span className="difficulty">{p.level}</span>

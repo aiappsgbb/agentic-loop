@@ -13,7 +13,7 @@ import {
   Wrench,
 } from 'lucide-react';
 
-type ArchitectureVariant = 'compact' | 'full';
+type ArchitectureVariant = 'compact' | 'full' | 'backbone';
 type ArchitectureWeight = 'spine' | 'complementary' | 'foundation';
 type BrandIconName = 'copilot-sdk' | 'hosted-agent' | 'foundry-models';
 
@@ -335,6 +335,32 @@ function FullArchitecture() {
   );
 }
 
+function BackboneArchitecture() {
+  return (
+    <section className="architecture-strip architecture-strip-backbone" aria-labelledby="home-backbone-heading">
+      <div className="architecture-strip-head">
+        <div>
+          <div className="section-eyebrow">Agentic Backbone</div>
+          <h2 id="home-backbone-heading">The technology spine behind the production loop.</h2>
+          <p>
+            This is the agentic core: GitHub Copilot SDK provides the Agent Harness and drives the loop
+            with Skills and Tools, Foundry Hosted Agents provides the runtime, and Foundry Models provide
+            the reasoning layer.
+          </p>
+        </div>
+        <Link className="explore-btn architecture-strip-cta" to="/concepts/platform">Explore the full architecture</Link>
+      </div>
+
+      <div className="architecture-layer architecture-core-layer" aria-label="Agentic Backbone">
+        <div className="architecture-layer-label">Agentic Backbone</div>
+        <Spine variant="full" />
+      </div>
+    </section>
+  );
+}
+
 export default function ArchitectureStrip({ variant }: { variant: ArchitectureVariant }) {
-  return variant === 'compact' ? <CompactArchitecture /> : <FullArchitecture />;
+  if (variant === 'compact') return <CompactArchitecture />;
+  if (variant === 'backbone') return <BackboneArchitecture />;
+  return <FullArchitecture />;
 }

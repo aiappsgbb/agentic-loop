@@ -20,6 +20,8 @@ export interface Playbook {
   summary: string;
   use_when: string;
   techniques: string[];
+  buildSkills?: string[];
+  deploymentSkills?: string[];
 }
 
 export const scenarios = scenariosData as Scenario[];

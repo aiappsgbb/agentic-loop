@@ -1,56 +1,70 @@
 import { Link } from 'react-router-dom';
-import { Hammer, Layers, BookOpen, Sparkles, ArrowRight } from 'lucide-react';
-import KratosLauncher from './KratosLauncher';
+import { Layers, Sparkles, ArrowRight, Zap } from 'lucide-react';
 
-const BUILD_PATHS = [
-  { label: 'Scenarios', sub: 'Pre-defined, industry-proven blueprints', to: '/scenarios', icon: Layers, hash: false },
-  { label: 'Playbooks', sub: 'Reusable techniques to compose', to: '/playbooks', icon: BookOpen, hash: false },
-  { label: 'Build from scratch', sub: 'Custom — describe it, Copilot scaffolds it', to: '#prompt', icon: Sparkles, hash: true },
+const PATHS = [
+  {
+    label: 'Path 1',
+    title: 'Kratos',
+    sub: 'Ready-to-use demo with domain personas and task skills. No advisor inputs, no setup.',
+    to: '/kratos',
+    icon: Zap,
+    meta: 'Try it live',
+    hash: false,
+  },
+  {
+    label: 'Path 2',
+    title: 'Production Launchpad',
+    sub: 'Bring a concrete idea, shape the pilot, and generate a Copilot-led deployment path.',
+    to: '#prompt',
+    icon: Sparkles,
+    meta: 'Build from idea',
+    hash: true,
+  },
+  {
+    label: 'Path 3',
+    title: 'Scenario Advisor',
+    sub: 'Start from a predefined outcome and generate the same package pre-seeded by scenario context.',
+    to: '/scenarios',
+    icon: Layers,
+    meta: 'Start from scenario',
+    hash: false,
+  },
 ];
 
 export default function WhatToUseWhen() {
   return (
-    <section className="wtuw">
+    <section className="wtuw" id="what-to-use-when">
       <div className="wtuw-head">
-        <div className="section-eyebrow">Find your starting point</div>
-        <h2>What to use when</h2>
-        <p>Two ways in: build &amp; run your own solution, or experiment instantly with a ready-to-use one.</p>
+        <div className="section-eyebrow">Choose your production path</div>
+        <h2>Where do you want to start?</h2>
+        <p>
+          Three paths, one loop: try Kratos, build your own idea, or start from a scenario.
+          Playbooks are the reusable HOW guidance behind the advisor paths.
+        </p>
       </div>
 
-      <div className="wtuw-duo">
-        <div className="wtuw-choice build">
-          <div className="wtuw-choice-head">
-            <div className="wtuw-choice-ic"><Hammer size={20} /></div>
-            <div>
-              <h3>Build &amp; run your own</h3>
-              <p>Pre-defined or fully custom solutions you deploy yourself with GitHub Copilot + Microsoft Foundry.</p>
-            </div>
-          </div>
-          <div className="wtuw-choice-paths">
-            {BUILD_PATHS.map(p => {
-              const Icon = p.icon;
-              const inner = (
-                <>
-                  <Icon size={16} className="wtuw-path-ic" />
-                  <span className="wtuw-path-text">
-                    <span className="wtuw-path-label">{p.label}</span>
-                    <span className="wtuw-path-sub">{p.sub}</span>
-                  </span>
-                  <ArrowRight size={14} className="wtuw-path-go" />
-                </>
-              );
-              return p.hash ? (
-                <a key={p.label} href={p.to} className="wtuw-path">{inner}</a>
-              ) : (
-                <Link key={p.label} to={p.to} className="wtuw-path">{inner}</Link>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="wtuw-choice ready">
-          <KratosLauncher />
-        </div>
+      <div className="wtuw-path-grid" aria-label="Three paths">
+        {PATHS.map(path => {
+          const Icon = path.icon;
+          const inner = (
+            <>
+              <div className="wtuw-path-card-top">
+                <span className="wtuw-path-number">{path.label}</span>
+                <span className="wtuw-path-icon"><Icon size={18} /></span>
+              </div>
+              <h3>{path.title}</h3>
+              <p>{path.sub}</p>
+              <span className="wtuw-path-action">
+                {path.meta} <ArrowRight size={14} />
+              </span>
+            </>
+          );
+          return path.hash ? (
+            <a key={path.label} href={path.to} className="wtuw-path-card">{inner}</a>
+          ) : (
+            <Link key={path.label} to={path.to} className="wtuw-path-card">{inner}</Link>
+          );
+        })}
       </div>
     </section>
   );

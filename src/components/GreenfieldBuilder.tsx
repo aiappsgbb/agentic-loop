@@ -1,16 +1,21 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import {
   Sparkles, Mic, Plus, Brain, ImageIcon, Volume2, Headphones, MessagesSquare,
   FileSearch, BookOpen, Eye, ShieldCheck, Network, Database, Workflow,
-  Building2, GraduationCap, Wrench, Rocket, X,
-  Plug, Waypoints, KeyRound, HardDrive,
+  Building2, GraduationCap, Wrench, Rocket,
+  Plug, Waypoints, KeyRound, HardDrive, Cloud,
 } from 'lucide-react';
 import CapabilityPicker, { type PickerOption } from './CapabilityPicker';
 import MakeItRealModal from './MakeItRealModal';
+import {
+  buildAdvisorPackage,
+  inferRequirementsFromSelections,
+} from '../data/advisor';
 
 const CAPABILITIES: PickerOption[] = [
   { id: 'frontier-models', label: 'Frontier Models', description: 'GPT, Claude, Llama, Phi', icon: Brain, link: '/concepts/platform/foundry#frontier-models' },
-  { id: 'image-generation', label: 'Image Generation', description: 'DALL·E, Stable Diffusion', icon: ImageIcon, link: '/concepts/platform/foundry#image-generation' },
+  { id: 'image-generation', label: 'Image Generation', description: 'DALL-E, Stable Diffusion', icon: ImageIcon, link: '/concepts/platform/foundry#image-generation' },
   { id: 'text-to-speech', label: 'Text to Speech', description: 'Neural voices', icon: Volume2, link: '/concepts/platform/foundry#text-to-speech' },
   { id: 'speech-to-text', label: 'Speech to Text', description: 'Real-time transcription', icon: Headphones, link: '/concepts/platform/foundry#speech-to-text' },
   { id: 'realtime', label: 'Real-Time Conversations', description: 'Voice-first agents', icon: MessagesSquare, link: '/concepts/platform/foundry#realtime' },
@@ -34,34 +39,11 @@ const THEMES: PickerOption[] = [
   { id: 'knowledge-grounding', label: 'Knowledge Grounding', description: 'Trusted enterprise data', icon: GraduationCap },
 ];
 
-const BUILD_SKILL_POOL = [
-  'spec-synthesizer', 'prompt-architect', 'eval-harness-builder', 'tool-registrar',
-  'rag-indexer', 'safety-policy-wizard', 'agent-graph-composer', 'telemetry-wiring',
-  'voice-pipeline-builder', 'vision-pipeline-builder', 'iac-bicep-generator', 'ci-cd-bootstrapper',
-];
-const RUN_SKILL_POOL = [
-  'intent-router', 'memory-orchestrator', 'plan-and-act', 'reflection-loop',
-  'guardrails-enforcer', 'tool-invoker', 'retrieval-fetcher', 'response-composer',
-  'evaluator-judge', 'cost-controller', 'session-handoff', 'human-in-the-loop',
-];
-
-function pick<T>(arr: T[], n: number): T[] {
-  const copy = [...arr];
-  const out: T[] = [];
-  while (out.length < n && copy.length) {
-    out.push(copy.splice(Math.floor(Math.random() * copy.length), 1)[0]);
-  }
-  return out;
-}
-
 export default function GreenfieldBuilder() {
   const [capabilities, setCapabilities] = useState<string[]>(['frontier-models']);
-  const [blocks, setBlocks] = useState<string[]>(['observability']);
+  const [blocks, setBlocks] = useState<string[]>(['observability', 'identity']);
   const [themes, setThemes] = useState<string[]>([]);
   const [text, setText] = useState('');
-  const [processing, setProcessing] = useState(false);
-  const [skills, setSkills] = useState<{ build: string[]; run: string[] } | null>(null);
-  const timer = useRef<number | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
   const labelMap = useMemo(() => {
@@ -70,20 +52,20 @@ export default function GreenfieldBuilder() {
     return m;
   }, []);
 
-  useEffect(() => {
-    if (!text.trim()) { setProcessing(false); setSkills(null); return; }
-    setProcessing(true);
-    setSkills(null);
-    if (timer.current) window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => {
-      setSkills({
-        build: pick(BUILD_SKILL_POOL, 4),
-        run: pick(RUN_SKILL_POOL, 5),
-      });
-      setProcessing(false);
-    }, 2200);
-    return () => { if (timer.current) window.clearTimeout(timer.current); };
-  }, [text]);
+  const selectedIds = useMemo(() => [...capabilities, ...blocks, ...themes], [blocks, capabilities, themes]);
+  const requirementIds = useMemo(
+    () => inferRequirementsFromSelections(selectedIds, text),
+    [selectedIds, text],
+  );
+
+  const advisorPackage = useMemo(() => {
+    if (!text.trim()) return null;
+    return buildAdvisorPackage({
+      path: 'idea',
+      intent: text,
+      requirementIds,
+    });
+  }, [requirementIds, text]);
 
   function craftPrompt() {
     const caps = capabilities.map(c => labelMap.get(c)).filter(Boolean);
@@ -95,19 +77,19 @@ export default function GreenfieldBuilder() {
     setText(
       `Design a production-grade agentic application${themePart}.` +
       `${capPart}.${blockPart}. ` +
-      `It should orchestrate multiple specialized agents that collaborate through a shared planner, ` +
-      `retrieve grounded knowledge on demand, and continuously self-evaluate against business KPIs. ` +
-      `Provide an opinionated repo scaffolded by GitHub Copilot and deploy-ready Bicep for Microsoft Foundry.`
+      `It should use SKILLs and tools to complete domain-specific work, run on Microsoft Foundry, ` +
+      `and be deployable with azd up.`,
     );
   }
 
   return (
     <section className="greenfield" id="prompt">
       <div className="greenfield-head">
-        <div className="section-eyebrow">Build from scratch · the greenfield lane</div>
-        <h2>Have a novel idea? Let Copilot cook it for you.</h2>
+        <div className="section-eyebrow">Path 2 · Production Launchpad</div>
+        <h2>Have a concrete idea? Turn it into a Copilot-led deployment.</h2>
         <p>
-          No template fits? Compose the capabilities and building blocks you need, craft a prompt, and hand off to GitHub Copilot. For most starts, a <a href="/scenarios">scenario</a> or <a href="/playbooks">playbook</a> above will get you there faster.
+          Choose the capabilities, building blocks, and theme from dropdowns, then get a deterministic package:
+          Build SKILLs, Deployment SKILLs, playbooks, tools, architecture recommendations, and an <code>azd up</code> hand-off.
         </p>
       </div>
 
@@ -123,7 +105,7 @@ export default function GreenfieldBuilder() {
       <div className="prompt-shell">
         <div className="prompt-box">
           <textarea
-            placeholder="Describe your AI agentic app and let copilot cook it for you"
+            placeholder="Describe your AI agentic app and let Copilot cook it for you"
             value={text}
             onChange={e => setText(e.target.value)}
           />
@@ -133,8 +115,8 @@ export default function GreenfieldBuilder() {
             <button
               className="craft-btn primary"
               onClick={() => setModalOpen(true)}
-              disabled={!skills}
-              title={skills ? 'Open the guided setup' : 'Describe your agent first'}
+              disabled={!advisorPackage}
+              title={advisorPackage ? 'Open the generated package' : 'Describe your agent first'}
             >
               <Rocket size={15} /> Make it real
             </button>
@@ -142,62 +124,51 @@ export default function GreenfieldBuilder() {
         </div>
       </div>
 
-      {processing && (
-        <div className="processing">
-          <div className="dots"><span className="dot" /><span className="dot" /><span className="dot" /></div>
-          <span className="label">Analyzing intent · matching agents · selecting skills…</span>
-          <div className="progress" />
-        </div>
-      )}
+      {advisorPackage && (
+        <>
+          <div className="skills-result advisor-result">
+            <SkillCard title="Build SKILLs" icon={<Wrench size={14} />} sub="Existing upstream skills Copilot should use to create solution code." skills={advisorPackage.buildSkills} />
+            <SkillCard title="Deployment SKILLs" icon={<Cloud size={14} />} sub="Existing upstream skills that make the package deployable with azd up." skills={advisorPackage.deploymentSkills} variant="run" />
+          </div>
 
-      {skills && !processing && (
-        <div className="skills-result">
-          <div className="skills-card">
-            <h3><Wrench size={14} /> Skills to build</h3>
-            <p className="sub">Copilot will scaffold and wire these into your repo. Remove anything you don't want.</p>
-            {skills.build.length === 0 && <p className="empty-skills">No build skills selected.</p>}
-            {skills.build.map(s => (
-              <span key={s} className="skill-pill">
-                <Sparkles size={12} /> {s}
-                <button
-                  className="skill-pill-remove"
-                  onClick={() => setSkills(prev => prev ? { ...prev, build: prev.build.filter(x => x !== s) } : prev)}
-                  aria-label={`Remove ${s}`}
-                  title="Remove skill"
-                >
-                  <X size={12} />
-                </button>
-              </span>
-            ))}
+          <div className="advisor-package-preview">
+            <div>
+              <h3>Selected playbooks</h3>
+              <p>Reusable HOW guidance composed into the Copilot prompt.</p>
+              <div className="advisor-chip-list">
+                {advisorPackage.playbooks.map(p => <span key={p.slug} className="scenario-bridge-pill">{p.name}</span>)}
+              </div>
+            </div>
+            <div>
+              <h3>Run architecture</h3>
+              <p>Foundry/Azure recommendations derived from the selected requirements.</p>
+              <div className="advisor-chip-list">
+                {advisorPackage.runArchitecture.map(item => <span key={item} className="scenario-bridge-pill">{item}</span>)}
+              </div>
+            </div>
           </div>
-          <div className="skills-card">
-            <h3><Workflow size={14} /> Skills to run</h3>
-            <p className="sub">Foundry will host and orchestrate these at runtime. Remove anything you don't want.</p>
-            {skills.run.length === 0 && <p className="empty-skills">No run skills selected.</p>}
-            {skills.run.map(s => (
-              <span key={s} className="skill-pill run">
-                <Brain size={12} /> {s}
-                <button
-                  className="skill-pill-remove"
-                  onClick={() => setSkills(prev => prev ? { ...prev, run: prev.run.filter(x => x !== s) } : prev)}
-                  aria-label={`Remove ${s}`}
-                  title="Remove skill"
-                >
-                  <X size={12} />
-                </button>
-              </span>
-            ))}
-          </div>
-        </div>
+        </>
       )}
 
       <MakeItRealModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        prompt={text}
-        buildSkills={skills?.build ?? []}
-        runSkills={skills?.run ?? []}
+        advisorPackage={advisorPackage}
       />
     </section>
+  );
+}
+
+function SkillCard({ title, icon, sub, skills, variant }: { title: string; icon: ReactNode; sub: string; skills: string[]; variant?: 'run' }) {
+  return (
+    <div className="skills-card">
+      <h3>{icon} {title}</h3>
+      <p className="sub">{sub}</p>
+      {skills.map(s => (
+        <span key={s} className={`skill-pill ${variant ?? ''}`}>
+          <Sparkles size={12} /> {s}
+        </span>
+      ))}
+    </div>
   );
 }
