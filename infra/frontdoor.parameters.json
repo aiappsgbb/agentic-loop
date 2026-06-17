@@ -6,6 +6,7 @@
     "endpointName": { "value": "agentic-loop" },
     "siteHostName": { "value": "REPLACE-with-agentic-loop-site.azurestaticapps.net" },
     "kratosHostName": { "value": "REPLACE-with-kratos-frontend.azurestaticapps.net" },
+    "kratosApiHostName": { "value": "REPLACE-with-ca-agent-xxxx.<region>.azurecontainerapps.io" },
     "sku": { "value": "Standard_AzureFrontDoor" }
   }
 }

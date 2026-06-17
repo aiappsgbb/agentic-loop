@@ -18,6 +18,8 @@ param(
   [string]$SiteSwaName   = 'agentic-loop',
   [string]$KratosSwaName = 'kratos-frontend',
   [string]$KratosSwaResourceGroup = '',
+  [string]$KratosApiContainerApp = '',
+  [string]$KratosApiResourceGroup = '',
   [string]$ProfileName   = 'afd-agentic-loop',
   [string]$EndpointName  = 'agentic-loop',
   [ValidateSet('Standard_AzureFrontDoor', 'Premium_AzureFrontDoor')]
@@ -27,6 +29,7 @@ param(
 $ErrorActionPreference = 'Stop'
 
 if (-not $KratosSwaResourceGroup) { $KratosSwaResourceGroup = $ResourceGroup }
+if (-not $KratosApiResourceGroup) { $KratosApiResourceGroup = $KratosSwaResourceGroup }
 
 Write-Host "Resolving Static Web App hostnames..." -ForegroundColor Cyan
 
@@ -41,8 +44,27 @@ $kratosHost = az staticwebapp show `
 if (-not $siteHost)   { throw "Could not resolve site SWA '$SiteSwaName' hostname." }
 if (-not $kratosHost) { throw "Could not resolve Kratos SWA '$KratosSwaName' hostname." }
 
-Write-Host "  site   : $siteHost"   -ForegroundColor Green
-Write-Host "  kratos : $kratosHost" -ForegroundColor Green
+# Resolve the Kratos backend Container App FQDN (fronted at /kratos/api/* so the
+# embedded UI calls the backend same-origin, no CORS). If the app name was not
+# supplied, discover the single Container App in the Kratos resource group.
+if (-not $KratosApiContainerApp) {
+  $KratosApiContainerApp = az containerapp list `
+    --resource-group $KratosApiResourceGroup `
+    --query "[?starts_with(name, 'ca-agent')].name | [0]" -o tsv
+}
+if (-not $KratosApiContainerApp) {
+  throw "Could not find a Kratos backend Container App in '$KratosApiResourceGroup'. Pass -KratosApiContainerApp explicitly."
+}
+
+$kratosApiHost = az containerapp show `
+  --name $KratosApiContainerApp --resource-group $KratosApiResourceGroup `
+  --query 'properties.configuration.ingress.fqdn' -o tsv
+
+if (-not $kratosApiHost) { throw "Could not resolve Kratos backend Container App '$KratosApiContainerApp' FQDN." }
+
+Write-Host "  site       : $siteHost"      -ForegroundColor Green
+Write-Host "  kratos     : $kratosHost"    -ForegroundColor Green
+Write-Host "  kratos-api : $kratosApiHost" -ForegroundColor Green
 
 Write-Host "Deploying Front Door (this can take a few minutes)..." -ForegroundColor Cyan
 
@@ -54,6 +76,7 @@ $outputs = az deployment group create `
     endpointName=$EndpointName `
     siteHostName=$siteHost `
     kratosHostName=$kratosHost `
+    kratosApiHostName=$kratosApiHost `
     sku=$Sku `
   --query 'properties.outputs' -o json | ConvertFrom-Json
 
