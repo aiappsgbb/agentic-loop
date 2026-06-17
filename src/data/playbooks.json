@@ -70,5 +70,41 @@
     "techniques": ["Real-Time Conversations", "Frontier Models"],
     "buildSkills": ["azure-ai-voicelive-py", "agent-framework-azure-ai-py", "azure-ai-projects-py"],
     "deploymentSkills": ["containerization", "aigbb-azd-compliance", "aigbb-observability"]
+  },
+  {
+    "slug": "threadlight-pilot-pipeline",
+    "name": "Threadlight Pilot Pipeline",
+    "icon": "Workflow",
+    "level": "Advanced",
+    "steps": 5,
+    "summary": "Business process to working agent: take a one-paragraph brief to a deployed, evaluated, observable Foundry hosted agent in one guided session.",
+    "use_when": "You're running an enterprise pilot (FSI, Mfg, Retail, Telco, Healthcare) and want the fastest path from a vague brief to a governed, demo-ready Foundry agent.",
+    "techniques": ["Domain-Specific Agents", "Workflow Automation", "Governance", "Observability"],
+    "buildSkills": ["threadlight-design", "threadlight-demo-data-factory", "threadlight-local-test", "threadlight-hitl-patterns", "threadlight-workspace-ui"],
+    "deploymentSkills": ["threadlight-deploy", "threadlight-safe-check", "threadlight-event-triggers", "aigbb-observability"]
+  },
+  {
+    "slug": "threadlight-customization",
+    "name": "Threadlight Customization",
+    "icon": "Layers",
+    "level": "Intermediate",
+    "steps": 4,
+    "summary": "Surfaces from one agent: tailor a Threadlight agent to the customer's process and industry, then surface it across Workspace UI, Teams, and M365 Copilot \u2014 guardrails enforced once.",
+    "use_when": "You have a deployed Threadlight agent and need it to fit a specific customer's domain, operator surfaces, and channels.",
+    "techniques": ["Domain-Specific Agents", "Workflow Automation", "Knowledge Grounding"],
+    "buildSkills": ["threadlight-design", "threadlight-demo-data-factory", "threadlight-hitl-patterns", "threadlight-workspace-ui"],
+    "deploymentSkills": ["threadlight-event-triggers", "foundry-teams-bot"]
+  },
+  {
+    "slug": "threadlight-productionization",
+    "name": "Threadlight Productionization",
+    "icon": "ShieldCheck",
+    "level": "Advanced",
+    "steps": 5,
+    "summary": "The paved path to production: the five guardrails the chain refuses to ship without, the safe-check gate, and the no-rewrite path to the AI Citadel landing zone.",
+    "use_when": "Your pilot needs CISO sign-off \u2014 keyless identity, telemetry, citations, audit trail, and evals \u2014 and a path to a governed production landing zone.",
+    "techniques": ["Governance", "Observability"],
+    "buildSkills": ["threadlight-safe-check", "foundry-evals", "foundry-observability"],
+    "deploymentSkills": ["foundry-hosted-agents", "citadel-hub-deploy", "citadel-spoke-onboarding", "foundry-agt"]
   }
 ]

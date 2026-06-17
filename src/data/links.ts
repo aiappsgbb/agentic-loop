@@ -27,9 +27,16 @@ export interface Playbook {
 export const scenarios = scenariosData as Scenario[];
 export const playbooks = playbooksData as Playbook[];
 
-/** Only the getting-started playbook currently ships a rendered slide deck. */
+/** Slugs that ship a rendered slide deck (any playbooks/<slug>/README.md). */
+const DECK_SLUGS = new Set(
+  Object.keys(
+    import.meta.glob('/playbooks/*/README.md', { eager: true }),
+  ).map(path => path.split('/')[2]),
+);
+
+/** Whether a playbook ships a rendered slide deck. */
 export function playbookHasDeck(slug: string): boolean {
-  return slug === 'getting-started';
+  return DECK_SLUGS.has(slug);
 }
 
 /** Playbooks whose techniques intersect a scenario's tags (getting-started always included). */

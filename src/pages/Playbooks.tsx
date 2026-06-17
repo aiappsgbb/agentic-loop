@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
 import {
-  BookOpen, Rocket, ShieldCheck, GitBranch, Database, Eye, ArrowRight, Layers, Wrench, Cloud,
+  BookOpen, Rocket, ShieldCheck, GitBranch, Database, Eye, ArrowRight, Layers, Wrench, Cloud, Workflow,
 } from 'lucide-react';
 import { playbooks, playbookHasDeck, scenariosForPlaybook } from '../data/links';
 
 const ICONS: Record<string, typeof Rocket> = {
-  Rocket, GitBranch, Database, ShieldCheck, Eye, BookOpen,
+  Rocket, GitBranch, Database, ShieldCheck, Eye, BookOpen, Workflow, Layers,
 };
 
 export default function Playbooks() {
