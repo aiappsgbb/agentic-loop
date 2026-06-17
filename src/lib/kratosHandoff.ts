@@ -27,6 +27,11 @@ export type KratosMode = 'light' | 'dark';
 // part of the host instead of Kratos' default newsprint theme.
 const KRATOS_BRAND_THEME = 'agentic-loop';
 
+// Same-origin host path the embedded Kratos "Back to Agentic Loop" button
+// returns to (the curated/custom gallery page). Passed on every open so the
+// sidebar back button lands the user back in the host experience.
+const HOST_RETURN_PATH = '/reference/kratos';
+
 /** The host's current light/dark mode, read from the site's <html data-theme>. */
 function hostMode(): KratosMode {
   if (typeof document === 'undefined') return 'dark';
@@ -84,6 +89,7 @@ export function relayAndOpen(manifest: PersonaManifest, opts: RelayOptions = {})
     import: '1',
     theme: opts.theme ?? KRATOS_BRAND_THEME,
     mode: opts.mode ?? hostMode(),
+    back: HOST_RETURN_PATH,
   }));
   return true;
 }
@@ -102,6 +108,7 @@ export function openPersona(personaSlug: string, opts: OpenPersonaOptions = {}):
     prompt: opts.prompt,
     theme: opts.theme ?? KRATOS_BRAND_THEME,
     mode: opts.mode ?? hostMode(),
+    back: HOST_RETURN_PATH,
   }));
 }
 
@@ -112,5 +119,6 @@ export function openPrompt(prompt: string, opts: { theme?: KratosTheme; mode?: K
     prompt,
     theme: opts.theme ?? KRATOS_BRAND_THEME,
     mode: opts.mode ?? hostMode(),
+    back: HOST_RETURN_PATH,
   }));
 }

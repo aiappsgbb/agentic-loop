@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Bot, Boxes, RefreshCw, Cloud, Code2 as Github, Database, Eye, ArrowRight,
-  ExternalLink, Plug, Layers, BookOpen, Sparkles,
+  ExternalLink, Plug, Layers, BookOpen, Sparkles, Wand2,
 } from 'lucide-react';
 import KratosLauncher from '../components/KratosLauncher';
 import PersonaBuilder from '../components/PersonaBuilder';
+
+type TryMode = 'curated' | 'custom';
 
 const KRATOS_REPO = 'https://github.com/kmavrodis/kratos-agent';
 
@@ -18,6 +21,7 @@ const PILLARS = [
 ];
 
 export default function Kratos() {
+  const [mode, setMode] = useState<TryMode>('curated');
   return (
     <>
       <div className="page-head">
@@ -40,18 +44,65 @@ export default function Kratos() {
         </div>
       </div>
 
-      <section className="kratos-try-builder">
-        <PersonaBuilder />
-      </section>
-
-      <section className="kratos-gallery-section">
-        <div className="section-eyebrow">Or skip the setup</div>
-        <h2>Start from a curated persona</h2>
+      <section className="kratos-try-section">
+        <div className="section-eyebrow">Try it live</div>
+        <h2>Pick a curated persona — or describe your own</h2>
         <p className="lede">
-          Not customizing? Pick a ready-made agent below — each one opens live in the embedded
-          Kratos app under <code>/kratos</code>, no setup and no extra steps.
+          Start from a ready-made agent — recommended, no setup — or describe a custom one in plain
+          language. Either one opens live in the embedded Kratos app under <code>/kratos</code>.
         </p>
-        <KratosLauncher />
+
+        <div className="kratos-mode-toggle" role="tablist" aria-label="How would you like to start?">
+          <button
+            type="button"
+            role="tab"
+            id="kratos-tab-curated"
+            aria-selected={mode === 'curated'}
+            aria-controls="kratos-panel-curated"
+            className={`kratos-mode-pill${mode === 'curated' ? ' active' : ''}`}
+            onClick={() => setMode('curated')}
+          >
+            <Boxes size={15} />
+            <span className="kratos-mode-pill-label">Curated personas</span>
+            <span className="kratos-mode-pill-tag">Recommended</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="kratos-tab-custom"
+            aria-selected={mode === 'custom'}
+            aria-controls="kratos-panel-custom"
+            className={`kratos-mode-pill${mode === 'custom' ? ' active' : ''}`}
+            onClick={() => setMode('custom')}
+          >
+            <Wand2 size={15} />
+            <span className="kratos-mode-pill-label">Describe your own</span>
+          </button>
+        </div>
+
+        {mode === 'curated' ? (
+          <div
+            id="kratos-panel-curated"
+            role="tabpanel"
+            aria-labelledby="kratos-tab-curated"
+            className="kratos-mode-panel"
+          >
+            <p className="kratos-mode-panel-lede">
+              Pick a ready-made agent below — each opens live in the embedded Kratos app, no setup
+              and no extra steps.
+            </p>
+            <KratosLauncher />
+          </div>
+        ) : (
+          <div
+            id="kratos-panel-custom"
+            role="tabpanel"
+            aria-labelledby="kratos-tab-custom"
+            className="kratos-mode-panel kratos-mode-panel-builder"
+          >
+            <PersonaBuilder />
+          </div>
+        )}
       </section>
 
       <section className="concept-section">

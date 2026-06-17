@@ -3290,12 +3290,60 @@
   .kratos-try-split { grid-template-columns: 1fr; }
 }
 
-/* ── Persona builder card surface (standalone, full width up to 640px) ── */
-.kratos-try-builder {
-  max-width: 640px;
-  margin: 8px 0 36px;
+/* ── Kratos "Try it" — curated/custom segmented toggle ──── */
+.kratos-try-section { margin-top: 8px; }
+.kratos-mode-toggle {
+  display: inline-flex;
+  gap: 6px;
+  margin: 20px 0 4px;
+  padding: 6px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
 }
-.kratos-try-builder > .persona-builder {
+@media (max-width: 560px) {
+  .kratos-mode-toggle { display: flex; width: 100%; }
+}
+.kratos-mode-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: none;
+  font: inherit;
+  font-size: 13.5px; font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, border-color 0.18s, box-shadow 0.18s;
+}
+@media (max-width: 560px) {
+  .kratos-mode-pill { flex: 1; justify-content: center; }
+}
+.kratos-mode-pill:hover { color: var(--text); }
+.kratos-mode-pill.active {
+  background: var(--gradient);
+  color: #fff;
+  box-shadow: var(--shadow-1);
+}
+.kratos-mode-pill-tag {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+.kratos-mode-pill:not(.active) .kratos-mode-pill-tag {
+  background: var(--surface-strong);
+  border: 1px solid var(--border-strong);
+  color: var(--accent-2);
+}
+.kratos-mode-panel { margin-top: 18px; }
+.kratos-mode-panel-lede {
+  margin: 0 0 2px; font-size: 13.5px; line-height: 1.55; color: var(--text-dim);
+}
+.kratos-mode-panel-builder {
+  max-width: 640px;
+}
+.kratos-mode-panel-builder > .persona-builder {
   border-radius: var(--radius);
   background: var(--gradient-soft);
   border: 1px solid var(--border-strong);
