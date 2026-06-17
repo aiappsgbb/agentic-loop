@@ -63,7 +63,6 @@ const REQUIREMENT_CONTRIBUTIONS: Record<AdvisorRequirementId, RequirementContrib
   },
   'mcp-tools': {
     skills: [{ name: 'tool-use', description: 'Call connected MCP tools to take actions and fetch live data.' }],
-    mcpServers: [{ name: 'tools', transport: 'http', registry: true }],
     traits: ['mcp-tools'],
   },
   'data-persistence': {
@@ -76,7 +75,6 @@ const REQUIREMENT_CONTRIBUTIONS: Record<AdvisorRequirementId, RequirementContrib
   },
   'm365-graph': {
     skills: [{ name: 'm365-graph', description: 'Access Microsoft 365 data (mail, calendar, files) via Microsoft Graph.' }],
-    mcpServers: [{ name: 'microsoft-graph', transport: 'http', registry: true }],
     traits: ['m365-graph'],
   },
   voice: { traits: ['voice'] },
