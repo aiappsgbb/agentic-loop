@@ -40,8 +40,17 @@ export default function Kratos() {
         </div>
       </div>
 
-      <section className="kratos-try kratos-try-split">
+      <section className="kratos-try-builder">
         <PersonaBuilder />
+      </section>
+
+      <section className="kratos-gallery-section">
+        <div className="section-eyebrow">Or skip the setup</div>
+        <h2>Start from a curated persona</h2>
+        <p className="lede">
+          Not customizing? Pick a ready-made agent below — each one opens live in the embedded
+          Kratos app under <code>/kratos</code>, no setup and no extra steps.
+        </p>
         <KratosLauncher />
       </section>
 

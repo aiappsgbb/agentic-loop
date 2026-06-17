@@ -20,6 +20,18 @@ import type { PersonaManifest } from '../data/manifest';
 export const IMPORT_RELAY_KEY = 'kratos.import';
 
 export type KratosTheme = 'light' | 'dark' | (string & {});
+export type KratosMode = 'light' | 'dark';
+
+// Named Kratos theme that mirrors the agentic-loop-site palette (aurora purple
+// on near-black). Passing it on every open makes the embedded Kratos look like
+// part of the host instead of Kratos' default newsprint theme.
+const KRATOS_BRAND_THEME = 'agentic-loop';
+
+/** The host's current light/dark mode, read from the site's <html data-theme>. */
+function hostMode(): KratosMode {
+  if (typeof document === 'undefined') return 'dark';
+  return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+}
 
 function rawBase(): string {
   const standalone = import.meta.env.VITE_KRATOS_STANDALONE_URL as string | undefined;
@@ -47,11 +59,14 @@ function buildUrl(params: Record<string, string | undefined>): string {
 function go(url: string): void {
   // Full-page navigation (NOT react-router) — we are leaving the site SPA and
   // entering the embedded Kratos app, which must run its own auth + bootstrap.
+  // With the Front Door path-mount this stays same-origin (host/kratos/...),
+  // so the browser keeps showing the agentic-loop host, not a separate domain.
   window.location.assign(url);
 }
 
 export interface RelayOptions {
   theme?: KratosTheme;
+  mode?: KratosMode;
 }
 
 /**
@@ -64,21 +79,38 @@ export function relayAndOpen(manifest: PersonaManifest, opts: RelayOptions = {})
   } catch {
     return false;
   }
-  go(buildUrl({ embed: '1', import: '1', theme: opts.theme }));
+  go(buildUrl({
+    embed: '1',
+    import: '1',
+    theme: opts.theme ?? KRATOS_BRAND_THEME,
+    mode: opts.mode ?? hostMode(),
+  }));
   return true;
 }
 
 export interface OpenPersonaOptions {
   prompt?: string;
   theme?: KratosTheme;
+  mode?: KratosMode;
 }
 
 /** Deep-link into an existing Kratos persona, optionally with a starter prompt. */
 export function openPersona(personaSlug: string, opts: OpenPersonaOptions = {}): void {
-  go(buildUrl({ embed: '1', persona: personaSlug, prompt: opts.prompt, theme: opts.theme }));
+  go(buildUrl({
+    embed: '1',
+    persona: personaSlug,
+    prompt: opts.prompt,
+    theme: opts.theme ?? KRATOS_BRAND_THEME,
+    mode: opts.mode ?? hostMode(),
+  }));
 }
 
 /** Deep-link into Kratos with just a starter prompt (default persona). */
-export function openPrompt(prompt: string, opts: { theme?: KratosTheme } = {}): void {
-  go(buildUrl({ embed: '1', prompt, theme: opts.theme }));
+export function openPrompt(prompt: string, opts: { theme?: KratosTheme; mode?: KratosMode } = {}): void {
+  go(buildUrl({
+    embed: '1',
+    prompt,
+    theme: opts.theme ?? KRATOS_BRAND_THEME,
+    mode: opts.mode ?? hostMode(),
+  }));
 }
