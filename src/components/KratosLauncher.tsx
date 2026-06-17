@@ -1,17 +1,17 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Zap, ArrowUp } from 'lucide-react';
 import { KRATOS_PERSONAS } from '../data/kratos';
+import { openPersona } from '../lib/kratosHandoff';
 
 export default function KratosLauncher() {
-  const navigate = useNavigate();
   const [personaId, setPersonaId] = useState(KRATOS_PERSONAS[0].id);
   const [prompt, setPrompt] = useState('');
 
   function start(text: string) {
     const value = text.trim();
-    if (!value) return;
-    navigate('/kratos', { state: { personaId, prompt: value } });
+    const persona = KRATOS_PERSONAS.find(p => p.id === personaId) ?? KRATOS_PERSONAS[0];
+    // Deep-link into the embedded Kratos app (always-latest, no mock).
+    openPersona(persona.kratosSlug, { prompt: value || undefined });
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -56,14 +56,13 @@ export default function KratosLauncher() {
         <button
           className="kratos-send"
           onClick={() => start(prompt)}
-          disabled={!prompt.trim()}
-          aria-label="Start conversation"
-          title="Start conversation"
+          aria-label="Open in Kratos"
+          title="Open in Kratos"
         >
           <ArrowUp size={16} />
         </button>
       </div>
-      <div className="kratos-launcher-hint"><kbd>Enter</kbd> to start · prebuilt, no setup</div>
+      <div className="kratos-launcher-hint"><kbd>Enter</kbd> to open the live agent · prebuilt, no setup</div>
     </div>
   );
 }

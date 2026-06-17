@@ -1,11 +1,10 @@
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   Bot, Boxes, RefreshCw, Cloud, Code2 as Github, Database, Eye, ArrowRight,
-  ExternalLink, Construction, Plug, Layers, BookOpen, Sparkles,
+  ExternalLink, Plug, Layers, BookOpen, Sparkles,
 } from 'lucide-react';
-import KratosChatMock from '../components/KratosChatMock';
 import KratosLauncher from '../components/KratosLauncher';
+import PersonaBuilder from '../components/PersonaBuilder';
 
 const KRATOS_REPO = 'https://github.com/kmavrodis/kratos-agent';
 
@@ -19,33 +18,17 @@ const PILLARS = [
 ];
 
 export default function Kratos() {
-  const location = useLocation();
-  const navState = location.state as { personaId?: string; prompt?: string } | null;
-  const [session, setSession] = useState(
-    navState?.prompt ? { personaId: navState.personaId ?? 'generic-assistant', prompt: navState.prompt } : null
-  );
-
-  if (session) {
-    return (
-      <KratosChatMock
-        initialPersonaId={session.personaId}
-        initialPrompt={session.prompt}
-        onReset={() => setSession(null)}
-      />
-    );
-  }
-
   return (
     <>
       <div className="page-head">
         <div className="page-eyebrow">Reference app · Kratos</div>
-        <span className="kratos-badge"><Construction size={13} /> Live mock · prebuilt agent</span>
+        <span className="kratos-badge"><Sparkles size={13} /> Live · embedded agent</span>
         <h1>Kratos — the Agentic Loop, in one reference app.</h1>
         <p className="lede">
           <strong>Kratos</strong> is a production-shaped reference implementation of the Agentic Loop: a single
           agent with persona switching, backed by swappable <strong>MCP skills</strong>, powered by the
-          <strong> GitHub Copilot SDK</strong> and hosted on <strong>Microsoft Foundry</strong>. Pick a persona
-          and start a chat below to experience it — this preview is mocked.
+          <strong> GitHub Copilot SDK</strong> and hosted on <strong>Microsoft Foundry</strong>. Describe an agent
+          in plain language to generate a persona, or pick a prebuilt one — either opens the live embedded app.
         </p>
         <div className="kratos-cta-row">
           <a className="kratos-cta primary" href={KRATOS_REPO} target="_blank" rel="noreferrer">
@@ -57,7 +40,8 @@ export default function Kratos() {
         </div>
       </div>
 
-      <section className="kratos-try">
+      <section className="kratos-try kratos-try-split">
+        <PersonaBuilder />
         <KratosLauncher />
       </section>
 
@@ -85,10 +69,10 @@ export default function Kratos() {
       <div className="callout">
         <div className="ic"><Boxes size={20} /></div>
         <div>
-          <h3>This is a placeholder</h3>
+          <h3>How persona generation works</h3>
           <p>
-            Content for Kratos — guided playbook, dual-compute diagram, and persona demos — is being authored.
-            In the meantime, explore the source on{' '}
+            Your description becomes a threadlight-compatible persona manifest, imported into Kratos
+            deterministically and opened live. Explore the source on{' '}
             <a href={KRATOS_REPO} target="_blank" rel="noreferrer">github.com/kmavrodis/kratos-agent</a>.
           </p>
         </div>

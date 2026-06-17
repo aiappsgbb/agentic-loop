@@ -149,7 +149,7 @@ export default function ScenarioPlaybook() {
               <p>Experience a prebuilt agent in Kratos before you build your own version.</p>
             </div>
           </div>
-          <Link to="/kratos" className="scenario-bridge-cta">
+          <Link to="/reference/kratos" className="scenario-bridge-cta">
             Try live in Kratos <ArrowRight size={14} />
           </Link>
         </div>

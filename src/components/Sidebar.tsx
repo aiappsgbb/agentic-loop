@@ -37,7 +37,7 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
           <Home className="icon" size={18} />
           <span className="nav-label">Home</span>
         </NavLink>
-        <NavLink to="/kratos" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+        <NavLink to="/reference/kratos" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <Rocket className="icon" size={18} />
           <span className="nav-label">Kratos</span>
           <span className="nav-badge">Live</span>

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "profileName": { "value": "afd-agentic-loop" },
+    "endpointName": { "value": "agentic-loop" },
+    "siteHostName": { "value": "REPLACE-with-agentic-loop-site.azurestaticapps.net" },
+    "kratosHostName": { "value": "REPLACE-with-kratos-frontend.azurestaticapps.net" },
+    "sku": { "value": "Standard_AzureFrontDoor" }
+  }
+}
