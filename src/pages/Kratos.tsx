@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Bot, Boxes, RefreshCw, Cloud, Code2 as Github, Database, Eye, ArrowRight,
-  ExternalLink, Plug, Layers, BookOpen, Sparkles, Wand2,
+  ExternalLink, Plug, Layers, BookOpen, Sparkles, Wand2, ServerCog,
 } from 'lucide-react';
 import KratosLauncher from '../components/KratosLauncher';
 import PersonaBuilder from '../components/PersonaBuilder';
+import SelfHostKratos from '../components/SelfHostKratos';
 
-type TryMode = 'curated' | 'custom';
+type TryMode = 'curated' | 'custom' | 'selfhost';
 
 const KRATOS_REPO = 'https://github.com/kmavrodis/kratos-agent';
 
@@ -49,7 +50,8 @@ export default function Kratos() {
         <h2>Pick a curated persona — or describe your own</h2>
         <p className="lede">
           Start from a ready-made agent — recommended, no setup — or describe a custom one in plain
-          language. Either one opens live in the embedded Kratos app under <code>/kratos</code>.
+          language; both open live in the embedded Kratos app under <code>/kratos</code>. Or
+          self-host your own private Kratos in a separate Azure subscription.
         </p>
 
         <div className="kratos-mode-toggle" role="tablist" aria-label="How would you like to start?">
@@ -78,9 +80,22 @@ export default function Kratos() {
             <Wand2 size={15} />
             <span className="kratos-mode-pill-label">Describe your own</span>
           </button>
+          <button
+            type="button"
+            role="tab"
+            id="kratos-tab-selfhost"
+            aria-selected={mode === 'selfhost'}
+            aria-controls="kratos-panel-selfhost"
+            className={`kratos-mode-pill${mode === 'selfhost' ? ' active' : ''}`}
+            onClick={() => setMode('selfhost')}
+          >
+            <ServerCog size={15} />
+            <span className="kratos-mode-pill-label">Self-host Kratos</span>
+            <span className="kratos-mode-pill-tag">Internal</span>
+          </button>
         </div>
 
-        {mode === 'curated' ? (
+        {mode === 'curated' && (
           <div
             id="kratos-panel-curated"
             role="tabpanel"
@@ -93,7 +108,8 @@ export default function Kratos() {
             </p>
             <KratosLauncher />
           </div>
-        ) : (
+        )}
+        {mode === 'custom' && (
           <div
             id="kratos-panel-custom"
             role="tabpanel"
@@ -101,6 +117,16 @@ export default function Kratos() {
             className="kratos-mode-panel kratos-mode-panel-builder"
           >
             <PersonaBuilder />
+          </div>
+        )}
+        {mode === 'selfhost' && (
+          <div
+            id="kratos-panel-selfhost"
+            role="tabpanel"
+            aria-labelledby="kratos-tab-selfhost"
+            className="kratos-mode-panel kratos-mode-panel-builder"
+          >
+            <SelfHostKratos />
           </div>
         )}
       </section>
