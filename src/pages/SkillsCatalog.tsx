@@ -3,7 +3,7 @@ import {
   Hammer, Rocket, Search, Code2, TestTube2, GitBranch, Workflow,
   ShieldCheck, FileCheck2, Sparkles, BookOpen, Bot, Network, Cloud, Database,
   Eye, BarChart3, Mic, Image as ImageIcon, MessageSquare, KeyRound, Plug,
-  RefreshCw, Layers, Wand2, AudioLines, FileSearch, Boxes, Award,
+  RefreshCw, Layers, Wand2, AudioLines, FileSearch, Boxes, Award, ExternalLink,
   Code as Github
 } from 'lucide-react';
 
@@ -406,17 +406,58 @@ const SKILLS: Skill[] = [
   },
 ];
 
+/** Source SKILL.md URL for GBB skills (build/run cards are concept capabilities, not 1:1 SKILL.md files). */
+function skillSource(s: Skill): string | undefined {
+  if (s.phase !== 'gbb') return undefined;
+  const repo = s.id.startsWith('threadlight-')
+    ? 'aiappsgbb/threadlight-skills'
+    : 'aiappsgbb/awesome-gbb';
+  return `https://github.com/${repo}/blob/main/skills/${s.id}/SKILL.md`;
+}
+
+const PHASE_META: Record<Phase, { icon: typeof Hammer; eyebrow: string; title: string; blurb: string }> = {
+  build: {
+    icon: Hammer,
+    eyebrow: 'Build phase',
+    title: 'GitHub Copilot · authoring, testing, and shipping agents.',
+    blurb: 'Everything a developer touches before traffic hits production — from spec to PR to release.',
+  },
+  run: {
+    icon: Rocket,
+    eyebrow: 'Run phase',
+    title: 'Microsoft Foundry · serving, grounding, and governing agents.',
+    blurb: "Everything the agent depends on once it's serving real users — models, data, safety, telemetry, identity.",
+  },
+  gbb: {
+    icon: Award,
+    eyebrow: 'awesome-gbb · unofficial',
+    title: 'Field-curated specialist skills, built by GBB.',
+    blurb: 'The flagship motions the playbooks lean on — Threadlight pilots, Foundry hosted agents, and AI Citadel governance — packaged as named skills you invoke by prompt.',
+  },
+};
+
+const TAB_LABEL: Record<Phase, string> = { build: 'Build', run: 'Run', gbb: 'GBB-curated' };
+
 export default function SkillsCatalog() {
+  const [tab, setTab] = useState<Phase>('build');
   const [query, setQuery] = useState('');
-  const [phaseFilter, setPhaseFilter] = useState<'all' | Phase>('all');
   const [categoryFilter, setCategoryFilter] = useState('All');
 
-  const categories = useMemo(() => ['All', ...Array.from(new Set(SKILLS.map(s => s.category)))], []);
+  const phaseCounts = useMemo(() => ({
+    build: SKILLS.filter(s => s.phase === 'build').length,
+    run: SKILLS.filter(s => s.phase === 'run').length,
+    gbb: SKILLS.filter(s => s.phase === 'gbb').length,
+  }), []);
+
+  const categories = useMemo(
+    () => ['All', ...Array.from(new Set(SKILLS.filter(s => s.phase === tab).map(s => s.category)))],
+    [tab],
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return SKILLS.filter(s => {
-      if (phaseFilter !== 'all' && s.phase !== phaseFilter) return false;
+      if (s.phase !== tab) return false;
       if (categoryFilter !== 'All' && s.category !== categoryFilter) return false;
       if (!q) return true;
       return s.name.toLowerCase().includes(q)
@@ -424,11 +465,15 @@ export default function SkillsCatalog() {
         || s.tags.some(t => t.toLowerCase().includes(q))
         || s.surface.toLowerCase().includes(q);
     });
-  }, [query, phaseFilter, categoryFilter]);
+  }, [query, tab, categoryFilter]);
 
-  const buildSkills = filtered.filter(s => s.phase === 'build');
-  const runSkills = filtered.filter(s => s.phase === 'run');
-  const gbbSkills = filtered.filter(s => s.phase === 'gbb');
+  function selectTab(p: Phase) {
+    setTab(p);
+    setCategoryFilter('All');
+  }
+
+  const meta = PHASE_META[tab];
+  const MetaIcon = meta.icon;
 
   return (
     <>
@@ -436,8 +481,27 @@ export default function SkillsCatalog() {
         <div className="page-eyebrow">Skills catalog · Reference</div>
         <h1>Every capability the Agentic Loop ships with.</h1>
         <p className="lede">
-          The reference you consult while building — browse the building blocks that GitHub Copilot brings to the <strong>build</strong> phase and that Microsoft Foundry brings to the <strong>run</strong> phase, plus a field-curated set of specialist <strong>GBB</strong> skills. One consistent contract, two sides of the loop.
+          The reference you consult while building — the building blocks that GitHub Copilot brings to the <strong>build</strong> phase, that Microsoft Foundry brings to the <strong>run</strong> phase, plus a field-curated set of specialist <strong>GBB</strong> skills. Pick a tab to explore each group.
         </p>
+      </div>
+
+      <div className="catalog-tabs" role="tablist">
+        {(['build', 'run', 'gbb'] as const).map(p => {
+          const TabIcon = PHASE_META[p].icon;
+          return (
+            <button
+              key={p}
+              role="tab"
+              aria-selected={tab === p}
+              className={`catalog-tab accent-${p} ${tab === p ? 'active' : ''}`}
+              onClick={() => selectTab(p)}
+            >
+              <TabIcon size={16} />
+              <span>{TAB_LABEL[p]}</span>
+              <span className="catalog-tab-count">{phaseCounts[p]}</span>
+            </button>
+          );
+        })}
       </div>
 
       <div className="catalog-toolbar">
@@ -448,17 +512,6 @@ export default function SkillsCatalog() {
             value={query}
             onChange={e => setQuery(e.target.value)}
           />
-        </div>
-        <div className="chip-group catalog-chips" role="tablist">
-          {(['all', 'build', 'run', 'gbb'] as const).map(p => (
-            <button
-              key={p}
-              className={`chip ${phaseFilter === p ? 'active' : ''}`}
-              onClick={() => setPhaseFilter(p)}
-            >
-              {p === 'all' ? 'All phases' : p === 'build' ? 'Build' : p === 'run' ? 'Run' : 'GBB-curated'}
-            </button>
-          ))}
         </div>
         <div className="chip-group catalog-chips" role="tablist">
           {categories.map(c => (
@@ -475,60 +528,24 @@ export default function SkillsCatalog() {
 
       <section className="catalog-phase">
         <div className="catalog-phase-head">
-          <div className="catalog-phase-icon build"><Hammer size={18} /></div>
+          <div className={`catalog-phase-icon ${tab}`}><MetaIcon size={18} /></div>
           <div>
-            <div className="catalog-phase-eyebrow">Build phase</div>
-            <h2>GitHub Copilot · authoring, testing, and shipping agents.</h2>
-            <p>Everything a developer touches before traffic hits production — from spec to PR to release.</p>
+            <div className="catalog-phase-eyebrow">{meta.eyebrow}</div>
+            <h2>{meta.title}</h2>
+            <p>{meta.blurb}</p>
           </div>
-          <span className="catalog-count">{buildSkills.length}</span>
+          <span className="catalog-count">{filtered.length}</span>
         </div>
-        {buildSkills.length === 0 ? (
-          <div className="catalog-empty">No build skills match your filters.</div>
-        ) : (
-          <div className="catalog-grid">
-            {buildSkills.map(s => <SkillCard key={s.id} s={s} />)}
-          </div>
+        {tab === 'gbb' && (
+          <p className="catalog-gbb-disclaimer">
+            <Award size={14} /> <span><strong>Community, not a product.</strong> These are unofficial, GBB-curated skills — battle-tested in the field for specialized agentic scenarios, but not Microsoft-supported offerings. Drive them the same way as any skill: name it in your prompt (e.g. <em>“Use the threadlight-auto skill to…”</em>). Click any card to open its <code>SKILL.md</code> source.</span>
+          </p>
         )}
-      </section>
-
-      <section className="catalog-phase">
-        <div className="catalog-phase-head">
-          <div className="catalog-phase-icon run"><Rocket size={18} /></div>
-          <div>
-            <div className="catalog-phase-eyebrow">Run phase</div>
-            <h2>Microsoft Foundry · serving, grounding, and governing agents.</h2>
-            <p>Everything the agent depends on once it's serving real users — models, data, safety, telemetry, identity.</p>
-          </div>
-          <span className="catalog-count">{runSkills.length}</span>
-        </div>
-        {runSkills.length === 0 ? (
-          <div className="catalog-empty">No run skills match your filters.</div>
+        {filtered.length === 0 ? (
+          <div className="catalog-empty">No {TAB_LABEL[tab]} skills match your filters.</div>
         ) : (
           <div className="catalog-grid">
-            {runSkills.map(s => <SkillCard key={s.id} s={s} />)}
-          </div>
-        )}
-      </section>
-
-      <section className="catalog-phase">
-        <div className="catalog-phase-head">
-          <div className="catalog-phase-icon gbb"><Award size={18} /></div>
-          <div>
-            <div className="catalog-phase-eyebrow">awesome-gbb · unofficial</div>
-            <h2>Field-curated specialist skills, built by GBB.</h2>
-            <p>The flagship motions the playbooks lean on — Threadlight pilots, Foundry hosted agents, and AI Citadel governance — packaged as named skills you invoke by prompt.</p>
-          </div>
-          <span className="catalog-count">{gbbSkills.length}</span>
-        </div>
-        <p className="catalog-gbb-disclaimer">
-          <Award size={14} /> <span><strong>Community, not a product.</strong> These are unofficial, GBB-curated skills — battle-tested in the field for specialized agentic scenarios, but not Microsoft-supported offerings. Drive them the same way as any skill: name it in your prompt (e.g. <em>“Use the threadlight-auto skill to…”</em>).</span>
-        </p>
-        {gbbSkills.length === 0 ? (
-          <div className="catalog-empty">No GBB skills match your filters.</div>
-        ) : (
-          <div className="catalog-grid">
-            {gbbSkills.map(s => <SkillCard key={s.id} s={s} />)}
+            {filtered.map(s => <SkillCard key={s.id} s={s} />)}
           </div>
         )}
       </section>
@@ -545,13 +562,17 @@ export default function SkillsCatalog() {
 
 function SkillCard({ s }: { s: Skill }) {
   const Icon = s.icon;
-  return (
-    <article className={`skill-card phase-${s.phase}`}>
+  const source = skillSource(s);
+  const body = (
+    <>
       <div className="skill-card-head">
         <div className="skill-card-icon"><Icon size={18} /></div>
-        <span className={`skill-phase-badge ${s.phase}`}>
-          {s.phase === 'build' ? 'Build' : s.phase === 'run' ? 'Run' : 'GBB'}
-        </span>
+        <div className="skill-card-head-right">
+          <span className={`skill-phase-badge ${s.phase}`}>
+            {s.phase === 'build' ? 'Build' : s.phase === 'run' ? 'Run' : 'GBB'}
+          </span>
+          {source && <ExternalLink className="skill-card-link-icon" size={14} />}
+        </div>
       </div>
       <h3>{s.name}</h3>
       <p>{s.description}</p>
@@ -563,6 +584,21 @@ function SkillCard({ s }: { s: Skill }) {
       <div className="skill-tags">
         {s.tags.map(t => <span key={t} className="skill-tag">{t}</span>)}
       </div>
-    </article>
+    </>
   );
+
+  if (source) {
+    return (
+      <a
+        className={`skill-card phase-${s.phase} is-link`}
+        href={source}
+        target="_blank"
+        rel="noreferrer"
+        aria-label={`Open ${s.name} SKILL.md source on GitHub`}
+      >
+        {body}
+      </a>
+    );
+  }
+  return <article className={`skill-card phase-${s.phase}`}>{body}</article>;
 }
