@@ -258,16 +258,17 @@ A reviewed, deployed, evaluated export is *most* of the way to production — be
 
 ### The export is already most of the way there
 
-Kratos exports ship production posture by default — the same controls the guardrails demand:
+Kratos exports ship real production posture by default — **three of the five** guardrails the productionization motion demands are already in the box:
 
-| Guardrail (Threadlight)     | Already in the Kratos export                                       |
-|-----------------------------|-------------------------------------------------------------------|
-| Keyless identity            | `ChainedTokenCredential` (Managed Identity → Azure CLI); zero secrets in code |
-| Telemetry                   | OpenTelemetry + Azure Monitor exporters wired in Bicep            |
-| Evals                       | Per-use-case eval suites (validation + foundry modes)            |
-| Network / content safety    | VNet private endpoints; Foundry prompt shields + jailbreak detection |
+| Guardrail (Threadlight) | In the Kratos export?                                              |
+|-------------------------|-------------------------------------------------------------------|
+| Keyless identity        | ✅ `ChainedTokenCredential` (Managed Identity → Azure CLI); zero secrets in code |
+| Telemetry               | ✅ OpenTelemetry + Azure Monitor exporters wired in Bicep        |
+| Evals                   | ✅ Per-use-case eval suites (validation + foundry modes)         |
+| Citation grounding      | ⚠️ Persona-dependent — enforce ≥1 citation per answer            |
+| Audit-grade trail       | ❌ Add the append-only audit emit + tiered retention            |
 
-> So productization isn't a rewrite — it's confirming these are green for *this* customer and adding the two things the export doesn't carry: a completeness **gate** and a **landing zone**.
+> **Bonus the export also carries:** VNet private endpoints + Foundry prompt shields / jailbreak detection. So productization isn't a rewrite — it's confirming the three green guardrails for *this* customer and adding the two it doesn't, behind the safe-check **gate**, then dropping it into the AI Citadel **landing zone**.
 
 ---
 
@@ -276,10 +277,11 @@ Kratos exports ship production posture by default — the same controls the guar
 Because the export is the same artefact shape as a Threadlight pilot, the [Threadlight Productionization](/playbooks/threadlight-productionization) playbook applies directly:
 
 - **Enforce the gate** — run `threadlight-safe-check` against the deployment until `gaps: []`.
+- **Citation grounding** — enforce ≥1 citation per answer (owned by per-process `AGENTS.md`, scored by `foundry-evals`).
 - **Audit-grade trail** — add the append-only audit emit + tiered retention the export doesn't include by default.
 - **Continuous evals in CI** — promote the persona's eval suite to a gate on every change.
 
-> The four guardrails Kratos already covers + the audit trail and CI gate = the full five. The productionization deck walks each one.
+> Keyless identity, telemetry, and evals are already green from the export. Add citation grounding and the audit trail and all **five guardrails** are covered — the productionization deck walks each one.
 
 ---
 
