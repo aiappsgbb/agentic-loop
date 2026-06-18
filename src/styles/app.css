@@ -3357,15 +3357,23 @@
   border: 1px solid var(--border-strong);
   padding: 22px 24px;
 }
-.selfhost .kratos-launcher-head { margin-bottom: 18px; }
-.selfhost-primary {
+.selfhost .kratos-launcher-head { margin-bottom: 20px; }
+
+.selfhost-grid {
+  display: grid;
+  grid-template-columns: minmax(300px, 380px) 1fr;
+  gap: 20px;
+  align-items: stretch;
+}
+.selfhost-aside {
+  display: flex; flex-direction: column;
   padding: 16px 16px 18px;
   border-radius: 14px;
   background: var(--bg-1);
   border: 1px solid var(--border-strong);
 }
 .selfhost-step-tag {
-  display: inline-flex; align-items: center; gap: 6px;
+  display: inline-flex; align-items: center; gap: 6px; align-self: flex-start;
   font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
   color: var(--accent-2);
   padding: 3px 9px; border-radius: 999px;
@@ -3378,12 +3386,20 @@
   font-size: 12px; padding: 1px 5px; border-radius: 5px;
   background: var(--surface-strong); border: 1px solid var(--border-strong);
 }
-.selfhost-primary .code-block { margin-top: 0; }
-.selfhost-primary .prompt-preview { margin-top: 12px; }
+.selfhost-aside .code-block { margin-top: 0; }
+.selfhost-prompt {
+  margin-top: 0;
+  display: flex; flex-direction: column;
+}
+.selfhost-prompt pre {
+  flex: 1;
+  max-height: 560px;
+  overflow-y: auto;
+}
 .selfhost-manual {
   margin-top: 16px;
   border: 1px solid var(--border-strong); border-radius: 12px;
-  background: var(--bg-1);
+  background: var(--bg-0);
   overflow: hidden;
 }
 .selfhost-manual > summary {
@@ -3405,6 +3421,11 @@
   margin-top: 18px;
 }
 .selfhost-foot .selfhost-note { margin: 0; flex: 1 1 320px; }
+.selfhost-foot .kratos-cta { flex: none; }
+@media (max-width: 900px) {
+  .selfhost-grid { grid-template-columns: 1fr; }
+  .selfhost-prompt pre { max-height: none; }
+}
 
 /* ── Curated persona gallery (no inner chat — click a card to open live) ── */
 .kratos-gallery-section { margin-top: 8px; }

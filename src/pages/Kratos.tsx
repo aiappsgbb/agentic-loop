@@ -91,7 +91,6 @@ export default function Kratos() {
           >
             <ServerCog size={15} />
             <span className="kratos-mode-pill-label">Self-host Kratos</span>
-            <span className="kratos-mode-pill-tag">Internal</span>
           </button>
         </div>
 
@@ -124,7 +123,7 @@ export default function Kratos() {
             id="kratos-panel-selfhost"
             role="tabpanel"
             aria-labelledby="kratos-tab-selfhost"
-            className="kratos-mode-panel kratos-mode-panel-builder"
+            className="kratos-mode-panel"
           >
             <SelfHostKratos />
           </div>

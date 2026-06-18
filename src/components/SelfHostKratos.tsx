@@ -55,32 +55,60 @@ export default function SelfHostKratos() {
       <div className="kratos-launcher-head">
         <div className="kratos-launcher-mark"><ServerCog size={18} /></div>
         <div>
-          <h3>Self-host Kratos <span className="wtuw-badge">Internal tool</span></h3>
+          <h3>Self-host Kratos</h3>
           <p>
-            Run your own private Kratos in a <strong>separate Azure subscription</strong> for your team.
-            The fastest path: hand it to GitHub Copilot and let it clone and deploy for you — no manual steps.
+            When a customer wants to run their own Kratos, deploy it into <strong>their own Azure
+            subscription</strong>. The fastest path: hand it to GitHub Copilot and let it clone and
+            deploy end to end — no manual steps.
           </p>
         </div>
       </div>
 
-      <div className="selfhost-primary">
-        <div className="selfhost-step-tag"><Sparkles size={13} /> Recommended · let Copilot do it</div>
-        <p className="selfhost-lede">
-          Open an empty folder, start GitHub Copilot CLI, and paste the prompt. Copilot checks prerequisites,
-          clones the repo, targets your subscription, and runs <code>azd up</code> — pausing only when it needs a decision.
-        </p>
+      <div className="selfhost-grid">
+        <div className="selfhost-aside">
+          <div className="selfhost-step-tag"><Sparkles size={13} /> Recommended · let Copilot do it</div>
+          <p className="selfhost-lede">
+            Open an empty folder, start GitHub Copilot CLI, and paste the prompt on the right. Copilot
+            checks prerequisites, clones the repo, targets the subscription, and runs <code>azd up</code> —
+            pausing only when it needs a decision.
+          </p>
 
-        <div className="code-block">
-          <div className="code-block-head">
-            <span><Terminal size={13} /> Start GitHub Copilot</span>
-            <button className="ghost-btn" onClick={() => copy('copilot', 'cli')}>
-              {copied === 'cli' ? <><Check size={13} /> Copied</> : <><Copy size={13} /> Copy</>}
-            </button>
+          <div className="code-block">
+            <div className="code-block-head">
+              <span><Terminal size={13} /> Start GitHub Copilot</span>
+              <button className="ghost-btn" onClick={() => copy('copilot', 'cli')}>
+                {copied === 'cli' ? <><Check size={13} /> Copied</> : <><Copy size={13} /> Copy</>}
+              </button>
+            </div>
+            <pre>copilot</pre>
           </div>
-          <pre>copilot</pre>
+
+          <details className="selfhost-manual">
+            <summary><GitBranch size={14} /> Prefer to run it yourself? Manual steps</summary>
+            <div className="selfhost-manual-body">
+              <p className="selfhost-lede">
+                One-command deploy with the <a href="https://learn.microsoft.com/azure/developer/azure-developer-cli/" target="_blank" rel="noreferrer">Azure Developer CLI</a>.
+                Requires azd ≥ 1.12, Azure CLI, Docker, Node 20+, and Python 3.11+.
+              </p>
+              <div className="code-block">
+                <div className="code-block-head">
+                  <span>Clone &amp; deploy to your subscription</span>
+                  <button className="ghost-btn" onClick={() => copy(MANUAL_STEPS, 'manual')}>
+                    {copied === 'manual' ? <><Check size={13} /> Copied</> : <><Copy size={13} /> Copy</>}
+                  </button>
+                </div>
+                <pre>{MANUAL_STEPS}</pre>
+              </div>
+              <p className="selfhost-note">
+                <KeyRound size={13} /> After <code>azd up</code>, there is one manual step — register the
+                agent in the Foundry portal (Operate → Agents → Register agent) so traces appear. Run
+                <code>azd env get-values | grep AGENT_SERVICE</code> for the URL and gateway values.
+              </p>
+            </div>
+          </details>
         </div>
 
-        <div className="prompt-preview">
+        <div className="prompt-preview selfhost-prompt">
           <div className="prompt-preview-head">
             <Sparkles size={14} /> Copilot prompt — clone &amp; deploy Kratos
             <button className="ghost-btn" onClick={() => copy(COPILOT_PROMPT, 'prompt')}>
@@ -91,34 +119,11 @@ export default function SelfHostKratos() {
         </div>
       </div>
 
-      <details className="selfhost-manual">
-        <summary><GitBranch size={14} /> Prefer to run it yourself? Manual steps</summary>
-        <div className="selfhost-manual-body">
-          <p className="selfhost-lede">
-            One-command deploy with the <a href="https://learn.microsoft.com/azure/developer/azure-developer-cli/" target="_blank" rel="noreferrer">Azure Developer CLI</a>.
-            Requires azd ≥ 1.12, Azure CLI, Docker, Node 20+, and Python 3.11+.
-          </p>
-          <div className="code-block">
-            <div className="code-block-head">
-              <span>Clone &amp; deploy to your subscription</span>
-              <button className="ghost-btn" onClick={() => copy(MANUAL_STEPS, 'manual')}>
-                {copied === 'manual' ? <><Check size={13} /> Copied</> : <><Copy size={13} /> Copy</>}
-              </button>
-            </div>
-            <pre>{MANUAL_STEPS}</pre>
-          </div>
-          <p className="selfhost-note">
-            <KeyRound size={13} /> After <code>azd up</code>, there is one manual step — register the agent in the
-            Foundry portal (Operate → Agents → Register agent) so traces appear. Run
-            <code>azd env get-values | grep AGENT_SERVICE</code> for the URL and gateway values.
-          </p>
-        </div>
-      </details>
-
       <div className="selfhost-foot">
         <p className="selfhost-note">
-          <ShieldCheck size={13} /> <strong>Keep it internal.</strong> Deploy into a dedicated subscription, restrict the
-          frontend to your Entra tenant, and keep the APIM gateway private — Copilot will recommend and apply these for you.
+          <ShieldCheck size={13} /> <strong>Keep it private.</strong> Deploy into a dedicated subscription,
+          restrict the frontend to the customer's Entra tenant, and keep the APIM gateway private —
+          Copilot will recommend and apply these for you.
         </p>
         <a className="kratos-cta" href={KRATOS_REPO} target="_blank" rel="noreferrer">
           View the repo <ExternalLink size={13} />
