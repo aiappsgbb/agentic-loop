@@ -1,19 +1,22 @@
 # Threadlight Pilot Pipeline: business process → working agent
 
-**AI agent PoCs, demos, and MVPs — dramatically simplified.** Describe a business process to a coding agent; it drafts the spec, scaffolds the agent, validates it locally, and deploys it to the customer's Azure — with governance, telemetry, and evals generated as auditable artefacts. **One guided session.**
+**What you get:** a deployed, evaluated, observable **Microsoft Foundry hosted agent** on the customer's Azure — with its spec, governance, telemetry, and an eval baseline generated as auditable artefacts. From a one-paragraph brief, in one guided session.
 
-### Why Threadlight is the wedge
+**How you get it:** you drive a chain of eight `threadlight-*` Copilot skills **by prompting them** — each stage is a skill you invoke with a sentence of intent, not a script you run by hand. The canonical order:
 
-> *The artefact is the agent, not the deck. The proof is the telemetry, not the demo. The path to production is paved, not planned.*
+1. **`threadlight-design`** — brief → `specs/SPEC.md`, the contract every later stage reads
+2. **`threadlight-demo-data-factory`** *(optional)* — seed realistic demo data
+3. **`threadlight-local-test`** — run the PoC on `localhost` in seconds
+4. **`threadlight-deploy`** → `azd up` — ship to the customer's Azure
+5. **`threadlight-safe-check`** — the ship / no-ship completeness gate
+6. **`foundry-evals` + `foundry-observability`** — prove it works, then watch it run
 
-Threadlight is **the wedge** in the GBB AI Apps motion: a chain of eight `threadlight-*` Copilot skills that turn a one-paragraph brief into a deployed, evaluated, observable **Microsoft Foundry hosted agent** on the customer's tenant — in a single working session. A recent Tier-1 European telco engagement went from paragraph brief to deployed agent, with audit-grade citations, **inside one working day**.
+> **Use this** when you're running an **enterprise pilot** (FSI, Mfg, Retail, Telco, Healthcare) and want the fastest governed path from a vague brief to a demo-ready agent. *A Tier-1 European telco went from paragraph brief to a deployed, audit-grade agent in one working day.*
 
-> Use this when you're running an **enterprise pilot** (FSI, Mfg, Retail, Telco, Healthcare) and want the fastest path from a vague brief to a governed, demo-ready agent — not a from-scratch greenfield build.
+Two companion playbooks go deeper once you have an agent:
 
-This playbook is the **core in-session pipeline**. Two companion playbooks go deeper on the other two proof points the experience promises:
-
-- **[Threadlight Customization](/playbooks/threadlight-customization)** — *surfaces from one agent*: tailor the agent to the customer's process, industry, and operator surfaces (Teams cards, workspace UI, event channels).
-- **[Threadlight Productionization](/playbooks/threadlight-productionization)** — *defense in depth*: the five guardrails the chain refuses to ship without, and the paved path from pilot to the AI Citadel production landing zone.
+- **[Threadlight Customization](/playbooks/threadlight-customization)** — tailor the agent to the customer's process, industry, and operator surfaces (Teams cards, workspace UI, event channels).
+- **[Threadlight Productionization](/playbooks/threadlight-productionization)** — the five guardrails the chain refuses to ship without, and the paved path to the AI Citadel landing zone.
 
 ### The chain at a glance
 
@@ -68,7 +71,7 @@ azd version
 
 ## Design
 
-Turn a vague brief into a durable SpecKit specification and derive the agent surface. This is the one stage that has no upstream dependency — and the one every other skill reads from.
+**What you get:** a numbered, machine-checkable `specs/SPEC.md` plus the agent surface derived from it — the contract every later stage reads. **How:** prompt `threadlight-design` with the process, industry, and regulatory frame in a sentence or two. This is the only stage with no upstream dependency.
 
 ---
 
@@ -86,7 +89,7 @@ The spec is the contract. `threadlight-design` writes a numbered, machine-checka
 
 ---
 
-### Run `threadlight-design`
+### How to get it — prompt `threadlight-design`
 
 Invoke the skill, then describe the process, the customer industry, and the regulatory frame in one or two sentences. Two operating modes: **Full** (stakeholder review, checkpoint after the interview) and **Fast-PoC** (2–3 questions, then proceed).
 
@@ -127,7 +130,7 @@ It reads SPEC § 4 (data models), § 5 (which systems are mock), and § 11d (vol
 
 ## Local Test
 
-Run the designed PoC entirely on the dev box — no `azd up`, no 20–30 min deploy round-trip. Iteration on tools, prompts, and the workspace UI happens in seconds.
+**What you get:** the designed PoC running entirely on your dev box — no `azd up`, no 20–30 min deploy round-trip — so tool, prompt, and UI edits reflect in seconds. **How:** prompt `threadlight-local-test` and pick the pattern that matches your iteration need.
 
 ---
 
@@ -186,7 +189,7 @@ These three skills attach to the same spec and can be added before or alongside 
 
 ## Deploy
 
-Take the designed project and generate everything needed to run as a Microsoft Foundry Hosted Agent. **One command — `azd up` — does the rest.**
+**What you get:** everything needed to run as a Microsoft Foundry Hosted Agent — runtime, `Dockerfile`, Bicep/AVM infra, telemetry wiring — generated from the spec. **How:** prompt `threadlight-deploy` to vendor the artefacts, then run **one command — `azd up`** — to provision and deploy.
 
 ---
 
@@ -236,25 +239,24 @@ azd up
 
 ## Safe-Check
 
-The single mandatory completeness gate. It catches the silent failures that `azd up` reports as success — placeholder images, dead cron jobs, empty App Insights, unreachable channels.
+**What you get:** a ship / no-ship verdict (`gaps: []` or a named list of what's missing) that catches the silent failures `azd up` reports as success — placeholder images, dead cron jobs, empty App Insights, unreachable channels. **How:** prompt `threadlight-safe-check` at each lifecycle phase.
 
 ---
 
-### The three-lifecycle gate
+### How to get it — prompt the gate at each phase
 
-One CLI, three phases. Run it after design, **before** `azd up`, and **after** `azd up` — every time:
-
-```bash
-python -m threadlight.safe_check --phase design        # SPEC ↔ manifest contract
-python -m threadlight.safe_check --phase pre-deploy    # manifest ↔ azure.yaml ↔ Bicep ↔ src/
-python -m threadlight.safe_check --phase post-deploy   # manifest ↔ deployed resources ↔ channel reach
-```
-
-Each run writes a manifest under `tests/` with a top-level `"gaps": []`. **Empty array = pass.** Exit `0` on pass, `1` on fail.
+One skill, three phases. Prompt it after design, **before** `azd up`, and **after** `azd up` — every time:
 
 ```text
-threadlight-safe-check --phase post-deploy   # expects: gaps: []
+threadlight-safe-check
+# then: "Run the design phase — check the SPEC ↔ manifest contract."
+# then: "Run pre-deploy — manifest ↔ azure.yaml ↔ Bicep ↔ src/."
+# then: "Run post-deploy — manifest ↔ deployed resources ↔ channel reach."
 ```
+
+Each run writes a manifest under `tests/` with a top-level `"gaps": []`. **Empty array = pass** (exit `0`); any gap is a hard stop (exit `1`).
+
+> Under the hood each phase is `python -m threadlight.safe_check --phase <design|pre-deploy|post-deploy>` — but you drive it by prompting the skill.
 
 ---
 
@@ -281,7 +283,7 @@ threadlight-safe-check --phase post-deploy   # expects: gaps: []
 
 ## Evaluate & Observe
 
-A pilot isn't done when it deploys — it's done when you can prove it works and watch it in production. The chain hands off to two companion skills from `awesome-gbb`.
+**What you get:** a runnable eval regression set scoring the deployed agent, plus live OpenTelemetry traces in App Insights — the proof a pilot works and the dashboard to watch it. **How:** prompt `foundry-evals`, then `foundry-observability` (both from `awesome-gbb`).
 
 ---
 

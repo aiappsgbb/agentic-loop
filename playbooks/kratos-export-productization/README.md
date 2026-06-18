@@ -1,12 +1,16 @@
 # Kratos Export Review & Productization: pick a persona, ship it
 
-**A demo persona that landed well is already a deployable agent.** [Kratos](https://github.com/kmavrodis/kratos-agent) is a production-ready reference architecture — one agent, N skills — and any of its use-case personas can be **exported as a self-contained standalone Foundry Hosted Agent**. This playbook is the path from "the customer liked the Insurance persona in the demo" to "that exact agent runs, governed, on the customer's Azure" — *review it, then productize it.*
+**What you get:** the exact Kratos demo persona the customer loved — running, governed, on **their** Azure as a standalone [Microsoft Foundry Hosted Agent](https://learn.microsoft.com/azure/ai-foundry/agents/). No Kratos backend at runtime, no rebuild. ([Kratos](https://github.com/kmavrodis/kratos-agent) is a production-ready reference architecture — one agent, N skills — and any persona exports as a self-contained ZIP.)
 
-### Why export at all
+**How you get it:** picking an export is a triage, not a build. Export one persona, review it, deploy it, prove it, then harden it — driving the skill steps **by prompting**:
 
-Kratos runs many personas behind one backend. The **export** flips a single persona into a standalone artefact that ships everything needed to deploy the *same* agent into a different Azure subscription as a [Microsoft Foundry Hosted Agent](https://learn.microsoft.com/azure/ai-foundry/agents/) — **no Kratos backend required at runtime.**
+1. **Export** — pick the persona that matches the customer's process; download it as a Foundry agent (UI button or `GET …/export`)
+2. **Review** — inspect the ZIP and boot it locally before you spend an `azd up`
+3. **`azd up`** — deploy into the customer subscription, then register the agent in Foundry
+4. **`foundry-evals`** — score it; smoke-test the 23 surfaces with `e2e-smoke`
+5. **`threadlight-safe-check` + `citadel-spoke-onboarding`** — harden through the five guardrails and land in AI Citadel
 
-> Use this when a Kratos demo persona resonated with a customer and you want to hand them *that* agent — not a slide, not a rebuild — running on their own tenant with governance and telemetry.
+> Use this when a Kratos demo persona resonated and you want to hand the customer *that* agent — not a slide, not a rebuild — on their own tenant with governance and telemetry.
 
 The exported ZIP is the **same artefact shape** a Threadlight pilot produces (`main.py`, `Dockerfile`, `agent.yaml`, `azure.yaml`, `infra/` Bicep), so it drops straight into the production motion. Two companion playbooks pick up where this one ends:
 
@@ -15,7 +19,7 @@ The exported ZIP is the **same artefact shape** a Threadlight pilot produces (`m
 
 ### The review-to-production path
 
-Picking an export is a triage, not a build. The flow:
+The whole flow at a glance:
 
 ![The Kratos review-to-production path — pick one of eight personas, GET the export, then review, azd up, register, and e2e-smoke 23 surfaces, evaluate with traces, harden via the five guardrails, and optionally land in AI Citadel.](./images/review-to-prod.svg)
 
@@ -36,7 +40,7 @@ git clone https://github.com/kmavrodis/kratos-agent && cd kratos-agent
 
 ## Pick the Export
 
-Start from what the customer reacted to in the demo, then choose the persona that matches.
+**What you get:** one persona, exported as one self-contained ZIP — the one whose skills and mocks match the customer's process. **How:** survey the eight personas, pick by process (not flashiest demo), then download it as a Foundry agent.
 
 ---
 
@@ -84,7 +88,7 @@ The endpoint is `GET /api/use-cases/{use_case}/export`. The ZIP is self-containe
 
 ## Review the Export
 
-The export is a triage gate: open the ZIP, confirm it's what you think it is, and run it before you deploy.
+**What you get:** confidence the export is what you think it is — the right system prompt, the right skills, booting clean — before you spend an `azd up`. **How:** inspect the ZIP, then run it locally with the Kratos full-local stack (no Azure needed).
 
 ---
 
@@ -133,7 +137,7 @@ cp .env.local.example .env.local
 
 ## Deploy & Validate
 
-The export is `azd`-native. Deploy it into the customer subscription, wire the one manual Foundry step, then prove it with the smoke skill.
+**What you get:** the agent provisioned in the customer's Foundry project and proven green across 23 surfaces. **How:** run `azd up`, register the agent in Foundry (one manual step), then prompt the `e2e-smoke` skill.
 
 ---
 
@@ -163,16 +167,15 @@ One manual step remains — it can't be automated because the Foundry control pl
 
 ### Smoke-test the 23 surfaces
 
-Kratos ships a Playwright smoke skill that asserts **23 critical surfaces** (health, scenarios, chat, evals, traces, UI, regression, interactive UX) of a deployed instance in ~66s:
+Kratos ships a Playwright **`e2e-smoke` skill** that asserts **23 critical surfaces** (health, scenarios, chat, evals, traces, UI, regression, interactive UX) of a deployed instance in ~66s. Prompt it with the deployed URLs:
 
-```bash
-cd .copilot/skills/e2e-smoke
-KRATOS_BACKEND_URL="https://<your-backend>.azurecontainerapps.io" \
-KRATOS_FRONTEND_URL="https://<your-frontend>.azurestaticapps.net" \
-./run.sh
+```text
+e2e-smoke
+# then: "Smoke-test the deployed instance — backend https://<backend>.azurecontainerapps.io,
+#        frontend https://<frontend>.azurestaticapps.net."
 ```
 
-> Run this after **every** deploy. A green smoke run is the difference between "it deployed" and "it works".
+> Under the hood: `cd .copilot/skills/e2e-smoke && KRATOS_BACKEND_URL=… KRATOS_FRONTEND_URL=… ./run.sh`. Run it after **every** deploy — a green smoke run is the difference between "it deployed" and "it works".
 
 ---
 
@@ -189,7 +192,7 @@ KRATOS_FRONTEND_URL="https://<your-frontend>.azurestaticapps.net" \
 
 ## Evaluate & Observe
 
-A deployed agent isn't a productionized one until you can score it and see inside it. Kratos carries both per persona.
+**What you get:** per-persona eval scores and a filterable trace waterfall — the proof the agent works and the view inside it. **How:** prompt `foundry-evals` to run the persona's suite (validation + foundry modes), then query the Traces tab.
 
 ---
 
@@ -208,12 +211,15 @@ Each persona carries its own eval suite under `use-cases/<name>/evals/` — an `
 | **validation** | In-process: invoke sequentially → score locally (`azure-ai-evaluation`) | Seconds | Fast feedback, CI smoke      |
 | **foundry**    | Full Foundry eval pipeline, same evaluators, hosted scoring   | Minutes | Pre-release, shareable links |
 
-Both follow the **two-phase invoke + score** pattern from the `foundry-evals` skill. From the CLI for CI:
+Both follow the **two-phase invoke + score** pattern from the `foundry-evals` skill — prompt it to run either mode:
 
-```bash
-python scripts/run_evals.py --use-case insurance --mode validation
-python scripts/run_evals.py --use-case insurance --mode foundry
+```text
+foundry-evals
+# then: "Run the insurance use-case evals in validation mode for a CI smoke."
+# then: "Run the insurance use-case evals in foundry mode for a shareable pre-release report."
 ```
+
+> Under the hood (CI): `python scripts/run_evals.py --use-case insurance --mode <validation|foundry>`.
 
 ---
 
@@ -240,7 +246,7 @@ python scripts/fetch_traces.py --conversation-id abc123
 
 ## Productize
 
-A reviewed, deployed, evaluated export is *most* of the way to production — because Kratos already ships the right substrate. The last chapter hands the agent to the production motion.
+**What you get:** all five guardrails green and the agent landed in AI Citadel — production-grade, from the same artefacts. **How:** prompt `threadlight-safe-check` until `gaps: []`, add the two guardrails the export lacks, then prompt `citadel-spoke-onboarding`.
 
 ---
 

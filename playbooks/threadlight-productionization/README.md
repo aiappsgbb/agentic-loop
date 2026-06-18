@@ -1,8 +1,15 @@
 # Threadlight Productionization: the paved path to production
 
-**The proof is the telemetry, not the demo. The path to production is paved, not planned.** Every Threadlight pilot ships as a *governed* agent on the customer's Azure — App Insights, evals, and the AI Citadel gateway from day zero — because the chain **refuses to ship without five guardrails**. This playbook is what your CISO reviews: the encoded gates, how the safe-check enforces them, and the no-rewrite path from pilot to the AI Citadel production landing zone.
+**What you get:** a pilot your CISO will sign — five guardrails (keyless identity, telemetry, citation grounding, audit trail, evals) enforced in the substrate, proven by a gate, and landed in the AI Citadel production zone. From the **same artefacts** the pilot produced, **no rewrite**.
 
-> Companion to the [Threadlight Pilot Pipeline](/playbooks/threadlight-pilot-pipeline) and [Customization](/playbooks/threadlight-customization). Those build and tailor the agent; this one makes it production-grade — *from the same artefacts, no rewrite.*
+**How you get it:** the guardrails are already generated into the SPEC, code, and Bicep — your job is to enforce and land them by **prompting** the gate and the Citadel skills:
+
+1. **`threadlight-safe-check`** — prove all five guardrails are green (`gaps: []`)
+2. **`foundry-evals` + `foundry-observability`** — promote evals + telemetry to operational
+3. **`citadel-hub-deploy`** — stand up the governance hub
+4. **`citadel-spoke-onboarding` + `foundry-agt`** — land the agent behind APIM + in-process policy
+
+> Companion to the [Pilot Pipeline](/playbooks/threadlight-pilot-pipeline) and [Customization](/playbooks/threadlight-customization): those build and tailor the agent; this makes it production-grade — *from the same artefacts, no rewrite.*
 
 ### The substrate is the paved path
 
@@ -16,7 +23,7 @@ Four chapters: **Five Guardrails → Enforce the Gate → Harden to Production �
 
 ## Five Guardrails
 
-The five things the chain refuses to ship without. Each is generated, not bolted on — and each is owned by a specific skill so it stays enforced.
+**What you get:** five guardrails generated into every pilot — keyless identity, telemetry, citation grounding, audit trail, evals — each owned by a specific skill so it stays enforced, not bolted on at the end. **How:** they ship with the deploy; this chapter is what to verify in each.
 
 ---
 
@@ -80,24 +87,22 @@ The five things the chain refuses to ship without. Each is generated, not bolted
 
 ## Enforce the Gate
 
-Guardrails are only real if something refuses to ship when they're missing. That something is **safe-check** — the completeness gate that runs across three lifecycle phases.
+**What you get:** a ship / no-ship verdict that refuses to pass when a guardrail is missing. **How:** prompt `threadlight-safe-check` across all three lifecycle phases until `gaps: []`.
 
 ---
 
-### Run the safe-check across all three lifecycles
+### How to get it — prompt the gate across all three lifecycles
 
-`threadlight-safe-check` validates the project against the encoded guardrails at each stage. It's not a linter — it's the ship/no-ship gate.
+Prompt `threadlight-safe-check` at each stage — it validates the project against the encoded guardrails. It's not a linter; it's the ship/no-ship gate.
 
 ```text
-# design-time completeness
-python -m threadlight.safe_check --phase design
-
-# pre-deploy readiness
-python -m threadlight.safe_check --phase pre-deploy
-
-# post-deploy verification
-threadlight-safe-check --phase post-deploy
+threadlight-safe-check
+# then: "Run the design phase — is the SPEC complete across all five guardrails?"
+# then: "Run pre-deploy — do Bicep, identity, and telemetry config validate?"
+# then: "Run post-deploy — verify the live deployment."
 ```
+
+> Under the hood each phase is `python -m threadlight.safe_check --phase <design|pre-deploy|post-deploy>` — but you drive it by prompting the skill.
 
 The post-deploy pass is the one your reviewer cares about — it expects a clean result:
 
@@ -122,7 +127,7 @@ gaps: []
 
 ## Harden to Production
 
-The pilot substrate *is* the production substrate. Hardening means turning the demo-grade guarantees into operational ones — without changing the artefacts.
+**What you get:** demo-grade guarantees turned operational — CI evals, App Insights dashboards, monitored identity and audit — without changing the artefacts. **How:** prompt `foundry-evals` and `foundry-observability` to promote the baselines; add new surfaces with one prompt each.
 
 ---
 
@@ -167,7 +172,7 @@ Production isn't only hardening — it's reach. Add capabilities to the **same**
 
 ## The Paved Path to AI Citadel
 
-The same substrate, landed in the production governance zone. This is where defense-in-depth becomes two real layers — and where the CISO signs off.
+**What you get:** the same agent landed in the production governance zone — an APIM perimeter and AGT in-process policy on one audit chain, the point where your CISO signs off. **How:** prompt `citadel-hub-deploy`, `citadel-spoke-onboarding`, and `foundry-agt`.
 
 ---
 

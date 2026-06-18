@@ -1,8 +1,15 @@
 # Threadlight Customization: surfaces from one agent
 
-**One Foundry hosted agent. Many surfaces — and one place to enforce the rules.** A Workspace UI, a Teams 1:1 chat, and M365 Copilot Chat can all be powered by the *same* agent, with guardrails enforced once, not three times. This playbook is how you tailor that agent to a specific customer: their **process**, their **industry**, and the **operator surfaces** they actually work in.
+**What you get:** one Foundry hosted agent, tailored to a specific customer — their process, their industry's data, and the operator surfaces they actually work in (Workspace UI, Teams 1:1, M365 Copilot Chat) — with guardrails enforced **once** in the substrate, not three times per channel.
 
-> Companion to the [Threadlight Pilot Pipeline](/playbooks/threadlight-pilot-pipeline). The pipeline gets you a deployed agent in one session; this playbook makes it *theirs* — FSI, MFG, Retail, Telco, or Healthcare, each tailored to domain-specific rules and data.
+**How you get it:** you add layers to the *same* agent by **prompting four customization skills**, each reading the same `specs/SPEC.md`:
+
+1. **`threadlight-design`** — tailor the SPEC to the customer's domain (entities, rules, vocabulary)
+2. **`threadlight-demo-data-factory`** — seed industry-realistic demo data every surface shares
+3. **`threadlight-hitl-patterns`** — Teams approval cards for the seven canonical gates
+4. **`threadlight-workspace-ui`** — one operator dashboard the customer can rebuild
+
+> Companion to the [Threadlight Pilot Pipeline](/playbooks/threadlight-pilot-pipeline): the pipeline gets you a deployed agent in one session; this makes it *theirs* — FSI, MFG, Retail, Telco, or Healthcare. Customization is **not a fork** — every surface reads the same SPEC, the same seed data, the same governance.
 
 ### One agent, many surfaces
 
@@ -27,7 +34,7 @@ threadlight-design
 
 ## Tailor the Process
 
-Make the agent speak the customer's domain — its entities, its business rules, and data that looks real enough to demo.
+**What you get:** an agent that speaks the customer's domain — its entities, business rules, and demo data realistic enough to survive scrutiny. **How:** customize the SPEC sections (not the generated code), then prompt `threadlight-demo-data-factory` to seed the data every surface shares.
 
 ---
 
@@ -87,7 +94,7 @@ It reads SPEC § 4, § 5, and § 11d plus the per-industry realism canon, then w
 
 ## Operator Surfaces
 
-Where the human actually works. Two surfaces, both generated from the SPEC and both binding to the same entity schemas.
+**What you get:** the two surfaces a human actually works in — Teams approval cards and an operator dashboard — both generated from the SPEC and bound to the same entity schemas. **How:** prompt `threadlight-hitl-patterns` for the gates and `threadlight-workspace-ui` for the dashboard.
 
 ---
 
@@ -145,7 +152,7 @@ Outputs include a single-file vanilla-JS reference (`index.html` + `workspace.cs
 
 ## Event & Channel Surfaces
 
-The agent doesn't only answer chat. Wire the non-interactive triggers, then surface the *same* agent across every channel.
+**What you get:** the same agent reachable beyond chat — non-interactive event triggers plus Workspace UI, Teams, and M365 Copilot, all calling **one** hosted agent. **How:** prompt `threadlight-event-triggers` to wire the receivers, then point every channel at the same agent.
 
 ---
 
@@ -194,7 +201,7 @@ The point of customization is leverage: the Workspace UI, Teams 1:1 chat, and M3
 
 ## Start From a Template
 
-Sometimes the fastest customization is to start from one that already exists.
+**What you get:** a head start — a pre-built process you customize from, instead of designing from a blank brief. **How:** browse the Threadlight Process Library, pick the closest match, deploy it, then customize with the full skill chain.
 
 ---
 
