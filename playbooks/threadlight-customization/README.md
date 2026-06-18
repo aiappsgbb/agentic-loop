@@ -21,11 +21,10 @@ This playbook is organized as four chapters: **Tailor the Process → Operator S
 
 ### Setup
 
-Customization skills all read the SPEC, so a designed project is the prerequisite. If you don't have one yet, run the pipeline's Design stage first:
+Customization skills all read the SPEC, so a designed project is the prerequisite. If you don't have one yet, prompt for a design first (`threadlight-design` activates on intent — no command to type):
 
 ```text
-threadlight-design
-# then: "Design a {process} for a {industry} customer. Fast PoC mode."
+Design a {process} for a {industry} customer. Quick PoC.
 ```
 
 > Every skill below assumes `specs/SPEC.md` + `specs/manifest.json` exist and are well-formed. The SPEC sections (§ 4, § 8, § 8b, § 10) are the input contract for each surface.
@@ -71,10 +70,10 @@ Customization is spec-driven. The selectors and sections written by `threadlight
 Every demo surface — mock MCP, workspace UI, eval dataset — must read the *same* canonical seed, or the second demo take contradicts the first.
 
 ```text
-threadlight-demo-data-factory
+Generate industry-realistic demo data and idempotent Cosmos seed/reset scripts for this pilot, from SPEC § 4, § 5, and § 11d.
 ```
 
-It reads SPEC § 4, § 5, and § 11d plus the per-industry realism canon, then writes:
+It reads those sections plus the per-industry realism canon, then writes:
 
 - `specs/sample-data/<entity>.json` — fully populated, each with a `_meta` generator block.
 - `scripts/seed_data.py` and `scripts/reset_data.py` — idempotent Cosmos seed and **reset for live-demo recovery**.
@@ -103,7 +102,7 @@ It reads SPEC § 4, § 5, and § 11d plus the per-industry realism canon, then w
 `threadlight-hitl-patterns` generates Teams Adaptive Card 1.5 flows for the seven canonical action gates declared in SPEC § 8: **approve, edit-and-approve, reject, escalate, signoff, audit-view, request-info.**
 
 ```text
-threadlight-hitl-patterns
+Generate Teams approval cards for the seven action gates declared in my SPEC § 8.
 ```
 
 It produces (paired with `foundry-teams-bot` for the bot itself):
@@ -121,7 +120,7 @@ It produces (paired with `foundry-teams-bot` for the bot itself):
 `threadlight-workspace-ui` generates **one** polished, framework-agnostic operator dashboard the customer can rebuild faithfully in their preferred stack (React / Angular / Vue / Blazor).
 
 ```text
-threadlight-workspace-ui
+Generate one operator workspace dashboard for my pilot from SPEC § 8b.
 ```
 
 Pick the shape that matches SPEC § 8b:
@@ -161,7 +160,7 @@ Outputs include a single-file vanilla-JS reference (`index.html` + `workspace.cs
 `threadlight-event-triggers` scaffolds **ACA-first** receivers — jobs, app HTTP receivers, KEDA-scaled consumers — with Azure Functions only when narrow constraints demand it. It wires idempotency + dead-letter rules per SPEC § 10b.
 
 ```text
-threadlight-event-triggers
+Scaffold ACA-first receivers for my pilot's triggers in SPEC § 10b — idempotent, with dead-letter wiring.
 ```
 
 Outputs:

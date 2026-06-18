@@ -167,12 +167,10 @@ One manual step remains — it can't be automated because the Foundry control pl
 
 ### Smoke-test the 23 surfaces
 
-Kratos ships a Playwright **`e2e-smoke` skill** that asserts **23 critical surfaces** (health, scenarios, chat, evals, traces, UI, regression, interactive UX) of a deployed instance in ~66s. Prompt it with the deployed URLs:
+Kratos ships a Playwright **`e2e-smoke` skill** that asserts **23 critical surfaces** (health, scenarios, chat, evals, traces, UI, regression, interactive UX) of a deployed instance in ~66s. Prompt it with the deployed URLs (the skill activates on intent — no command to type):
 
 ```text
-e2e-smoke
-# then: "Smoke-test the deployed instance — backend https://<backend>.azurecontainerapps.io,
-#        frontend https://<frontend>.azurestaticapps.net."
+Smoke-test my deployed Kratos instance — backend https://<backend>.azurecontainerapps.io, frontend https://<frontend>.azurestaticapps.net.
 ```
 
 > Under the hood: `cd .copilot/skills/e2e-smoke && KRATOS_BACKEND_URL=… KRATOS_FRONTEND_URL=… ./run.sh`. Run it after **every** deploy — a green smoke run is the difference between "it deployed" and "it works".
@@ -211,12 +209,12 @@ Each persona carries its own eval suite under `use-cases/<name>/evals/` — an `
 | **validation** | In-process: invoke sequentially → score locally (`azure-ai-evaluation`) | Seconds | Fast feedback, CI smoke      |
 | **foundry**    | Full Foundry eval pipeline, same evaluators, hosted scoring   | Minutes | Pre-release, shareable links |
 
-Both follow the **two-phase invoke + score** pattern from the `foundry-evals` skill — prompt it to run either mode:
+Both follow the **two-phase invoke + score** pattern from the `foundry-evals` skill — prompt it to run either mode (it activates on intent — no command to type):
 
 ```text
-foundry-evals
-# then: "Run the insurance use-case evals in validation mode for a CI smoke."
-# then: "Run the insurance use-case evals in foundry mode for a shareable pre-release report."
+Run the insurance use-case evals in validation mode for a CI smoke.
+
+Run the insurance use-case evals in foundry mode for a shareable pre-release report.
 ```
 
 > Under the hood (CI): `python scripts/run_evals.py --use-case insurance --mode <validation|foundry>`.

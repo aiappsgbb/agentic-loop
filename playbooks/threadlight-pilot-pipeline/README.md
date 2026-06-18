@@ -38,10 +38,9 @@ This playbook is organized as five chapters that mirror the pipeline: **Design �
 | Spec + data, ready to ship to a sandbox          | `threadlight-deploy`                     | safe-check (post-deploy)               |
 | An inherited deploy you need to triage           | `threadlight-safe-check --phase post-deploy` | deploy (re-run) → safe-check        |
 
-> **Fast path — one prompt, full auto.** [`threadlight-auto`](https://github.com/aiappsgbb/threadlight-skills/tree/main/skills/threadlight-auto) drives the whole chain from a single freeform prompt:
+> **Fast path — one prompt, full auto.** Describe the agent you want in a single sentence; [`threadlight-auto`](https://github.com/aiappsgbb/threadlight-skills/tree/main/skills/threadlight-auto) activates on intent and drives the whole chain:
 > ```text
-> threadlight-auto
-> # then: "Build me an auto-claim triage agent for Contoso Mutual."
+> Build me an auto-claim triage agent for Contoso Mutual in fruocco.
 > ```
 > It runs design → (optional) local-test → deploy → safe-check → live invoke, auto-continuing at every gate and **hard-stopping** only on tenant-assertion failure or quota exhaustion. The chapters below are the same chain, run by hand so you can review each stage.
 
@@ -89,13 +88,12 @@ The spec is the contract. `threadlight-design` writes a numbered, machine-checka
 
 ---
 
-### How to get it — prompt `threadlight-design`
+### How to get it — prompt for a design
 
-Invoke the skill, then describe the process, the customer industry, and the regulatory frame in one or two sentences. Two operating modes: **Full** (stakeholder review, checkpoint after the interview) and **Fast-PoC** (2–3 questions, then proceed).
+Just describe the process, the customer's industry, and the regulatory frame in a sentence or two — `threadlight-design` activates on intent, there's no command to type. Add **"quick PoC"** (or "fast demo") to skip the stakeholder interview and go straight to artifacts; omit it for the full **stakeholder-review** mode that checkpoints after the interview.
 
 ```text
-threadlight-design
-# then: "Design an auto-claim triage process for a commercial P&C insurer. Fast PoC mode."
+Design an auto-claim triage process for a commercial P&C insurer. Quick PoC.
 ```
 
 > Optionally pre-load a domain primer (e.g. `fsi-kyc-aml.md`) so the spec starts with the right entities, business rules, and vocabulary instead of generic placeholders.
@@ -107,7 +105,7 @@ threadlight-design
 If the process has `availability: mock` systems, generate synthetic data so every surface — mock MCP, workspace UI, eval dataset — reads the same canonical seed.
 
 ```text
-threadlight-demo-data-factory
+Generate synthetic demo data and Cosmos seed/reset scripts for this pilot's mock systems.
 ```
 
 It reads SPEC § 4 (data models), § 5 (which systems are mock), and § 11d (volumes, distributions, named golden cases, reset semantics), then writes:
@@ -139,7 +137,7 @@ It reads SPEC § 4 (data models), § 5 (which systems are mock), and § 11d (vol
 The default pattern boots a MAF Agent + SkillsProvider + JSON stub tools + a Streamlit UI on `localhost:8501`, with a **single** LLM dependency (a Foundry project *or* Azure OpenAI).
 
 ```text
-threadlight-local-test
+Run my pilot locally with the Streamlit quickstart — boot the agent, skills, and stub tools, no azd.
 # Pattern 0 (Quickstart) → http://localhost:8501
 ```
 
@@ -198,7 +196,7 @@ These three skills attach to the same spec and can be added before or alongside 
 `threadlight-deploy` reads `specs/SPEC.md`, `AGENTS.md`, `src/agent/skills/`, and the § 11c selectors in `specs/manifest.json`, then vendors the runtime + infra:
 
 ```text
-threadlight-deploy
+Make this pilot deployable to Foundry — generate the container, Dockerfile, azd project, and infra, then azd up.
 ```
 
 | Artifact                    | What it is                                                                 |
@@ -245,18 +243,19 @@ azd up
 
 ### How to get it — prompt the gate at each phase
 
-One skill, three phases. Prompt it after design, **before** `azd up`, and **after** `azd up` — every time:
+One skill, three phases. Prompt it after design, **before** `azd up`, and **after** `azd up` — `threadlight-safe-check` activates on intent each time (no command to type):
 
 ```text
-threadlight-safe-check
-# then: "Run the design phase — check the SPEC ↔ manifest contract."
-# then: "Run pre-deploy — manifest ↔ azure.yaml ↔ Bicep ↔ src/."
-# then: "Run post-deploy — manifest ↔ deployed resources ↔ channel reach."
+Run the design-phase completeness gate — does specs/manifest.json's deployment_manifest match every § 11c selector in the SPEC?
+
+Run the pre-deploy gate before I azd up — is every `yes` selector wired in azure.yaml, infra/main.bicep, and a src Dockerfile, with no orphan modules?
+
+Run the post-deploy gate — is every expected resource live, no placeholder images, no scheduled job failing its last 5 runs, all channels reachable?
 ```
 
 Each run writes a manifest under `tests/` with a top-level `"gaps": []`. **Empty array = pass** (exit `0`); any gap is a hard stop (exit `1`).
 
-> Under the hood each phase is `python -m threadlight.safe_check --phase <design|pre-deploy|post-deploy>` — but you drive it by prompting the skill.
+> Under the hood each phase is `python -m threadlight.safe_check --phase <design|pre-deploy|post-deploy>` — but you drive it by prompting.
 
 ---
 
@@ -292,7 +291,7 @@ Each run writes a manifest under `tests/` with a top-level `"gaps": []`. **Empty
 Turn the spec's § 9 eval scenarios into a runnable regression set with [`foundry-evals`](https://github.com/aiappsgbb/awesome-gbb). The demo-data factory's canonical seed is what makes scores reproducible across runs.
 
 ```text
-foundry-evals
+Turn my SPEC § 9 eval scenarios into a runnable regression set, scored against the golden seed data.
 ```
 
 | Build into the eval set | Why                                                              |
