@@ -3,11 +3,11 @@ import {
   Hammer, Rocket, Search, Code2, TestTube2, GitBranch, Workflow,
   ShieldCheck, FileCheck2, Sparkles, BookOpen, Bot, Network, Cloud, Database,
   Eye, BarChart3, Mic, Image as ImageIcon, MessageSquare, KeyRound, Plug,
-  RefreshCw, Layers, Wand2, AudioLines, FileSearch, Boxes,
+  RefreshCw, Layers, Wand2, AudioLines, FileSearch, Boxes, Award,
   Code as Github
 } from 'lucide-react';
 
-type Phase = 'build' | 'run';
+type Phase = 'build' | 'run' | 'gbb';
 
 interface Skill {
   id: string;
@@ -213,6 +213,197 @@ const SKILLS: Skill[] = [
     icon: Bot, phase: 'run', category: 'Runtime',
     surface: 'Microsoft Foundry', tags: ['registry', 'discovery']
   },
+
+  // ---------------- AWESOME-GBB (unofficial, field-curated) ----------------
+  {
+    id: 'threadlight-auto',
+    name: 'threadlight-auto',
+    description: 'One freeform prompt drives the whole pilot pipeline — design → deploy → safe-check, end to end.',
+    icon: Workflow, phase: 'gbb', category: 'Pilot delivery',
+    surface: 'Threadlight', tags: ['pilot', 'end-to-end']
+  },
+  {
+    id: 'threadlight-design',
+    name: 'threadlight-design',
+    description: 'Specs a business process into a durable SpecKit spec, then an agent architecture (AGENTS.md + skills).',
+    icon: FileSearch, phase: 'gbb', category: 'Pilot delivery',
+    surface: 'Threadlight', tags: ['spec', 'architecture']
+  },
+  {
+    id: 'threadlight-deploy',
+    name: 'threadlight-deploy',
+    description: 'Turns a designed agent project into Foundry Hosted Agent deployment artefacts — Bicep, agent.yaml, azd.',
+    icon: Rocket, phase: 'gbb', category: 'Pilot delivery',
+    surface: 'Threadlight', tags: ['deploy', 'foundry']
+  },
+  {
+    id: 'threadlight-safe-check',
+    name: 'threadlight-safe-check',
+    description: 'Three-lifecycle completeness gate (design / pre-deploy / post-deploy) that blocks half-built pilots.',
+    icon: ShieldCheck, phase: 'gbb', category: 'Pilot delivery',
+    surface: 'Threadlight', tags: ['gate', 'quality']
+  },
+  {
+    id: 'threadlight-local-test',
+    name: 'threadlight-local-test',
+    description: 'Runs a designed PoC locally without azd up — a quickstart MAF agent with stub tools and a UI.',
+    icon: TestTube2, phase: 'gbb', category: 'Pilot delivery',
+    surface: 'Threadlight', tags: ['local', 'PoC']
+  },
+  {
+    id: 'threadlight-workspace-ui',
+    name: 'threadlight-workspace-ui',
+    description: 'Generates a framework-agnostic operator UI — inbox / dashboard / console — for a pilot process.',
+    icon: Layers, phase: 'gbb', category: 'Customization',
+    surface: 'Threadlight', tags: ['UI', 'operator']
+  },
+  {
+    id: 'threadlight-event-triggers',
+    name: 'threadlight-event-triggers',
+    description: 'Scaffolds non-interactive trigger receivers (ACA jobs, HTTP, KEDA) so the agent runs on events, not chat.',
+    icon: Plug, phase: 'gbb', category: 'Customization',
+    surface: 'Threadlight', tags: ['events', 'ACA']
+  },
+  {
+    id: 'threadlight-hitl-patterns',
+    name: 'threadlight-hitl-patterns',
+    description: 'Teams Adaptive Card flows for the seven canonical human-in-the-loop action gates.',
+    icon: MessageSquare, phase: 'gbb', category: 'Customization',
+    surface: 'Threadlight', tags: ['Teams', 'HITL']
+  },
+  {
+    id: 'threadlight-demo-data-factory',
+    name: 'threadlight-demo-data-factory',
+    description: 'Per-domain synthetic data plus Cosmos seed/reset scripts so demos feel real on day one.',
+    icon: Database, phase: 'gbb', category: 'Customization',
+    surface: 'Threadlight', tags: ['demo', 'data']
+  },
+  {
+    id: 'foundry-hosted-agents',
+    name: 'foundry-hosted-agents',
+    description: 'Deploy and manage Foundry hosted agents — code deploy-mode, agent manifest, identity roles, WS invocations.',
+    icon: Bot, phase: 'gbb', category: 'Foundry agents',
+    surface: 'Foundry GBB', tags: ['hosted', 'deploy']
+  },
+  {
+    id: 'foundry-prompt-agents',
+    name: 'foundry-prompt-agents',
+    description: 'Declarative prompt agents — a model, instructions, and tools, with no containers or custom code.',
+    icon: Sparkles, phase: 'gbb', category: 'Foundry agents',
+    surface: 'Foundry GBB', tags: ['declarative', 'prompt']
+  },
+  {
+    id: 'foundry-evals',
+    name: 'foundry-evals',
+    description: 'Score hosted agents with the two-phase invoke+score pattern and Foundry built-in evaluators.',
+    icon: BarChart3, phase: 'gbb', category: 'Foundry agents',
+    surface: 'Foundry GBB', tags: ['evals', 'scoring']
+  },
+  {
+    id: 'foundry-observability',
+    name: 'foundry-observability',
+    description: 'End-to-end OpenTelemetry across hosted agents, ACA MCP servers, jobs, bots, and workspace UIs.',
+    icon: Eye, phase: 'gbb', category: 'Foundry agents',
+    surface: 'Foundry GBB', tags: ['otel', 'traces']
+  },
+  {
+    id: 'foundry-mcp-aca',
+    name: 'foundry-mcp-aca',
+    description: 'Deploy custom MCP servers as Azure Container Apps or Functions for use with Foundry hosted agents.',
+    icon: Network, phase: 'gbb', category: 'Foundry agents',
+    surface: 'Foundry GBB', tags: ['MCP', 'ACA']
+  },
+  {
+    id: 'foundry-voice-live',
+    name: 'foundry-voice-live',
+    description: 'Real-time voice agents on Foundry Voice Live — a three-rung migration ladder from OpenAI Realtime.',
+    icon: AudioLines, phase: 'gbb', category: 'Foundry agents',
+    surface: 'Foundry GBB', tags: ['voice', 'realtime']
+  },
+  {
+    id: 'foundry-memory',
+    name: 'foundry-memory',
+    description: 'Persistent agent memory across sessions — user profiles, summaries, semantic retrieval, scope isolation.',
+    icon: RefreshCw, phase: 'gbb', category: 'Foundry agents',
+    surface: 'Foundry GBB', tags: ['memory', 'state']
+  },
+  {
+    id: 'foundry-iq',
+    name: 'foundry-iq',
+    description: 'Enterprise RAG via Foundry IQ — Knowledge Bases with agentic, multi-hop, citation-backed retrieval.',
+    icon: FileSearch, phase: 'gbb', category: 'Foundry agents',
+    surface: 'Foundry GBB', tags: ['RAG', 'retrieval']
+  },
+  {
+    id: 'foundry-agt',
+    name: 'foundry-agt',
+    description: 'Wrap the Agent Governance Toolkit around agents and MCP servers — policy enforcement + hash-chained audit.',
+    icon: ShieldCheck, phase: 'gbb', category: 'Governance',
+    surface: 'Foundry GBB', tags: ['governance', 'audit']
+  },
+  {
+    id: 'citadel-hub-deploy',
+    name: 'citadel-hub-deploy',
+    description: 'Stand up the AI Citadel Governance Hub — APIM AI gateway, Foundry control plane, telemetry, private endpoints.',
+    icon: Cloud, phase: 'gbb', category: 'Governance',
+    surface: 'AI Citadel', tags: ['citadel', 'gateway']
+  },
+  {
+    id: 'citadel-spoke-onboarding',
+    name: 'citadel-spoke-onboarding',
+    description: 'Onboard a Foundry project as a Citadel spoke — access contracts, APIM connections, product policies, JWT auth.',
+    icon: Network, phase: 'gbb', category: 'Governance',
+    surface: 'AI Citadel', tags: ['citadel', 'spoke']
+  },
+  {
+    id: 'azure-sre-agent',
+    name: 'azure-sre-agent',
+    description: 'Adopt the Azure SRE Agent in GBB engagements without rebuilding the toolchain Microsoft already ships.',
+    icon: Bot, phase: 'gbb', category: 'Governance',
+    surface: 'GBB Toolkit', tags: ['SRE', 'ops']
+  },
+  {
+    id: 'azure-tenant-isolation',
+    name: 'azure-tenant-isolation',
+    description: 'Multi-tenant az / azd isolation for concurrent terminals, with a guard against cross-tenant deploys.',
+    icon: KeyRound, phase: 'gbb', category: 'Governance',
+    surface: 'GBB Toolkit', tags: ['multi-tenant', 'safety']
+  },
+  {
+    id: 'azd-patterns',
+    name: 'azd-patterns',
+    description: 'Field-tested azd patterns — hooks, ACA job deploys, and infra scripting conventions that just work.',
+    icon: GitBranch, phase: 'gbb', category: 'Governance',
+    surface: 'GBB Toolkit', tags: ['azd', 'infra']
+  },
+  {
+    id: 'gbb-pptx',
+    name: 'gbb-pptx',
+    description: 'Generate professional GBB-styled PowerPoint pitch decks programmatically with python-pptx.',
+    icon: ImageIcon, phase: 'gbb', category: 'GTM',
+    surface: 'GBB Toolkit', tags: ['pptx', 'deck']
+  },
+  {
+    id: 'gbb-humanizer',
+    name: 'gbb-humanizer',
+    description: "Strip AI-writing tells from prose — 29 patterns from Wikipedia's “Signs of AI writing.”",
+    icon: Wand2, phase: 'gbb', category: 'GTM',
+    surface: 'GBB Toolkit', tags: ['writing', 'editing']
+  },
+  {
+    id: 'ip-catalog',
+    name: 'ip-catalog',
+    description: 'Search the AI Apps GBB IP catalog — demos, accelerators, and reusable assets — via an MCP server.',
+    icon: BookOpen, phase: 'gbb', category: 'GTM',
+    surface: 'GBB Toolkit', tags: ['catalog', 'IP']
+  },
+  {
+    id: 'paygo-ptu-cost-analyzer',
+    name: 'paygo-ptu-cost-analyzer',
+    description: 'Headless Azure OpenAI PAYGO-vs-PTU cost analysis and sizing report from token-usage data.',
+    icon: BarChart3, phase: 'gbb', category: 'GTM',
+    surface: 'GBB Toolkit', tags: ['cost', 'sizing']
+  },
 ];
 
 export default function SkillsCatalog() {
@@ -237,6 +428,7 @@ export default function SkillsCatalog() {
 
   const buildSkills = filtered.filter(s => s.phase === 'build');
   const runSkills = filtered.filter(s => s.phase === 'run');
+  const gbbSkills = filtered.filter(s => s.phase === 'gbb');
 
   return (
     <>
@@ -244,7 +436,7 @@ export default function SkillsCatalog() {
         <div className="page-eyebrow">Skills catalog · Reference</div>
         <h1>Every capability the Agentic Loop ships with.</h1>
         <p className="lede">
-          The reference you consult while building — browse the building blocks that GitHub Copilot brings to the <strong>build</strong> phase and that Microsoft Foundry brings to the <strong>run</strong> phase. One consistent contract, two sides of the loop.
+          The reference you consult while building — browse the building blocks that GitHub Copilot brings to the <strong>build</strong> phase and that Microsoft Foundry brings to the <strong>run</strong> phase, plus a field-curated set of specialist <strong>GBB</strong> skills. One consistent contract, two sides of the loop.
         </p>
       </div>
 
@@ -258,13 +450,13 @@ export default function SkillsCatalog() {
           />
         </div>
         <div className="chip-group catalog-chips" role="tablist">
-          {(['all', 'build', 'run'] as const).map(p => (
+          {(['all', 'build', 'run', 'gbb'] as const).map(p => (
             <button
               key={p}
               className={`chip ${phaseFilter === p ? 'active' : ''}`}
               onClick={() => setPhaseFilter(p)}
             >
-              {p === 'all' ? 'All phases' : p === 'build' ? 'Build' : 'Run'}
+              {p === 'all' ? 'All phases' : p === 'build' ? 'Build' : p === 'run' ? 'Run' : 'GBB-curated'}
             </button>
           ))}
         </div>
@@ -319,6 +511,28 @@ export default function SkillsCatalog() {
         )}
       </section>
 
+      <section className="catalog-phase">
+        <div className="catalog-phase-head">
+          <div className="catalog-phase-icon gbb"><Award size={18} /></div>
+          <div>
+            <div className="catalog-phase-eyebrow">awesome-gbb · unofficial</div>
+            <h2>Field-curated specialist skills, built by GBB.</h2>
+            <p>The flagship motions the playbooks lean on — Threadlight pilots, Foundry hosted agents, and AI Citadel governance — packaged as named skills you invoke by prompt.</p>
+          </div>
+          <span className="catalog-count">{gbbSkills.length}</span>
+        </div>
+        <p className="catalog-gbb-disclaimer">
+          <Award size={14} /> <span><strong>Community, not a product.</strong> These are unofficial, GBB-curated skills — battle-tested in the field for specialized agentic scenarios, but not Microsoft-supported offerings. Drive them the same way as any skill: name it in your prompt (e.g. <em>“Use the threadlight-auto skill to…”</em>).</span>
+        </p>
+        {gbbSkills.length === 0 ? (
+          <div className="catalog-empty">No GBB skills match your filters.</div>
+        ) : (
+          <div className="catalog-grid">
+            {gbbSkills.map(s => <SkillCard key={s.id} s={s} />)}
+          </div>
+        )}
+      </section>
+
       <section className="catalog-cta">
         <BookOpen size={18} />
         <div>
@@ -336,7 +550,7 @@ function SkillCard({ s }: { s: Skill }) {
       <div className="skill-card-head">
         <div className="skill-card-icon"><Icon size={18} /></div>
         <span className={`skill-phase-badge ${s.phase}`}>
-          {s.phase === 'build' ? 'Build' : 'Run'}
+          {s.phase === 'build' ? 'Build' : s.phase === 'run' ? 'Run' : 'GBB'}
         </span>
       </div>
       <h3>{s.name}</h3>

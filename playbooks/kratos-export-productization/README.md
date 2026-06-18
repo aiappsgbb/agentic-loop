@@ -4,8 +4,8 @@
 
 **How you get it:** picking an export is a triage, not a build. Export one persona, review it, deploy it, prove it, then harden it — driving the skill steps **by prompting**:
 
-1. **Export** — pick the persona that matches the customer's process; download it as a Foundry agent (UI button or `GET …/export`)
-2. **Review** — inspect the ZIP and boot it locally before you spend an `azd up`
+1. **Export** — on the **live Kratos site**, pick the persona that matches the customer's process and click *Download as Foundry Agent*
+2. **Review & customize** — inspect the ZIP and tailor it (prompt, mocks → real MCP, surfaces) before you spend an `azd up`
 3. **`azd up`** — deploy into the customer subscription, then register the agent in Foundry
 4. **`foundry-evals`** — score it; smoke-test the 23 surfaces with `e2e-smoke`
 5. **`threadlight-safe-check` + `citadel-spoke-onboarding`** — harden through the five guardrails and land in AI Citadel
@@ -23,24 +23,24 @@ The whole flow at a glance:
 
 ![The Kratos review-to-production path — pick one of eight personas, GET the export, then review, azd up, register, and e2e-smoke 23 surfaces, evaluate with traces, harden via the five guardrails, and optionally land in AI Citadel.](./images/review-to-prod.svg)
 
-This deck is organized as five chapters: **Pick the Export → Review the Export → Deploy & Validate → Evaluate & Observe → Productize.**
+This deck is organized as five chapters: **Pick the Export → Review & Customize → Deploy & Validate → Evaluate & Observe → Productize.**
 
 ### Setup
 
-You need the Kratos repo (to trigger an export and to deploy) and the standard `azd` toolchain:
+You don't clone Kratos and you don't stand it up. The entrypoint is the **live Kratos site** — you export a persona straight from it, then everything after runs from that ZIP. All you add locally is the standard `azd` toolchain to deploy it:
 
 ```text
+Live Kratos site — the "Download as Foundry Agent" button (a shared deployment is fine)
 azd ≥ 1.12 · Azure CLI · Docker · Node.js 20+ · Python 3.11+
-git clone https://github.com/kmavrodis/kratos-agent && cd kratos-agent
 ```
 
-> You can export from a **running** Kratos instance (the UI's "Download as Foundry Agent" button, or the API) — you don't have to deploy Kratos yourself if a shared instance already exists.
+> The export is a self-contained ZIP. Once you've downloaded it from the live site, there is no Kratos backend in the loop again — you review, customize, and ship that artefact.
 
 ---
 
 ## Pick the Export
 
-**What you get:** one persona, exported as one self-contained ZIP — the one whose skills and mocks match the customer's process. **How:** survey the eight personas, pick by process (not flashiest demo), then download it as a Foundry agent.
+**What you get:** one persona, exported as one self-contained ZIP — the one whose skills and mocks match the customer's process. **How:** survey the eight personas on the live Kratos site, pick by process (not flashiest demo), then download it as a Foundry agent.
 
 ---
 
@@ -65,14 +65,14 @@ Kratos ships eight configurable use-case personas, each with its own system prom
 
 ### Download as a Foundry Hosted Agent
 
-Trigger the export from the UI ("Download as Foundry Agent" under the persona picker) or directly from the API:
+This is the entrypoint to the whole playbook. On the **live Kratos site**, open the persona and click **"Download as Foundry Agent"** under the persona picker — you get the ZIP straight from the running app. If you're scripting it, the same export is one API call against the live host:
 
 ```bash
-curl -OJ http://localhost:8000/api/use-cases/insurance/export
+curl -OJ https://<kratos-host>/api/use-cases/insurance/export
 # → insurance-foundry-agent.zip
 ```
 
-The endpoint is `GET /api/use-cases/{use_case}/export`. The ZIP is self-contained — it surfaces in the target Foundry project alongside any other hosted agents, with no Kratos backend at runtime.
+> Under the hood the button calls `GET /api/use-cases/{use_case}/export`. The ZIP is self-contained — it surfaces in the target Foundry project alongside any other hosted agents, with no Kratos backend at runtime.
 
 ---
 
@@ -86,9 +86,9 @@ The endpoint is `GET /api/use-cases/{use_case}/export`. The ZIP is self-containe
 
 ---
 
-## Review the Export
+## Review & Customize the Export
 
-**What you get:** confidence the export is what you think it is — the right system prompt, the right skills, booting clean — before you spend an `azd up`. **How:** inspect the ZIP, then run it locally with the Kratos full-local stack (no Azure needed).
+**What you get:** an export tailored to *this* customer — the right prompt, the right skills, real integrations where they matter — before you spend an `azd up`. **How:** inspect the ZIP to confirm what you exported, then customize it directly. No Kratos backend in the loop.
 
 ---
 
@@ -110,27 +110,31 @@ A `<persona>-foundry-agent.zip` ships everything to run the same agent standalon
 
 ---
 
-### Run it locally first
+### Customize from the export
 
-Before spending an `azd up`, confirm the export boots. Kratos's full-local mode needs no Azure — a Copilot token replaces Foundry models, SQLite replaces Cosmos, Azurite replaces Blob:
+The export is your starting point, not a frozen artefact. This is where you tailor the persona to *this* customer — and because you're editing the exported ZIP, every change is exactly what `azd up` will ship:
 
-```bash
-cp .env.local.example .env.local
-# set COPILOT_GITHUB_TOKEN=ghu_xxx  (github.com/settings/tokens, Copilot scope)
-./run-local.sh            # or .\run-local.ps1 on Windows
+- **Sharpen the prompt** — edit `copilot-instructions.md` to match the customer's tone, policies, and escalation rules.
+- **Swap a mock for a real system** — every `mocks/packages/` server is a stub standing in for a customer integration. Replace one with a real MCP server by naming the skill in your prompt:
+
+```text
+Use the foundry-mcp-aca skill to replace the salesforce-mcp-server mock in this
+export with a real MCP server on Azure Container Apps, wired to the customer's CRM.
 ```
 
-> The exported `main.py` is a single-tenant runtime; the local Kratos stack is the fastest way to exercise the persona's skills and mocks before you commit it to a customer subscription.
+- **Add operator surfaces** — Teams, a workspace UI, or event channels, without a rewrite. The **[Threadlight Customization](/playbooks/threadlight-customization)** playbook drives this end-to-end on the exported agent.
+
+> Customizing on the export — not on the Kratos backend — is the point: you stay in the production artefact the whole way, so what the customer sees in the demo becomes what you harden and ship.
 
 ---
 
-### What good looks like — Review the Export
+### What good looks like — Review & Customize
 
 | Check               | Pass condition                                                        |
 |---------------------|----------------------------------------------------------------------|
 | Prompt reviewed     | `copilot-instructions.md` matches the behavior the customer saw       |
 | Skills accounted    | Every `skills/` entry is intentional; you know which are mocked       |
-| Boots clean         | The persona runs locally and answers a representative prompt          |
+| Customized          | Prompt / mocks / surfaces tailored to the customer — or intentionally left as the demo default |
 | Mocks flagged       | Every `mocks/packages/` server has a real-integration owner / plan    |
 
 ---

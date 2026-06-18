@@ -2063,6 +2063,30 @@
   background: linear-gradient(135deg, rgba(34,211,238,0.22), rgba(34,211,238,0.05));
   border: 1px solid rgba(34,211,238,0.35);
 }
+.catalog-phase-icon.gbb {
+  background: linear-gradient(135deg, rgba(255,181,71,0.24), rgba(255,181,71,0.05));
+  border: 1px solid rgba(255,181,71,0.4);
+}
+.catalog-gbb-disclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 0 0 16px;
+  padding: 11px 14px;
+  border: 1px solid rgba(255,181,71,0.32);
+  border-radius: 12px;
+  background: rgba(255,181,71,0.07);
+  color: var(--text-dim);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.catalog-gbb-disclaimer svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #ffb547;
+}
+.catalog-gbb-disclaimer strong { color: var(--text); }
+.catalog-gbb-disclaimer em { font-style: italic; color: var(--text); }
 .catalog-count {
   margin-left: auto;
   align-self: center;
@@ -2116,6 +2140,13 @@
   border-radius: 0 3px 3px 0;
   background: linear-gradient(180deg, #22d3ee, #38bdf8);
 }
+.skill-card.phase-gbb::before {
+  content: '';
+  position: absolute; left: 0; top: 18px; bottom: 18px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(180deg, #ffb547, #ff8a3d);
+}
 .skill-card h3 {
   margin: 0;
   font-size: 15.5px;
@@ -2161,8 +2192,14 @@
   background: rgba(34,211,238,0.15);
   border-color: rgba(34,211,238,0.4);
 }
+.skill-phase-badge.gbb {
+  color: #ffd9a0;
+  background: rgba(255,181,71,0.15);
+  border-color: rgba(255,181,71,0.42);
+}
 :root[data-theme='light'] .skill-phase-badge.build { color: #4c2bd9; background: rgba(124,92,255,0.10); }
 :root[data-theme='light'] .skill-phase-badge.run { color: #0d758a; background: rgba(34,211,238,0.12); }
+:root[data-theme='light'] .skill-phase-badge.gbb { color: #a35a06; background: rgba(255,181,71,0.16); }
 .skill-card-foot {
   display: flex;
   align-items: center;
