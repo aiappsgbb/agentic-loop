@@ -3294,6 +3294,7 @@
 .kratos-try-section { margin-top: 8px; }
 .kratos-mode-toggle {
   display: inline-flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin: 20px 0 4px;
   padding: 6px;
@@ -3347,6 +3348,83 @@
   border-radius: var(--radius);
   background: var(--gradient-soft);
   border: 1px solid var(--border-strong);
+}
+
+/* ── Self-host Kratos panel ── */
+.selfhost {
+  border-radius: var(--radius);
+  background: var(--gradient-soft);
+  border: 1px solid var(--border-strong);
+  padding: 22px 24px;
+}
+.selfhost .kratos-launcher-head { margin-bottom: 20px; }
+
+.selfhost-grid {
+  display: grid;
+  grid-template-columns: minmax(300px, 380px) 1fr;
+  gap: 20px;
+  align-items: stretch;
+}
+.selfhost-aside {
+  display: flex; flex-direction: column;
+  padding: 16px 16px 18px;
+  border-radius: 14px;
+  background: var(--bg-1);
+  border: 1px solid var(--border-strong);
+}
+.selfhost-step-tag {
+  display: inline-flex; align-items: center; gap: 6px; align-self: flex-start;
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--accent-2);
+  padding: 3px 9px; border-radius: 999px;
+  background: var(--surface-strong); border: 1px solid var(--border-strong);
+}
+.selfhost-lede {
+  margin: 10px 0 12px; font-size: 13px; line-height: 1.55; color: var(--text-dim);
+}
+.selfhost-lede code, .selfhost-note code {
+  font-size: 12px; padding: 1px 5px; border-radius: 5px;
+  background: var(--surface-strong); border: 1px solid var(--border-strong);
+}
+.selfhost-aside .code-block { margin-top: 0; }
+.selfhost-prompt {
+  margin-top: 0;
+  display: flex; flex-direction: column;
+}
+.selfhost-prompt pre {
+  flex: 1;
+  max-height: 560px;
+  overflow-y: auto;
+}
+.selfhost-manual {
+  margin-top: 16px;
+  border: 1px solid var(--border-strong); border-radius: 12px;
+  background: var(--bg-0);
+  overflow: hidden;
+}
+.selfhost-manual > summary {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px; cursor: pointer;
+  font-size: 13px; font-weight: 600; color: var(--text);
+  list-style: none;
+}
+.selfhost-manual > summary::-webkit-details-marker { display: none; }
+.selfhost-manual[open] > summary { border-bottom: 1px solid var(--border-strong); }
+.selfhost-manual-body { padding: 14px 16px 16px; }
+.selfhost-note {
+  display: flex; align-items: flex-start; gap: 8px;
+  margin: 12px 0 0; font-size: 12.5px; line-height: 1.55; color: var(--text-dim);
+}
+.selfhost-note svg { flex: none; margin-top: 2px; color: var(--accent-2); }
+.selfhost-foot {
+  display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between;
+  margin-top: 18px;
+}
+.selfhost-foot .selfhost-note { margin: 0; flex: 1 1 320px; }
+.selfhost-foot .kratos-cta { flex: none; }
+@media (max-width: 900px) {
+  .selfhost-grid { grid-template-columns: 1fr; }
+  .selfhost-prompt pre { max-height: none; }
 }
 
 /* ── Curated persona gallery (no inner chat — click a card to open live) ── */
