@@ -93,14 +93,14 @@ Four chapters: **Five Guardrails → Enforce the Gate → Harden to Production �
 
 ### How to get it — prompt the gate across all three lifecycles
 
-Prompt the gate at each stage — `threadlight-safe-check` activates on intent (no command to type) and validates the project against the encoded guardrails. It's not a linter; it's the ship/no-ship gate.
+Name the skill in each prompt so the right gate runs — `threadlight-safe-check` validates the project against the encoded guardrails. It's not a linter; it's the ship/no-ship gate.
 
 ```text
-Run the design-phase gate — is the SPEC complete across all five guardrails?
+Use the threadlight-safe-check skill to run the design-phase gate — is the SPEC complete across all five guardrails?
 
-Run the pre-deploy gate before I azd up — do Bicep, the keyless identity wiring, and telemetry config all validate?
+Use the threadlight-safe-check skill to run the pre-deploy gate before I azd up — do Bicep, the keyless identity wiring, and telemetry config all validate?
 
-Run the post-deploy gate — verify the live deployment: real images (no placeholder), channels reachable, telemetry flowing.
+Use the threadlight-safe-check skill to run the post-deploy gate — verify the live deployment: real images (no placeholder), channels reachable, telemetry flowing.
 ```
 
 > Under the hood each phase is `python -m threadlight.safe_check --phase <design|pre-deploy|post-deploy>` — but you drive it by prompting.
