@@ -106,5 +106,17 @@
     "techniques": ["Governance", "Observability"],
     "buildSkills": ["threadlight-safe-check", "foundry-evals", "foundry-observability"],
     "deploymentSkills": ["foundry-hosted-agents", "citadel-hub-deploy", "citadel-spoke-onboarding", "foundry-agt"]
+  },
+  {
+    "slug": "kratos-export-productization",
+    "name": "Kratos Export Review & Productization",
+    "icon": "Wrench",
+    "level": "Intermediate",
+    "steps": 5,
+    "summary": "Pick a Kratos use-case persona, review its export, and ship it: download it as a standalone Foundry hosted agent, validate it, then harden it through the productionization guardrails.",
+    "use_when": "A Kratos demo persona landed well and you want to hand the customer that exact agent \u2014 running, governed \u2014 on their own Azure, not a rebuild.",
+    "techniques": ["Domain-Specific Agents", "Governance", "Observability"],
+    "buildSkills": ["copilot-sdk", "mcp-builder", "foundry-evals"],
+    "deploymentSkills": ["bicep-azd-patterns", "aigbb-observability", "threadlight-safe-check", "citadel-spoke-onboarding"]
   }
 ]

@@ -5,7 +5,7 @@ import {
 import { playbooks, playbookHasDeck, scenariosForPlaybook } from '../data/links';
 
 const ICONS: Record<string, typeof Rocket> = {
-  Rocket, GitBranch, Database, ShieldCheck, Eye, BookOpen, Workflow, Layers,
+  Rocket, GitBranch, Database, ShieldCheck, Eye, BookOpen, Workflow, Layers, Wrench,
 };
 
 export default function Playbooks() {
