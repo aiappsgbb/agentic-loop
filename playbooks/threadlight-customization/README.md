@@ -8,17 +8,7 @@
 
 Customization is not a fork. Every surface reads the **same** `specs/SPEC.md`, the **same** seed data, and the **same** governance. You're adding layers, not rewriting:
 
-```text
-specs/SPEC.md  (the customization contract)
-  │
-  ├─ § 4/5/11d  ─► threadlight-demo-data-factory   → industry-realistic seed + reset
-  ├─ § 8        ─► threadlight-hitl-patterns        → Teams Adaptive Cards (7 gates)
-  ├─ § 8b       ─► threadlight-workspace-ui         → operator dashboard (pick the shape)
-  └─ § 10/10b   ─► threadlight-event-triggers       → ACA jobs / HTTP / KEDA receivers
-       │
-       ▼
-one agent ──► Workspace UI · Teams 1:1 · M365 Copilot Chat   (guardrails enforced once)
-```
+![One agent built from four customization skills — demo-data-factory, hitl-patterns, workspace-ui, event-triggers — all reading one SPEC and rendering to Workspace UI, Teams, and M365 Copilot, with guardrails enforced once in the substrate.](./images/surfaces.svg)
 
 This playbook is organized as four chapters: **Tailor the Process → Operator Surfaces → Event & Channel Surfaces → Start From a Template.**
 

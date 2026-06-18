@@ -16,6 +16,7 @@ export interface Playbook {
   name: string;
   icon: string;
   level: string;
+  featured?: boolean;
   steps: number;
   summary: string;
   use_when: string;

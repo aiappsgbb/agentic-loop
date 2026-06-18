@@ -11,6 +11,14 @@ const PLAYBOOK_FILES = import.meta.glob('/playbooks/*/README.md', {
   eager: true,
 }) as Record<string, string>;
 
+// Authored diagram SVGs, inlined (not <img>) so they inherit the live theme
+// via currentColor + CSS custom properties instead of being sandboxed.
+const DIAGRAMS = import.meta.glob('/playbooks/*/images/*.svg', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+
 interface Slide {
   id: string;
   chapter: string;
@@ -306,6 +314,19 @@ export default function PlaybookPage() {
                     {children}
                   </a>
                 );
+              },
+              img: ({ src, alt }) => {
+                const key = typeof src === 'string' ? src : '';
+                const svg = key.endsWith('.svg') ? DIAGRAMS[key] : undefined;
+                if (svg) {
+                  return (
+                    <figure className="md-figure">
+                      <div className="md-figure-svg" dangerouslySetInnerHTML={{ __html: svg }} />
+                      {alt ? <figcaption>{alt}</figcaption> : null}
+                    </figure>
+                  );
+                }
+                return <img src={key} alt={alt ?? ''} loading="lazy" />;
               },
             }}
           >

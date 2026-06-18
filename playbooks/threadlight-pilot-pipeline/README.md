@@ -19,26 +19,7 @@ This playbook is the **core in-session pipeline**. Two companion playbooks go de
 
 The chain flows in canonical order. Every skill after `threadlight-design` reads `specs/SPEC.md` as its input contract:
 
-```text
-brief
-  │
-  ▼
-threadlight-design ─────────► specs/SPEC.md + manifest.json + AGENTS.md
-  │
-  ├─ (optional) threadlight-demo-data-factory  → synthetic data + Cosmos seed/reset
-  ▼
-threadlight-local-test ─────► http://localhost:8501        (inner loop, no azd)
-  │
-  ├─ (optional) hitl-patterns · workspace-ui · event-triggers
-  ▼
-threadlight-deploy ─────────► azd up   (ACR · Bicep/AVM · Foundry hosted agent)
-  │
-  ▼
-threadlight-safe-check ─────► --phase post-deploy → gaps: []   (mandatory gate)
-  │
-  ▼
-foundry-evals + foundry-observability  → traces · regression sets · flywheel
-```
+![The pilot chain — brief → design → local-test → deploy → safe-check gate → evals + observability, with optional steps that slot in anywhere.](./images/chain.svg)
 
 This playbook is organized as five chapters that mirror the pipeline: **Design → Local Test → Deploy → Safe-Check → Evaluate & Observe.**
 

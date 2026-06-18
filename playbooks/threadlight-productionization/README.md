@@ -8,18 +8,7 @@
 
 The guardrails aren't a checklist you apply at the end. They're encoded in the generated SPEC, code, and Bicep — and the same substrate that demos is the substrate that hardens:
 
-```text
-SPEC.md · agent code · Bicep · azure.yaml · eval dataset · telemetry config · governance policy · audit trail
-        │  (every pilot ships this substrate)
-        ▼
-  ┌─────────────── five guardrails (refused if missing) ───────────────┐
-  │ keyless identity · telemetry · citation grounding · audit · evals  │
-  └────────────────────────────────────────────────────────────────────┘
-        │
-        ▼
-  safe-check gate ──► harden (CI) ──► AI Citadel landing zone
-  (design / pre-deploy / post-deploy)          (APIM + AGT + VNet)
-```
+![The substrate as paved path — five guardrails (keyless identity, telemetry, citation grounding, audit, evals) enforced once, gated by threadlight-safe-check across design, pre-deploy and post-deploy, then hardened by the AI Citadel landing zone.](./images/paved-path.svg)
 
 Four chapters: **Five Guardrails → Enforce the Gate → Harden to Production → The Paved Path to AI Citadel.**
 

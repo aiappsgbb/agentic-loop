@@ -17,19 +17,7 @@ The exported ZIP is the **same artefact shape** a Threadlight pilot produces (`m
 
 Picking an export is a triage, not a build. The flow:
 
-```text
-Kratos personas (generic · insurance · retail-banking · wealth-management ·
-                 sales-account-review · hr-onboarding · it-service-desk · clinician-visit-prep)
-        │  pick by what the customer needs
-        ▼
-GET /api/use-cases/<persona>/export ──► <persona>-foundry-agent.zip
-        │  (copilot-instructions · skills/ · mcp-config · mocks/ · main.py · Bicep)
-        ▼
-review the ZIP ──► run locally ──► azd up ──► register in Foundry ──► e2e-smoke (23 surfaces)
-        │
-        ▼
-evals (validation / foundry) + traces ──► harden via the five guardrails ──► AI Citadel
-```
+![The Kratos review-to-production path — pick one of eight personas, GET the export, then review, azd up, register, and e2e-smoke 23 surfaces, evaluate with traces, harden via the five guardrails, and optionally land in AI Citadel.](./images/review-to-prod.svg)
 
 This deck is organized as five chapters: **Pick the Export → Review the Export → Deploy & Validate → Evaluate & Observe → Productize.**
 

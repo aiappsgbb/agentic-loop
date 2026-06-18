@@ -779,6 +779,59 @@
   background: rgba(74,222,128,0.12); color: var(--success); font-size: 11px;
 }
 
+/* ---------- Flagship playbooks ---------- */
+.flagship-section { margin-top: 28px; }
+.flagship-banner {
+  display: flex; gap: 16px; align-items: flex-start;
+  padding: 20px 22px; border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, transparent), color-mix(in srgb, var(--accent-2) 9%, transparent)),
+    var(--surface);
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
+}
+.flagship-banner-icon {
+  flex: none; width: 40px; height: 40px; border-radius: 11px;
+  display: grid; place-items: center;
+  background: var(--accent); color: #fff;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.flagship-banner-copy { min-width: 0; }
+.flagship-banner-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent-2); margin-bottom: 5px;
+}
+.flagship-banner h2 { margin: 0 0 7px; font-size: 18px; font-weight: 650; letter-spacing: -0.01em; }
+.flagship-banner p { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--text-dim); }
+.flagship-banner strong { color: var(--text); font-weight: 600; }
+.flagship-section .playbook-list { margin-top: 14px; }
+
+.playbook-row.flagship {
+  position: relative;
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border-strong));
+  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+}
+.playbook-row.flagship::before {
+  content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px;
+  border-radius: 0 3px 3px 0; background: var(--accent);
+}
+.playbook-row.flagship:hover { border-color: var(--accent); }
+
+.playbook-row-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.playbook-row-head h3 { margin: 0; }
+.flagship-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 9px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent);
+}
+
+.playbook-section-label {
+  margin: 32px 0 0; font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-muted);
+}
+
 /* ---------- Theme switch ---------- */
 .theme-switch {
   display: inline-flex;
@@ -2443,6 +2496,55 @@
   margin: 14px auto;
   border: 1px solid var(--border);
 }
+
+/* ---- Inlined diagram figures (authored SVG, theme-adaptive) ---- */
+.md-figure {
+  margin: 20px 0 22px;
+  padding: 20px 20px 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background:
+    radial-gradient(120% 120% at 0% 0%, rgba(124, 92, 255, 0.06), transparent 55%),
+    var(--bg-1, var(--surface));
+}
+.md-figure-svg { width: 100%; }
+.md-figure-svg svg { display: block; width: 100%; height: auto; }
+.md-figure figcaption {
+  margin-top: 12px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  text-align: center;
+  letter-spacing: 0.01em;
+}
+/* Shared classes used inside authored diagram SVGs (kept lean per-file). */
+.md-figure-svg svg text { fill: currentColor; }
+.md-figure-svg .df-node { fill: var(--surface-strong); stroke: var(--border-strong); stroke-width: 1.25; }
+.md-figure-svg .df-node.is-soft { fill: var(--surface); }
+.md-figure-svg .df-title { font: 600 14px/1.2 inherit; fill: var(--text); }
+.md-figure-svg .df-sub { font: 400 11.5px/1.2 inherit; fill: var(--text-dim); }
+.md-figure-svg .df-kicker { font: 700 10px/1 inherit; letter-spacing: 0.12em; text-transform: uppercase; fill: var(--text-muted); }
+.md-figure-svg .df-edge { stroke: var(--text-muted); stroke-width: 1.6; fill: none; }
+.md-figure-svg .df-edge-em { stroke: var(--accent); stroke-width: 2; fill: none; }
+.md-figure-svg .df-elabel { font: 500 11px/1 inherit; fill: var(--text-dim); }
+.md-figure-svg .df-arrow { fill: var(--text-muted); }
+.md-figure-svg .df-arrow-em { fill: var(--accent); }
+.md-figure-svg .df-a1 { fill: var(--accent); }
+.md-figure-svg .df-a2 { fill: var(--accent-2); }
+.md-figure-svg .df-a3 { fill: var(--accent-3); }
+.md-figure-svg .df-a4 { fill: var(--accent-4); }
+.md-figure-svg .df-bar1 { fill: var(--accent); }
+.md-figure-svg .df-bar2 { fill: var(--accent-2); }
+.md-figure-svg .df-bar3 { fill: var(--accent-3); }
+.md-figure-svg .df-bar4 { fill: var(--accent-4); }
+.md-figure-svg .df-stroke1 { stroke: var(--accent); }
+.md-figure-svg .df-stroke2 { stroke: var(--accent-2); }
+.md-figure-svg .df-ok { fill: var(--success); }
+.md-figure-svg .df-warn { fill: var(--accent-4); }
+.md-figure-svg .df-bad { fill: var(--accent-3); }
+.md-figure-svg .df-chip { fill: var(--surface-strong); stroke: var(--border-strong); stroke-width: 1; }
+.md-figure-svg .df-chip-t { font: 600 11px/1 inherit; fill: var(--text); }
+.md-figure-svg .df-band { fill: var(--surface); stroke: var(--border); stroke-width: 1; stroke-dasharray: 5 5; }
+.md-figure-svg .df-band-label { font: 700 10px/1 inherit; letter-spacing: 0.1em; text-transform: uppercase; fill: var(--text-muted); }
 .playbook-slide-body a { color: var(--accent-2); }
 .playbook-slide-body table {
   width: 100%;

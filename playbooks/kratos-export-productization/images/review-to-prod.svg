@@ -1,0 +1,93 @@
+<svg viewBox="0 0 900 560" role="img" aria-label="The Kratos review-to-production path: pick a persona, export, review, deploy, register, smoke-test, evaluate, harden, ship" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="kr-arr" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="df-arrow"/>
+    </marker>
+  </defs>
+
+  <!-- personas -->
+  <text class="df-kicker" x="24" y="32">Pick a persona — 8 shipped</text>
+  <g>
+    <rect class="df-chip" x="24" y="42" width="84" height="22" rx="11"/>
+    <text class="df-chip-t" x="66" y="57" text-anchor="middle">generic</text>
+    <rect class="df-chip" x="120" y="42" width="132" height="22" rx="11"/>
+    <text class="df-chip-t" x="186" y="57" text-anchor="middle">retail-banking</text>
+    <rect class="df-chip" x="264" y="42" width="160" height="22" rx="11"/>
+    <text class="df-chip-t" x="344" y="57" text-anchor="middle">wealth-management</text>
+    <rect class="df-chip" x="436" y="42" width="100" height="22" rx="11"/>
+    <text class="df-chip-t" x="486" y="57" text-anchor="middle">insurance</text>
+
+    <rect class="df-chip" x="24" y="72" width="180" height="22" rx="11"/>
+    <text class="df-chip-t" x="114" y="87" text-anchor="middle">sales-account-review</text>
+    <rect class="df-chip" x="216" y="72" width="130" height="22" rx="11"/>
+    <text class="df-chip-t" x="281" y="87" text-anchor="middle">hr-onboarding</text>
+    <rect class="df-chip" x="358" y="72" width="140" height="22" rx="11"/>
+    <text class="df-chip-t" x="428" y="87" text-anchor="middle">it-service-desk</text>
+    <rect class="df-chip" x="510" y="72" width="178" height="22" rx="11"/>
+    <text class="df-chip-t" x="599" y="87" text-anchor="middle">clinician-visit-prep</text>
+  </g>
+
+  <line class="df-edge" x1="450" y1="102" x2="450" y2="126" marker-end="url(#kr-arr)"/>
+
+  <!-- export -->
+  <rect class="df-node" x="230" y="128" width="440" height="58" rx="13"/>
+  <rect class="df-bar2" x="233" y="131" width="5" height="52" rx="2.5"/>
+  <text class="df-title" x="252" y="154">GET /api/use-cases/{persona}/export</text>
+  <text class="df-sub" x="252" y="173">one curl → a runnable, deployable agent repo</text>
+
+  <line class="df-edge" x1="450" y1="186" x2="450" y2="210" marker-end="url(#kr-arr)"/>
+
+  <!-- 4-stage pipeline -->
+  <g>
+    <rect class="df-node" x="24" y="220" width="180" height="66" rx="12"/>
+    <circle class="df-a1" cx="114" cy="220" r="15"/>
+    <text x="114" y="225" text-anchor="middle" style="fill:#fff" font-weight="700" font-size="13">1</text>
+    <text class="df-title" x="114" y="252" text-anchor="middle">review</text>
+    <text class="df-sub" x="114" y="270" text-anchor="middle">read SPEC · diff</text>
+
+    <rect class="df-node" x="238" y="220" width="180" height="66" rx="12"/>
+    <circle class="df-a1" cx="328" cy="220" r="15"/>
+    <text x="328" y="225" text-anchor="middle" style="fill:#fff" font-weight="700" font-size="13">2</text>
+    <text class="df-title" x="328" y="252" text-anchor="middle">azd up</text>
+    <text class="df-sub" x="328" y="270" text-anchor="middle">provision + deploy</text>
+
+    <rect class="df-node" x="452" y="220" width="180" height="66" rx="12"/>
+    <circle class="df-a1" cx="542" cy="220" r="15"/>
+    <text x="542" y="225" text-anchor="middle" style="fill:#fff" font-weight="700" font-size="13">3</text>
+    <text class="df-title" x="542" y="252" text-anchor="middle">register</text>
+    <text class="df-sub" x="542" y="270" text-anchor="middle">wire the surfaces</text>
+
+    <rect class="df-node" x="666" y="220" width="180" height="66" rx="12"/>
+    <circle class="df-a4" cx="756" cy="220" r="15"/>
+    <text x="756" y="225" text-anchor="middle" style="fill:#0c0f16" font-weight="700" font-size="13">4</text>
+    <text class="df-title" x="756" y="252" text-anchor="middle">e2e-smoke</text>
+    <text class="df-sub" x="756" y="270" text-anchor="middle">23 surfaces green</text>
+
+    <line class="df-edge" x1="206" y1="253" x2="236" y2="253" marker-end="url(#kr-arr)"/>
+    <line class="df-edge" x1="420" y1="253" x2="450" y2="253" marker-end="url(#kr-arr)"/>
+    <line class="df-edge" x1="634" y1="253" x2="664" y2="253" marker-end="url(#kr-arr)"/>
+  </g>
+
+  <line class="df-edge" x1="435" y1="288" x2="435" y2="316" marker-end="url(#kr-arr)"/>
+
+  <!-- evals -->
+  <rect class="df-node" x="230" y="318" width="440" height="56" rx="13"/>
+  <rect class="df-bar3" x="233" y="321" width="5" height="50" rx="2.5"/>
+  <text class="df-title" x="252" y="343">foundry-evals + observability</text>
+  <text class="df-sub" x="252" y="361">traces · regression sets · the improvement flywheel</text>
+
+  <line class="df-edge" x1="450" y1="374" x2="450" y2="400" marker-end="url(#kr-arr)"/>
+
+  <!-- harden band -->
+  <rect class="df-band" x="24" y="404" width="852" height="50" rx="12"/>
+  <text class="df-band-label" x="44" y="426">Harden — five guardrails</text>
+  <text class="df-sub" x="44" y="444">keyless identity · telemetry · citation grounding · audit · evals</text>
+
+  <line class="df-edge" x1="450" y1="454" x2="450" y2="480" marker-end="url(#kr-arr)"/>
+
+  <!-- citadel -->
+  <rect class="df-node is-soft" x="300" y="484" width="300" height="58" rx="13"/>
+  <rect class="df-bar2" x="303" y="487" width="5" height="52" rx="2.5"/>
+  <text class="df-title" x="322" y="510">AI Citadel — optional</text>
+  <text class="df-sub" x="322" y="529">APIM · AGT policy · VNet</text>
+</svg>
