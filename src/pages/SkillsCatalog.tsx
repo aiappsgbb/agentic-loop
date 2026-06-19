@@ -476,6 +476,7 @@ const PHASE_META: Record<Phase, { icon: typeof Hammer; eyebrow: string; title: s
 };
 
 const TAB_LABEL: Record<Phase, string> = { build: 'Build', run: 'Run', gbb: 'GBB-curated' };
+const SURFACE_TAG: Record<Phase, string> = { build: 'GitHub Copilot', run: 'Microsoft Foundry', gbb: 'Field-curated' };
 
 export default function SkillsCatalog() {
   const [tab, setTab] = useState<Phase>('build');
@@ -535,9 +536,12 @@ export default function SkillsCatalog() {
               className={`catalog-tab accent-${p} ${tab === p ? 'active' : ''}`}
               onClick={() => selectTab(p)}
             >
-              <TabIcon size={16} />
-              <span>{TAB_LABEL[p]}</span>
-              <span className="catalog-tab-count">{phaseCounts[p]}</span>
+              <span className="catalog-tab-top">
+                <TabIcon size={19} />
+                <span className="catalog-tab-label">{TAB_LABEL[p]}</span>
+                <span className="catalog-tab-count">{phaseCounts[p]}</span>
+              </span>
+              <span className="catalog-tab-tag">{SURFACE_TAG[p]}</span>
             </button>
           );
         })}
