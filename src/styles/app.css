@@ -2590,6 +2590,197 @@
   letter-spacing: -0.4px;
   line-height: 1.2;
 }
+
+/* ── Deck visual overhaul: per-chapter accent + hero ──────────────── */
+.playbook-page { --ph: var(--accent); }
+
+.playbook-slide { position: relative; overflow: hidden; }
+.playbook-slide::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--ph), color-mix(in srgb, var(--ph) 35%, transparent));
+}
+.playbook-slide {
+  box-shadow: 0 18px 48px color-mix(in srgb, var(--ph) 10%, transparent);
+  border-color: color-mix(in srgb, var(--ph) 22%, var(--border));
+}
+.playbook-slide-watermark {
+  position: absolute;
+  top: -26px;
+  right: 6px;
+  font-size: 190px;
+  font-weight: 800;
+  line-height: 1;
+  color: color-mix(in srgb, var(--ph) 8%, transparent);
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+.playbook-slide-eyebrow,
+.playbook-slide-title,
+.playbook-slide-body,
+.pb-hero { position: relative; z-index: 1; }
+
+.pb-eyebrow-chapter { color: var(--ph); font-weight: 700; }
+
+.playbook-progress-fill {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--ph) 55%, transparent), var(--ph));
+}
+.chapter-pill { --pp: var(--accent-2); }
+.chapter-pill.done { color: var(--text); }
+.chapter-pill.done .chapter-pill-num {
+  background: color-mix(in srgb, var(--pp) 45%, var(--border));
+  color: var(--text);
+}
+.chapter-pill.active {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--pp) 60%, var(--border));
+  background: color-mix(in srgb, var(--pp) 12%, var(--surface));
+}
+.chapter-pill.active .chapter-pill-num { background: var(--pp); color: #fff; }
+
+/* "What you get" lead block */
+.playbook-slide-body p.pb-lead {
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ph) 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--ph) 22%, var(--border));
+  border-left: 3px solid var(--ph);
+  font-size: 15.5px;
+  line-height: 1.6;
+}
+.playbook-slide-body p.pb-lead strong { color: var(--text); }
+
+/* ── Chapter opener (divider) slide ───────────────────────────────── */
+.playbook-slide.is-opener {
+  padding-top: clamp(34px, 5vw, 64px);
+  background:
+    radial-gradient(700px 280px at 100% -20%, color-mix(in srgb, var(--ph) 12%, transparent), transparent 70%),
+    var(--surface);
+}
+.playbook-slide.is-opener .playbook-slide-watermark {
+  top: -40px;
+  font-size: 260px;
+  color: color-mix(in srgb, var(--ph) 11%, transparent);
+}
+.playbook-slide.is-opener .pb-eyebrow-chapter {
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.playbook-slide.is-opener .playbook-slide-title {
+  font-size: clamp(2.1rem, 4vw, 3rem);
+  background: linear-gradient(120deg, var(--text), color-mix(in srgb, var(--ph) 70%, var(--text)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.playbook-slide.is-opener .playbook-slide-body p.pb-lead {
+  font-size: 16.5px;
+  padding: 18px 20px;
+}
+
+/* ── Hero intro slide ─────────────────────────────────────────────── */
+.playbook-slide.is-hero {
+  padding: clamp(28px, 4vw, 52px) clamp(22px, 4vw, 52px) clamp(26px, 3vw, 40px);
+  background:
+    radial-gradient(900px 320px at 100% -10%, color-mix(in srgb, var(--ph) 14%, transparent), transparent 70%),
+    var(--surface);
+}
+.pb-hero-head { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }
+.pb-hero-icon {
+  display: inline-grid; place-items: center;
+  width: 52px; height: 52px; border-radius: 14px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ph) 28%, transparent), color-mix(in srgb, var(--ph) 10%, transparent));
+  border: 1px solid color-mix(in srgb, var(--ph) 30%, var(--border));
+  color: var(--ph);
+}
+.pb-hero-badges { display: inline-flex; flex-wrap: wrap; gap: 8px; }
+.pb-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 11px; border-radius: 999px;
+  font-size: 12px; font-weight: 600;
+  background: var(--surface-strong); border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.pb-badge.level { color: var(--ph); border-color: color-mix(in srgb, var(--ph) 35%, var(--border)); }
+.pb-badge.flagship {
+  color: #2c1800;
+  background: linear-gradient(135deg, #ffc163, #ff8a3d);
+  border-color: transparent;
+}
+.pb-hero-title {
+  margin: 0 0 16px;
+  font-size: clamp(30px, 4.4vw, 46px);
+  line-height: 1.12;
+  letter-spacing: -0.9px;
+  font-weight: 800;
+  background: var(--gradient);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.pb-hero-lede { font-size: 17px; line-height: 1.6; color: var(--text-dim); max-width: 760px; }
+.pb-hero-lede p { margin: 0; }
+.pb-hero-lede strong { color: var(--text); }
+.pb-hero-usewhen {
+  margin: 18px 0 0;
+  font-size: 14.5px; line-height: 1.6; color: var(--text-dim);
+  max-width: 760px;
+}
+.pb-hero-usewhen-tag {
+  display: inline-block; margin-right: 8px;
+  padding: 2px 9px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+  background: color-mix(in srgb, var(--ph) 14%, var(--surface));
+  color: var(--ph);
+  border: 1px solid color-mix(in srgb, var(--ph) 26%, var(--border));
+}
+.pb-hero-tech { display: flex; flex-wrap: wrap; gap: 7px; margin: 20px 0 0; }
+.pb-tech-chip {
+  padding: 4px 11px; border-radius: 999px;
+  font-size: 12px; font-weight: 600;
+  background: var(--surface-strong); border: 1px solid var(--border); color: var(--text-dim);
+}
+.pb-hero-chain {
+  display: flex; align-items: stretch; gap: 14px; flex-wrap: wrap;
+  margin: 22px 0 0; padding: 16px;
+  border-radius: 14px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+}
+.pb-chain-group { flex: 1; min-width: 220px; }
+.pb-chain-label {
+  display: inline-block; margin-bottom: 9px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.pb-chain-label.build { color: #8b6dff; }
+.pb-chain-label.deploy { color: #1fb6d6; }
+.pb-chain-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.pb-chain-chip {
+  padding: 4px 10px; border-radius: 8px;
+  font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  background: var(--bg-2, var(--surface)); border: 1px solid var(--border); color: var(--text);
+}
+.pb-chain-arrow { color: var(--text-muted); align-self: center; flex-shrink: 0; }
+.pb-hero-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 26px; padding: 12px 22px;
+  border: none; border-radius: 999px; cursor: pointer;
+  font-size: 14.5px; font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--accent) 30%, transparent);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.pb-hero-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--accent) 38%, transparent);
+}
+@media (max-width: 640px) {
+  .pb-hero-chain { flex-direction: column; }
+  .pb-chain-arrow { transform: rotate(90deg); }
+}
 .playbook-slide-body { font-size: 15px; line-height: 1.65; color: var(--text); }
 .playbook-slide-body p { margin: 0 0 14px; }
 .playbook-slide-body h2,
