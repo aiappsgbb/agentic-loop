@@ -543,47 +543,49 @@ export default function SkillsCatalog() {
         })}
       </div>
 
-      <div className="catalog-toolbar">
-        <div className="search-input catalog-search">
-          <Search size={15} color="var(--text-muted)" />
-          <input
-            placeholder="Search skills, surfaces, or tags"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-          />
-        </div>
-        <div className="chip-group catalog-chips" role="tablist">
-          {categories.map(c => (
-            <button
-              key={c}
-              className={`chip ${categoryFilter === c ? 'active' : ''}`}
-              onClick={() => setCategoryFilter(c)}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
-      </div>
-
       <section className="catalog-phase">
-        <div className="catalog-phase-head">
+        <div className="catalog-phase-intro">
           <div className={`catalog-phase-icon ${tab}`}><MetaIcon size={18} /></div>
           <div>
             <div className="catalog-phase-eyebrow">{meta.eyebrow}</div>
             <h2>{meta.title}</h2>
             <p>{meta.blurb}</p>
+            {meta.linkNote && (
+              <p className="catalog-link-note">
+                <ExternalLink size={13} /> <span>{meta.linkNote}</span>
+              </p>
+            )}
           </div>
-          <span className="catalog-count">{filtered.length}</span>
         </div>
-        {tab === 'gbb' ? (
+
+        {tab === 'gbb' && (
           <p className="catalog-gbb-disclaimer">
             <Award size={14} /> <span><strong>Community, not a product.</strong> These are unofficial, GBB-curated skills — battle-tested in the field for specialized agentic scenarios, but not Microsoft-supported offerings. Drive them the same way as any skill: name it in your prompt (e.g. <em>“Use the threadlight-auto skill to…”</em>). Click any card to open its <code>SKILL.md</code> source.</span>
           </p>
-        ) : meta.linkNote ? (
-          <p className="catalog-link-note">
-            <ExternalLink size={13} /> <span>{meta.linkNote}</span>
-          </p>
-        ) : null}
+        )}
+
+        <div className="catalog-toolbar">
+          <div className="search-input catalog-search">
+            <Search size={15} color="var(--text-muted)" />
+            <input
+              placeholder={`Search ${TAB_LABEL[tab]} skills, surfaces, or tags`}
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+            />
+          </div>
+          <div className="chip-group catalog-chips" role="tablist">
+            {categories.map(c => (
+              <button
+                key={c}
+                className={`chip ${categoryFilter === c ? 'active' : ''}`}
+                onClick={() => setCategoryFilter(c)}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {filtered.length === 0 ? (
           <div className="catalog-empty">No {TAB_LABEL[tab]} skills match your filters.</div>
         ) : (
