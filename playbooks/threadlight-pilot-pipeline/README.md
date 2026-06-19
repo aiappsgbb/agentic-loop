@@ -40,7 +40,7 @@ This playbook is organized as five chapters that mirror the pipeline: **Design �
 
 > **Fast path — one prompt, full auto.** Name the skill and describe the agent you want in a single sentence; [`threadlight-auto`](https://github.com/aiappsgbb/threadlight-skills/tree/main/skills/threadlight-auto) drives the whole chain:
 > ```text
-> Use the threadlight-auto skill to build me an auto-claim triage agent for Contoso Mutual in fruocco.
+> Use the threadlight-auto skill to build me an auto-claim triage agent for Contoso Mutual in my Azure sandbox.
 > ```
 > It runs design → (optional) local-test → deploy → safe-check → live invoke, auto-continuing at every gate and **hard-stopping** only on tenant-assertion failure or quota exhaustion. The chapters below are the same chain, run by hand so you can review each stage.
 
