@@ -1,0 +1,199 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]:
+      - img [ref=e7]
+      - generic [ref=e9]: Agentic Loop
+    - navigation [ref=e10]:
+      - generic [ref=e11]: Start here
+      - link "Home" [ref=e12] [cursor=pointer]:
+        - /url: /
+        - img [ref=e13]
+        - generic [ref=e16]: Home
+      - link "Kratos Live" [ref=e17] [cursor=pointer]:
+        - /url: /kratos
+        - img [ref=e18]
+        - generic [ref=e23]: Kratos
+        - generic [ref=e24]: Live
+      - generic [ref=e25]: Build
+      - link "Scenarios" [ref=e26] [cursor=pointer]:
+        - /url: /scenarios
+        - img [ref=e27]
+        - generic [ref=e31]: Scenarios
+      - link "Playbooks" [ref=e32] [cursor=pointer]:
+        - /url: /playbooks
+        - img [ref=e33]
+        - generic [ref=e35]: Playbooks
+      - link "Skills catalog" [ref=e36] [cursor=pointer]:
+        - /url: /skills
+        - img [ref=e37]
+        - generic [ref=e39]: Skills catalog
+      - generic [ref=e40]: Learn
+      - button "Concepts" [ref=e41] [cursor=pointer]:
+        - img [ref=e42]
+        - generic [ref=e44]: Concepts
+        - img [ref=e45]
+      - generic [ref=e47]:
+        - link "Agentic Loop" [ref=e48] [cursor=pointer]:
+          - /url: /concepts/agentic-loop
+          - img [ref=e49]
+          - generic [ref=e53]: Agentic Loop
+        - link "Agents" [ref=e54] [cursor=pointer]:
+          - /url: /concepts/agents
+          - img [ref=e55]
+          - generic [ref=e58]: Agents
+        - link "Skills" [ref=e59] [cursor=pointer]:
+          - /url: /concepts/skills
+          - img [ref=e60]
+          - generic [ref=e63]: Skills
+        - link "Tools" [ref=e64] [cursor=pointer]:
+          - /url: /concepts/tools
+          - img [ref=e65]
+          - generic [ref=e67]: Tools
+      - button "Platform" [ref=e68] [cursor=pointer]:
+        - img [ref=e69]
+        - generic [ref=e72]: Platform
+        - img [ref=e73]
+      - generic [ref=e75]:
+        - link "Overview" [ref=e76] [cursor=pointer]:
+          - /url: /concepts/platform
+          - img [ref=e77]
+          - generic [ref=e80]: Overview
+        - link "Foundry" [ref=e81] [cursor=pointer]:
+          - /url: /concepts/platform/foundry
+          - generic [ref=e82]: Foundry
+        - link "Azure" [ref=e83] [cursor=pointer]:
+          - /url: /concepts/platform/azure
+          - generic [ref=e84]: Azure
+    - generic [ref=e85]:
+      - generic [ref=e86]:
+        - radiogroup "Theme" [ref=e87]:
+          - button "Light" [ref=e88] [cursor=pointer]:
+            - img [ref=e89]
+          - button "Dark" [ref=e95] [cursor=pointer]:
+            - img [ref=e96]
+          - button "System" [pressed] [ref=e98] [cursor=pointer]:
+            - img [ref=e99]
+        - button "Collapse sidebar" [ref=e101] [cursor=pointer]:
+          - img [ref=e102]
+      - generic [ref=e105]: Made with ❤️ by AI Apps GBB's - EMEA
+  - main [ref=e106]:
+    - generic [ref=e107]:
+      - generic [ref=e108]:
+        - img [ref=e109]
+        - text: The agentic production gap
+      - heading "Stop shipping agent demos. Start running production agents." [level=1] [ref=e112]: Stop shipping agent demos. Start running production agents.
+      - paragraph [ref=e114]: Copilot made the pilot fast. The hard part is turning that pilot into a governed, observable, evaluated system the business can trust and IT can evolve.
+      - generic "Problem and solution statement" [ref=e115]:
+        - generic [ref=e116]:
+          - generic [ref=e117]: Problem
+          - heading "Pilots are cheap. Ungoverned production is expensive." [level=2] [ref=e118]
+          - paragraph [ref=e119]: Agents either stay trapped in developer-led experiments, or spread through the business faster than security, identity, evals, and cost controls can keep up.
+        - generic [ref=e120]:
+          - generic [ref=e121]: Solution
+          - heading "Standardize the path from idea to pilot to production." [level=2] [ref=e122]
+          - paragraph [ref=e123]: Agentic Loop combines GitHub Copilot SDK for execution, SKILLs for specialization, and Microsoft Foundry for governed runtime, models, evals, and measurable scale.
+    - generic [ref=e124]:
+      - generic [ref=e125]:
+        - generic [ref=e126]: Choose your production path
+        - heading "Where do you want to start?" [level=2] [ref=e127]
+        - paragraph [ref=e128]: "Three paths, one loop: try Kratos, build your own idea, or start from a scenario. Playbooks are the reusable HOW guidance behind the advisor paths."
+      - generic "Three paths" [ref=e129]:
+        - link "Path 1 Kratos Ready-to-use demo with domain personas and task skills. No advisor inputs, no setup. Try it live" [ref=e130] [cursor=pointer]:
+          - /url: /kratos
+          - generic [ref=e131]:
+            - generic [ref=e132]: Path 1
+            - img [ref=e134]
+          - heading "Kratos" [level=3] [ref=e136]
+          - paragraph [ref=e137]: Ready-to-use demo with domain personas and task skills. No advisor inputs, no setup.
+          - generic [ref=e138]:
+            - text: Try it live
+            - img [ref=e139]
+        - link "Path 2 Production Launchpad Bring a concrete idea, shape the pilot, and generate a Copilot-led deployment path. Build from idea" [ref=e141] [cursor=pointer]:
+          - /url: "#prompt"
+          - generic [ref=e142]:
+            - generic [ref=e143]: Path 2
+            - img [ref=e145]
+          - heading "Production Launchpad" [level=3] [ref=e148]
+          - paragraph [ref=e149]: Bring a concrete idea, shape the pilot, and generate a Copilot-led deployment path.
+          - generic [ref=e150]:
+            - text: Build from idea
+            - img [ref=e151]
+        - link "Path 3 Scenario Advisor Start from a predefined outcome and generate the same package pre-seeded by scenario context. Start from scenario" [ref=e153] [cursor=pointer]:
+          - /url: /scenarios
+          - generic [ref=e154]:
+            - generic [ref=e155]: Path 3
+            - img [ref=e157]
+          - heading "Scenario Advisor" [level=3] [ref=e161]
+          - paragraph [ref=e162]: Start from a predefined outcome and generate the same package pre-seeded by scenario context.
+          - generic [ref=e163]:
+            - text: Start from scenario
+            - img [ref=e164]
+    - region "The technology spine behind the production loop." [ref=e166]:
+      - generic [ref=e167]:
+        - generic [ref=e168]:
+          - generic [ref=e169]: Agentic Backbone
+          - heading "The technology spine behind the production loop." [level=2] [ref=e170]
+          - paragraph [ref=e171]: "This is the agentic core: GitHub Copilot SDK provides the Agent Harness and drives the loop with Skills and Tools, Foundry Hosted Agents provides the runtime, and Foundry Models provide the reasoning layer."
+        - link "Explore the full architecture" [ref=e172] [cursor=pointer]:
+          - /url: /concepts/platform
+      - generic "Agentic Backbone" [ref=e173]:
+        - generic [ref=e174]: Agentic Backbone
+        - generic [ref=e176]:
+          - 'link "GitHub Copilot SDK: Agent Loop runtime that binds skills, tools, and model calls." [ref=e177] [cursor=pointer]':
+            - /url: /concepts/agentic-loop
+            - img [ref=e179]
+            - generic [ref=e182]:
+              - generic [ref=e183]: GitHub Copilot SDK
+              - generic [ref=e184]: Agent Loop runtime that binds skills, tools, and model calls.
+          - generic [ref=e186]: runs in
+          - 'link "Hosted Agent: Foundry runtime where skills execute and tools are invoked under policy." [ref=e187] [cursor=pointer]':
+            - /url: /concepts/agents
+            - generic [ref=e189]:
+              - generic [ref=e190]: Hosted Agent
+              - generic [ref=e191]: Foundry runtime where skills execute and tools are invoked under policy.
+              - generic [ref=e192]:
+                - img [ref=e193]
+                - text: Skills + tools power the loop
+          - generic [ref=e197]: model calls
+          - 'link "Foundry Models: Frontier and open models behind the agent loop." [ref=e198] [cursor=pointer]':
+            - /url: /concepts/platform/foundry#frontier-models
+            - generic [ref=e200]:
+              - generic [ref=e201]: Foundry Models
+              - generic [ref=e202]: Frontier and open models behind the agent loop.
+    - generic [ref=e203]:
+      - generic [ref=e204]:
+        - generic [ref=e205]: Path 2 · Production Launchpad
+        - heading "Have a concrete idea? Turn it into a Copilot-led deployment." [level=2] [ref=e206]
+        - paragraph [ref=e207]:
+          - text: "Choose the capabilities, building blocks, and theme from dropdowns, then get a deterministic package: Build SKILLs, Deployment SKILLs, playbooks, tools, architecture recommendations, and an"
+          - code [ref=e208]: azd up
+          - text: hand-off.
+      - generic [ref=e209]:
+        - button "Capabilities 1" [ref=e211] [cursor=pointer]:
+          - img [ref=e212]
+          - generic [ref=e220]: Capabilities
+          - generic [ref=e221]: "1"
+          - img [ref=e222]
+        - button "Building blocks 2" [ref=e225] [cursor=pointer]:
+          - img [ref=e226]
+          - generic [ref=e229]: Building blocks
+          - generic [ref=e230]: "2"
+          - img [ref=e231]
+        - button "Themes Any" [ref=e234] [cursor=pointer]:
+          - img [ref=e235]
+          - generic [ref=e239]: Themes
+          - generic [ref=e240]: Any
+          - img [ref=e241]
+        - button "Craft the prompt" [ref=e243] [cursor=pointer]:
+          - img [ref=e244]
+          - text: Craft the prompt
+      - generic [ref=e248]:
+        - textbox "Describe your AI agentic app and let Copilot cook it for you" [ref=e249]
+        - generic [ref=e250]:
+          - button "Voice" [ref=e251] [cursor=pointer]:
+            - img [ref=e252]
+          - button "Attach" [ref=e255] [cursor=pointer]:
+            - img [ref=e256]
+          - button "Make it real" [disabled] [ref=e257]:
+            - img [ref=e258]
+            - text: Make it real
