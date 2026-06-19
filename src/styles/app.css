@@ -2049,44 +2049,57 @@
   font-weight: 600;
 }
 .catalog-tabs {
-  display: flex;
+  display: inline-flex;
   gap: 4px;
   flex-wrap: wrap;
-  margin-bottom: 18px;
-  border-bottom: 1px solid var(--border);
+  margin-bottom: 22px;
+  padding: 5px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
 }
 .catalog-tab {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
-  margin-bottom: -1px;
+  padding: 10px 18px;
   background: transparent;
   border: none;
-  border-bottom: 2px solid transparent;
+  border-radius: 10px;
   color: var(--text-muted);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
 }
-.catalog-tab:hover { color: var(--text); }
-.catalog-tab.active { color: var(--text); }
-.catalog-tab.active.accent-build { border-bottom-color: #7c5cff; }
-.catalog-tab.active.accent-run { border-bottom-color: #22d3ee; }
-.catalog-tab.active.accent-gbb { border-bottom-color: #ffb547; }
+.catalog-tab:hover { color: var(--text); background: var(--surface-strong); }
+.catalog-tab.active { color: #fff; box-shadow: 0 8px 22px rgba(0,0,0,0.32); }
+.catalog-tab.active.accent-build { background: linear-gradient(135deg, #8b6dff, #5b3fd6); color: #fff; }
+.catalog-tab.active.accent-run { background: linear-gradient(135deg, #2ee0f5, #0ea5c4); color: #03212b; }
+.catalog-tab.active.accent-gbb { background: linear-gradient(135deg, #ffc163, #ff8a3d); color: #2c1800; }
 .catalog-tab-count {
   font-size: 11px;
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 999px;
-  background: var(--surface);
+  background: var(--surface-strong);
   border: 1px solid var(--border);
   color: var(--text-muted);
 }
-.catalog-tab.active.accent-build .catalog-tab-count { color: #c8baff; background: rgba(124,92,255,0.15); border-color: rgba(124,92,255,0.4); }
-.catalog-tab.active.accent-run .catalog-tab-count { color: #a5f3fc; background: rgba(34,211,238,0.15); border-color: rgba(34,211,238,0.4); }
-.catalog-tab.active.accent-gbb .catalog-tab-count { color: #ffd9a0; background: rgba(255,181,71,0.15); border-color: rgba(255,181,71,0.42); }
+.catalog-tab.active .catalog-tab-count {
+  background: rgba(0, 0, 0, 0.2);
+  border-color: transparent;
+  color: inherit;
+}
+.catalog-link-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+.catalog-link-note svg { flex-shrink: 0; opacity: 0.8; }
 .catalog-phase-icon {
   width: 38px; height: 38px;
   display: grid; place-items: center;

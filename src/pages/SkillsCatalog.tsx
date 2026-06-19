@@ -406,27 +406,66 @@ const SKILLS: Skill[] = [
   },
 ];
 
-/** Source SKILL.md URL for GBB skills (build/run cards are concept capabilities, not 1:1 SKILL.md files). */
+/** Official documentation for the platform-capability cards (Build + Run).
+ *  These aren't installable skills — they're GitHub Copilot / Microsoft Foundry
+ *  product features, so each links to its canonical docs page (all verified live). */
+const DOC_URLS: Record<string, string> = {
+  // Build · GitHub Copilot + Foundry authoring
+  'copilot-workspace': 'https://docs.github.com/en/copilot/using-github-copilot/coding-agent',
+  'copilot-chat': 'https://docs.github.com/en/copilot/using-github-copilot/copilot-chat',
+  'copilot-code-review': 'https://docs.github.com/en/copilot/using-github-copilot/code-review/using-copilot-code-review',
+  'codespaces': 'https://docs.github.com/en/codespaces/overview',
+  'github-actions': 'https://docs.github.com/en/actions',
+  'foundry-sdk': 'https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/develop/sdk-overview',
+  'prompt-flow': 'https://learn.microsoft.com/en-us/azure/machine-learning/prompt-flow/overview-what-is-prompt-flow',
+  'eval-harness': 'https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/evaluation-approach-gen-ai',
+  'red-team': 'https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/ai-red-teaming-agent',
+  'prompt-optimizer': 'https://learn.microsoft.com/azure/foundry/observability/how-to/prompt-optimizer',
+  'dataset-curator': 'https://learn.microsoft.com/azure/foundry/observability/how-to/traces-to-dataset',
+  // Run · Microsoft Foundry runtime
+  'agent-runtime': 'https://learn.microsoft.com/en-us/azure/ai-foundry/agents/overview',
+  'frontier-models': 'https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/model-catalog-overview',
+  'knowledge-index': 'https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/index-add',
+  'content-safety': 'https://learn.microsoft.com/en-us/azure/ai-services/content-safety/overview',
+  'observability': 'https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/observability',
+  'continuous-eval': 'https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/continuous-evaluation-agents',
+  'private-networking': 'https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/configure-private-link',
+  'identity': 'https://learn.microsoft.com/en-us/entra/fundamentals/whatis',
+  'tool-connectors': 'https://learn.microsoft.com/en-us/azure/ai-foundry/agents/how-to/tools/overview',
+  'feedback-loop': 'https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/evaluation-evaluators/agent-evaluators',
+  'realtime-voice': 'https://learn.microsoft.com/en-us/azure/ai-services/speech-service/voice-live',
+  'speech': 'https://learn.microsoft.com/en-us/azure/ai-services/speech-service/overview',
+  'vision': 'https://learn.microsoft.com/en-us/azure/ai-services/computer-vision/overview',
+  'document-intelligence': 'https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/overview',
+  'state-store': 'https://learn.microsoft.com/en-us/azure/ai-foundry/agents/concepts/threads-runs-messages',
+  'agent-catalog': 'https://learn.microsoft.com/en-us/azure/ai-foundry/what-is-azure-ai-foundry',
+};
+
+/** Where a card points: GBB skills → their SKILL.md source; Build/Run → official product docs. */
 function skillSource(s: Skill): string | undefined {
-  if (s.phase !== 'gbb') return undefined;
-  const repo = s.id.startsWith('threadlight-')
-    ? 'aiappsgbb/threadlight-skills'
-    : 'aiappsgbb/awesome-gbb';
-  return `https://github.com/${repo}/blob/main/skills/${s.id}/SKILL.md`;
+  if (s.phase === 'gbb') {
+    const repo = s.id.startsWith('threadlight-')
+      ? 'aiappsgbb/threadlight-skills'
+      : 'aiappsgbb/awesome-gbb';
+    return `https://github.com/${repo}/blob/main/skills/${s.id}/SKILL.md`;
+  }
+  return DOC_URLS[s.id];
 }
 
-const PHASE_META: Record<Phase, { icon: typeof Hammer; eyebrow: string; title: string; blurb: string }> = {
+const PHASE_META: Record<Phase, { icon: typeof Hammer; eyebrow: string; title: string; blurb: string; linkNote?: string }> = {
   build: {
     icon: Hammer,
     eyebrow: 'Build phase',
     title: 'GitHub Copilot · authoring, testing, and shipping agents.',
     blurb: 'Everything a developer touches before traffic hits production — from spec to PR to release.',
+    linkNote: 'Platform capabilities — click any card to open its official GitHub or Foundry documentation.',
   },
   run: {
     icon: Rocket,
     eyebrow: 'Run phase',
     title: 'Microsoft Foundry · serving, grounding, and governing agents.',
     blurb: "Everything the agent depends on once it's serving real users — models, data, safety, telemetry, identity.",
+    linkNote: 'Platform capabilities — click any card to open its official Microsoft Foundry documentation.',
   },
   gbb: {
     icon: Award,
@@ -481,7 +520,7 @@ export default function SkillsCatalog() {
         <div className="page-eyebrow">Skills catalog · Reference</div>
         <h1>Every capability the Agentic Loop ships with.</h1>
         <p className="lede">
-          The reference you consult while building — the building blocks that GitHub Copilot brings to the <strong>build</strong> phase, that Microsoft Foundry brings to the <strong>run</strong> phase, plus a field-curated set of specialist <strong>GBB</strong> skills. Pick a tab to explore each group.
+          The reference you consult while building — the building blocks that GitHub Copilot brings to the <strong>build</strong> phase, that Microsoft Foundry brings to the <strong>run</strong> phase, plus a field-curated set of specialist <strong>GBB</strong> skills. Pick a tab to explore each group — every card links out to its official source.
         </p>
       </div>
 
@@ -536,11 +575,15 @@ export default function SkillsCatalog() {
           </div>
           <span className="catalog-count">{filtered.length}</span>
         </div>
-        {tab === 'gbb' && (
+        {tab === 'gbb' ? (
           <p className="catalog-gbb-disclaimer">
             <Award size={14} /> <span><strong>Community, not a product.</strong> These are unofficial, GBB-curated skills — battle-tested in the field for specialized agentic scenarios, but not Microsoft-supported offerings. Drive them the same way as any skill: name it in your prompt (e.g. <em>“Use the threadlight-auto skill to…”</em>). Click any card to open its <code>SKILL.md</code> source.</span>
           </p>
-        )}
+        ) : meta.linkNote ? (
+          <p className="catalog-link-note">
+            <ExternalLink size={13} /> <span>{meta.linkNote}</span>
+          </p>
+        ) : null}
         {filtered.length === 0 ? (
           <div className="catalog-empty">No {TAB_LABEL[tab]} skills match your filters.</div>
         ) : (
@@ -594,7 +637,9 @@ function SkillCard({ s }: { s: Skill }) {
         href={source}
         target="_blank"
         rel="noreferrer"
-        aria-label={`Open ${s.name} SKILL.md source on GitHub`}
+        aria-label={s.phase === 'gbb'
+          ? `Open ${s.name} SKILL.md source on GitHub`
+          : `Open ${s.name} documentation`}
       >
         {body}
       </a>
