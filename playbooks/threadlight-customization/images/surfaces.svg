@@ -1,0 +1,81 @@
+<svg viewBox="0 0 900 462" role="img" aria-label="One agent built from four customization skills, rendered to three surfaces, with guardrails enforced once" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="cs-arr" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="df-arrow"/>
+    </marker>
+    <marker id="cs-arr-em" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="df-arrow-em"/>
+    </marker>
+  </defs>
+
+  <!-- column kickers -->
+  <text class="df-kicker" x="24" y="86">Contract</text>
+  <text class="df-kicker" x="250" y="86">Customization skills</text>
+  <text class="df-kicker" x="566" y="86">Surfaces</text>
+
+  <!-- SPEC contract -->
+  <rect class="df-node" x="24" y="184" width="160" height="92" rx="13"/>
+  <rect class="df-bar2" x="27" y="187" width="5" height="86" rx="2.5"/>
+  <text class="df-title" x="46" y="222">specs/SPEC.md</text>
+  <text class="df-sub" x="46" y="242">one contract,</text>
+  <text class="df-sub" x="46" y="256">every skill reads it</text>
+
+  <!-- edges SPEC -> skills -->
+  <g fill="none">
+    <path class="df-edge" d="M184,230 C214,230 220,128 246,128" marker-end="url(#cs-arr)"/>
+    <path class="df-edge" d="M184,230 C214,230 220,196 246,196" marker-end="url(#cs-arr)"/>
+    <path class="df-edge" d="M184,230 C214,230 220,264 246,264" marker-end="url(#cs-arr)"/>
+    <path class="df-edge" d="M184,230 C214,230 220,332 246,332" marker-end="url(#cs-arr)"/>
+  </g>
+
+  <!-- four skills -->
+  <rect class="df-node" x="250" y="102" width="250" height="52" rx="11"/>
+  <rect class="df-bar1" x="253" y="105" width="5" height="46" rx="2.5"/>
+  <text class="df-title" x="270" y="125">demo-data-factory</text>
+  <text class="df-sub" x="270" y="143">synthetic data · Cosmos seed</text>
+
+  <rect class="df-node" x="250" y="170" width="250" height="52" rx="11"/>
+  <rect class="df-bar1" x="253" y="173" width="5" height="46" rx="2.5"/>
+  <text class="df-title" x="270" y="193">hitl-patterns</text>
+  <text class="df-sub" x="270" y="211">human approval gates</text>
+
+  <rect class="df-node" x="250" y="238" width="250" height="52" rx="11"/>
+  <rect class="df-bar1" x="253" y="241" width="5" height="46" rx="2.5"/>
+  <text class="df-title" x="270" y="261">workspace-ui</text>
+  <text class="df-sub" x="270" y="279">branded review experience</text>
+
+  <rect class="df-node" x="250" y="306" width="250" height="52" rx="11"/>
+  <rect class="df-bar1" x="253" y="309" width="5" height="46" rx="2.5"/>
+  <text class="df-title" x="270" y="329">event-triggers</text>
+  <text class="df-sub" x="270" y="347">schedules · webhooks</text>
+
+  <!-- merge brace -> one agent -->
+  <path class="df-edge-em" d="M512,108 L512,352" fill="none"/>
+  <text class="df-elabel" x="520" y="200" text-anchor="middle" transform="rotate(90 520 200)">one agent</text>
+  <g fill="none">
+    <path class="df-edge-em" d="M512,150 C536,150 540,150 560,150" marker-end="url(#cs-arr-em)"/>
+    <path class="df-edge-em" d="M512,230 C536,230 540,230 560,230" marker-end="url(#cs-arr-em)"/>
+    <path class="df-edge-em" d="M512,310 C536,310 540,310 560,310" marker-end="url(#cs-arr-em)"/>
+  </g>
+
+  <!-- three surfaces -->
+  <rect class="df-node" x="566" y="120" width="310" height="60" rx="12"/>
+  <rect class="df-bar3" x="569" y="123" width="5" height="54" rx="2.5"/>
+  <text class="df-title" x="586" y="146">Workspace UI</text>
+  <text class="df-sub" x="586" y="165">the branded web app</text>
+
+  <rect class="df-node" x="566" y="200" width="310" height="60" rx="12"/>
+  <rect class="df-bar3" x="569" y="203" width="5" height="54" rx="2.5"/>
+  <text class="df-title" x="586" y="226">Microsoft Teams</text>
+  <text class="df-sub" x="586" y="245">bot · message extension</text>
+
+  <rect class="df-node" x="566" y="280" width="310" height="60" rx="12"/>
+  <rect class="df-bar3" x="569" y="283" width="5" height="54" rx="2.5"/>
+  <text class="df-title" x="586" y="306">M365 Copilot</text>
+  <text class="df-sub" x="586" y="325">declarative agent</text>
+
+  <!-- guardrails band -->
+  <rect class="df-band" x="24" y="392" width="852" height="50" rx="12"/>
+  <text class="df-band-label" x="44" y="414">Guardrails enforced once</text>
+  <text class="df-sub" x="44" y="432">identity · telemetry · citation grounding · audit · evals — written in the substrate, inherited by every surface.</text>
+</svg>
