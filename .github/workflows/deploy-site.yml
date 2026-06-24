@@ -11,10 +11,11 @@ name: Deploy site (fruocco-2)
 on:
   push:
     branches: [main]
+    # Only ignore pure documentation. NOTE: top-level playbooks/*/README.md and
+    # playbooks/*/images/*.svg are BUILD INPUTS (import.meta.glob in src/data/links.ts
+    # and src/pages/PlaybookPage.tsx), so they must NOT be ignored here.
     paths-ignore:
       - 'docs/**'
-      - 'playbooks/**'
-      - '**/*.md'
   workflow_dispatch:
 
 permissions:
@@ -22,8 +23,9 @@ permissions:
   contents: read
 
 concurrency:
+  # Don't cancel an in-flight production deploy; queue the next one instead.
   group: deploy-site-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build-and-deploy:
