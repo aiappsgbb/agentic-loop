@@ -4,7 +4,8 @@ import {
   Home, Layers, BookOpen, Sparkles, Bot, Wrench, Workflow,
   ChevronRight, PanelLeftClose, PanelLeft, Sun, Moon, Monitor, Infinity as InfinityIcon, Library, Cpu, Lightbulb, Compass, Rocket
 } from 'lucide-react';
-import { useTheme, type ThemePref } from './ThemeProvider';
+import { type ThemePref } from './ThemeContext';
+import { useTheme } from './useTheme';
 
 interface Props { collapsed: boolean; onToggle: () => void; }
 

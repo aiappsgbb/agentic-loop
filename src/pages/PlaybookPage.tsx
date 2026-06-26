@@ -146,17 +146,7 @@ export default function PlaybookPage() {
   const key = `/playbooks/${slug}/README.md`;
   const raw = PLAYBOOK_FILES[key];
 
-  if (!raw) {
-    return (
-      <div className="playbook-missing">
-        <h1>Playbook not found</h1>
-        <p>No <code>playbooks/{slug}/README.md</code> in this workspace.</p>
-        <Link to="/playbooks" className="btn-pill"><ArrowLeft size={14} /> Back to Playbooks</Link>
-      </div>
-    );
-  }
-
-  const parsed = useMemo(() => parsePlaybook(raw, slug), [raw, slug]);
+  const parsed = useMemo(() => (raw ? parsePlaybook(raw, slug) : null), [raw, slug]);
   const [index, setIndex] = useState(0);
   const [tocOpen, setTocOpen] = useState(false);
   const [tocPinned, setTocPinned] = useState(() => {
@@ -172,46 +162,62 @@ export default function PlaybookPage() {
 
   // URL hash sync
   useEffect(() => {
+    if (!parsed) return;
+    const slides = parsed.slides;
     const fromHash = () => {
       const id = window.location.hash.replace(/^#/, '');
       if (!id) return;
-      const i = parsed.slides.findIndex(s => s.id === id);
+      const i = slides.findIndex(s => s.id === id);
       if (i >= 0) setIndex(i);
     };
     fromHash();
     window.addEventListener('hashchange', fromHash);
     return () => window.removeEventListener('hashchange', fromHash);
-  }, [parsed.slides]);
+  }, [parsed]);
 
   useEffect(() => {
-    const id = parsed.slides[index]?.id;
+    if (!parsed) return;
+    const slides = parsed.slides;
+    const id = slides[index]?.id;
     if (id && `#${id}` !== window.location.hash) {
       history.replaceState(null, '', `#${id}`);
     }
     slideRef.current?.focus();
-  }, [index, parsed.slides]);
+  }, [index, parsed]);
 
   // Keyboard nav
   useEffect(() => {
+    if (!parsed) return;
+    const slideCount = parsed.slides.length;
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
         e.preventDefault();
-        setIndex(i => Math.min(parsed.slides.length - 1, i + 1));
+        setIndex(i => Math.min(slideCount - 1, i + 1));
       } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
         e.preventDefault();
         setIndex(i => Math.max(0, i - 1));
       } else if (e.key === 'Home') {
         setIndex(0);
       } else if (e.key === 'End') {
-        setIndex(parsed.slides.length - 1);
+        setIndex(slideCount - 1);
       } else if (e.key === 'Escape') {
         navigate('/playbooks');
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [parsed.slides.length, navigate]);
+  }, [parsed, navigate]);
+
+  if (!parsed) {
+    return (
+      <div className="playbook-missing">
+        <h1>Playbook not found</h1>
+        <p>No <code>playbooks/{slug}/README.md</code> in this workspace.</p>
+        <Link to="/playbooks" className="btn-pill"><ArrowLeft size={14} /> Back to Playbooks</Link>
+      </div>
+    );
+  }
 
   const slide = parsed.slides[index];
   const progress = ((index + 1) / parsed.slides.length) * 100;
