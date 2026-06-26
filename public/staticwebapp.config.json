@@ -4,6 +4,7 @@
     "exclude": [
       "/assets/*",
       "/images/*",
+      "/playbooks/*",
       "/*.{svg,png,jpg,jpeg,gif,ico,webp,css,js,json,txt,woff,woff2,ttf,map}"
     ]
   },
