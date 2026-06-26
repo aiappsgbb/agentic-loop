@@ -31,8 +31,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="playbooks" element={<Playbooks />} />
             <Route path="playbooks/:slug" element={<PlaybookPage />} />
             <Route path="skills" element={<SkillsCatalog />} />
-            <Route path="reference/kratos" element={<Kratos />} />
-            <Route path="kratos" element={<Navigate to="/reference/kratos" replace />} />
+            <Route path="kratos" element={<Kratos />} />
             <Route path="concepts">
               <Route index element={<Navigate to="agentic-loop" replace />} />
               <Route path="agentic-loop" element={<AgenticLoopConcept />} />

@@ -6,7 +6,7 @@ const PATHS = [
     label: 'Path 1',
     title: 'Kratos',
     sub: 'Ready-to-use demo with domain personas and task skills. No advisor inputs, no setup.',
-    to: '/reference/kratos',
+    to: '/kratos',
     icon: Zap,
     meta: 'Try it live',
     hash: false,

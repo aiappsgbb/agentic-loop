@@ -1,37 +1,69 @@
-import { Zap, ArrowUpRight } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Zap, ArrowUp } from 'lucide-react';
 import { KRATOS_PERSONAS } from '../data/kratos';
-import { openPersona } from '../lib/kratosHandoff';
 
-// Curated-persona gallery. No inner chat: clicking a card opens that persona
-// directly in the embedded Kratos app (same-origin /kratos mount).
 export default function KratosLauncher() {
+  const navigate = useNavigate();
+  const [personaId, setPersonaId] = useState(KRATOS_PERSONAS[0].id);
+  const [prompt, setPrompt] = useState('');
+
+  function start(text: string) {
+    const value = text.trim();
+    if (!value) return;
+    navigate('/kratos', { state: { personaId, prompt: value } });
+  }
+
+  function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      start(prompt);
+    }
+  }
+
   return (
-    <div className="kratos-gallery">
-      {KRATOS_PERSONAS.map(p => (
-        <button
-          key={p.id}
-          type="button"
-          className="kratos-persona-card"
-          onClick={() => openPersona(p.kratosSlug)}
-          aria-label={`Open ${p.name} in Kratos`}
+    <div className="kratos-launcher">
+      <div className="kratos-launcher-head">
+        <div className="kratos-launcher-mark"><Zap size={18} /></div>
+        <div>
+          <h3>Kratos <span className="wtuw-badge">Live</span></h3>
+          <p>A ready-to-use reference agent for demo, experiment, and prototype — start a chat right here.</p>
+        </div>
+      </div>
+
+      <label className="kratos-field-label" htmlFor="kratos-persona">Agent persona</label>
+      <div className="kratos-select-wrap">
+        <select
+          id="kratos-persona"
+          className="kratos-select"
+          value={personaId}
+          onChange={e => setPersonaId(e.target.value)}
         >
-          <div className="kratos-persona-card-top">
-            <span className="kratos-persona-mark"><Zap size={16} /></span>
-            <span className="kratos-persona-skillcount">{p.skillCount} skills</span>
-          </div>
-          <h3 className="kratos-persona-name">{p.name}</h3>
-          <p className="kratos-persona-tagline">{p.tagline}</p>
-          <div className="kratos-persona-skills">
-            {p.skills.slice(0, 5).map(s => (
-              <span key={s} className="kratos-persona-chip">{s}</span>
-            ))}
-            {p.skills.length > 5 && (
-              <span className="kratos-persona-chip more">+{p.skills.length - 5}</span>
-            )}
-          </div>
-          <span className="kratos-persona-open">Open live <ArrowUpRight size={14} /></span>
+          {KRATOS_PERSONAS.map(p => (
+            <option key={p.id} value={p.id}>{p.name} ({p.skillCount} skills)</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="kratos-launcher-input">
+        <textarea
+          placeholder="Ask me anything…"
+          value={prompt}
+          onChange={e => setPrompt(e.target.value)}
+          onKeyDown={onKeyDown}
+          rows={1}
+        />
+        <button
+          className="kratos-send"
+          onClick={() => start(prompt)}
+          disabled={!prompt.trim()}
+          aria-label="Start conversation"
+          title="Start conversation"
+        >
+          <ArrowUp size={16} />
         </button>
-      ))}
+      </div>
+      <div className="kratos-launcher-hint"><kbd>Enter</kbd> to start · prebuilt, no setup</div>
     </div>
   );
 }
