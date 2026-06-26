@@ -1,15 +1,6 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { ThemeCtx, type Resolved, type ThemeContextValue, type ThemePref } from './ThemeContext';
 
-export type ThemePref = 'light' | 'dark' | 'system';
-type Resolved = 'light' | 'dark';
-
-interface Ctx {
-  pref: ThemePref;
-  resolved: Resolved;
-  setPref: (p: ThemePref) => void;
-}
-
-const ThemeCtx = createContext<Ctx | null>(null);
 const KEY = 'agentic-loop-theme';
 
 function getSystem(): Resolved {
@@ -36,17 +27,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     document.documentElement.dataset.theme = resolved;
   }, [resolved]);
 
-  const value = useMemo<Ctx>(() => ({
+  const value = useMemo<ThemeContextValue>(() => ({
     pref,
     resolved,
     setPref: (p) => { setPrefState(p); localStorage.setItem(KEY, p); },
   }), [pref, resolved]);
 
   return <ThemeCtx.Provider value={value}>{children}</ThemeCtx.Provider>;
-}
-
-export function useTheme() {
-  const ctx = useContext(ThemeCtx);
-  if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
-  return ctx;
 }

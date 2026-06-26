@@ -136,12 +136,13 @@ const CAPABILITIES = [
 
 export default function Foundry() {
   const { hash } = useLocation();
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const hashId = hash ? hash.replace('#', '') : null;
+  const [selectedId, setSelectedId] = useState<string | null>(() => hashId);
+  const activeId = selectedId ?? hashId;
 
   useEffect(() => {
     if (!hash) return;
     const id = hash.replace('#', '');
-    setActiveId(id);
     const el = document.getElementById(id);
     if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
   }, [hash]);
@@ -170,7 +171,7 @@ export default function Foundry() {
                 key={c.id}
                 id={c.id}
                 className={`platform-card ${activeId === c.id ? 'is-active' : ''}`}
-                onClick={() => setActiveId(c.id)}
+                onClick={() => setSelectedId(c.id)}
               >
                 <div className="platform-card-head">
                   <div className="platform-card-icon"><Icon size={22} /></div>

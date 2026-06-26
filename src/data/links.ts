@@ -16,7 +16,6 @@ export interface Playbook {
   name: string;
   icon: string;
   level: string;
-  featured?: boolean;
   steps: number;
   summary: string;
   use_when: string;
@@ -28,16 +27,9 @@ export interface Playbook {
 export const scenarios = scenariosData as Scenario[];
 export const playbooks = playbooksData as Playbook[];
 
-/** Slugs that ship a rendered slide deck (any playbooks/<slug>/README.md). */
-const DECK_SLUGS = new Set(
-  Object.keys(
-    import.meta.glob('/playbooks/*/README.md', { eager: true }),
-  ).map(path => path.split('/')[2]),
-);
-
-/** Whether a playbook ships a rendered slide deck. */
+/** Only the getting-started playbook currently ships a rendered slide deck. */
 export function playbookHasDeck(slug: string): boolean {
-  return DECK_SLUGS.has(slug);
+  return slug === 'getting-started';
 }
 
 /** Playbooks whose techniques intersect a scenario's tags (getting-started always included). */

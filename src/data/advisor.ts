@@ -231,7 +231,7 @@ const textRequirementHints: Array<[RegExp, AdvisorRequirementId]> = [
   [/\b(voice|speech|audio|conversation)\b/i, 'voice'],
   [/\b(private|vnet|network|endpoint)\b/i, 'private-networking'],
   [/\b(trace|monitor|observability|telemetry|logging)\b/i, 'observability'],
-  [/\b(rag|ground(?:s|ed|ing)?|knowledge|documents?|docs?|citations?|policies)\b/i, 'knowledge-grounding'],
+  [/\b(rag|ground|knowledge|document|citation|search)\b/i, 'knowledge-grounding'],
   [/\b(gateway|quota|rate limit|cache|policy)\b/i, 'ai-gateway'],
   [/\b(identity|rbac|entra|auth|permission)\b/i, 'identity-rbac'],
   [/\b(storage|blob|file|artifact)\b/i, 'storage'],

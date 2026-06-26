@@ -70,57 +70,5 @@
     "techniques": ["Real-Time Conversations", "Frontier Models"],
     "buildSkills": ["azure-ai-voicelive-py", "agent-framework-azure-ai-py", "azure-ai-projects-py"],
     "deploymentSkills": ["containerization", "aigbb-azd-compliance", "aigbb-observability"]
-  },
-  {
-    "slug": "threadlight-pilot-pipeline",
-    "name": "Threadlight Pilot Pipeline",
-    "icon": "Workflow",
-    "level": "Advanced",
-    "featured": true,
-    "steps": 5,
-    "summary": "The flagship end-to-end path: take a one-paragraph business brief to a deployed, evaluated, observable Foundry hosted agent in one guided session. This is the spine every other Threadlight deck plugs into.",
-    "use_when": "You're running an enterprise pilot (FSI, Mfg, Retail, Telco, Healthcare) and want the fastest governed path from a vague brief to a demo-ready Foundry agent.",
-    "techniques": ["Domain-Specific Agents", "Workflow Automation", "Governance", "Observability"],
-    "buildSkills": ["threadlight-design", "threadlight-demo-data-factory", "threadlight-local-test", "threadlight-hitl-patterns", "threadlight-workspace-ui"],
-    "deploymentSkills": ["threadlight-deploy", "threadlight-safe-check", "threadlight-event-triggers", "aigbb-observability"]
-  },
-  {
-    "slug": "threadlight-customization",
-    "name": "Threadlight Customization",
-    "icon": "Layers",
-    "level": "Advanced",
-    "featured": true,
-    "steps": 4,
-    "summary": "One agent, every surface: tailor a Threadlight agent to the customer's process and industry, then render it across Workspace UI, Teams, and M365 Copilot \u2014 with governance written once in the substrate, not per channel.",
-    "use_when": "You have a deployed Threadlight agent and need it to fit a specific customer's domain, operator surfaces, and channels without forking the codebase.",
-    "techniques": ["Domain-Specific Agents", "Workflow Automation", "Knowledge Grounding"],
-    "buildSkills": ["threadlight-design", "threadlight-demo-data-factory", "threadlight-hitl-patterns", "threadlight-workspace-ui"],
-    "deploymentSkills": ["threadlight-event-triggers", "foundry-teams-bot"]
-  },
-  {
-    "slug": "threadlight-productionization",
-    "name": "Threadlight Productionization",
-    "icon": "ShieldCheck",
-    "level": "Advanced",
-    "featured": true,
-    "steps": 5,
-    "summary": "The paved path to production: the five guardrails the chain refuses to ship without, the safe-check gate, and the no-rewrite path to the AI Citadel landing zone. This is what turns a pilot into something a CISO will sign.",
-    "use_when": "Your pilot needs CISO sign-off \u2014 keyless identity, telemetry, citations, audit trail, and evals \u2014 and a path to a governed production landing zone.",
-    "techniques": ["Governance", "Observability"],
-    "buildSkills": ["threadlight-safe-check", "foundry-evals", "foundry-observability"],
-    "deploymentSkills": ["foundry-hosted-agents", "citadel-hub-deploy", "citadel-spoke-onboarding", "foundry-agt"]
-  },
-  {
-    "slug": "kratos-export-productization",
-    "name": "Kratos Export Review & Productization",
-    "icon": "Wrench",
-    "level": "Advanced",
-    "featured": true,
-    "steps": 5,
-    "summary": "Pick a Kratos use-case persona, review its export, and ship it: hand the customer the exact demo agent they loved \u2014 running and governed on their own Azure \u2014 as a standalone Foundry hosted agent, hardened through the productionization guardrails. No rebuild.",
-    "use_when": "A Kratos demo persona landed well and you want to hand the customer that exact agent \u2014 running, governed \u2014 on their own Azure, not a rebuild.",
-    "techniques": ["Domain-Specific Agents", "Governance", "Observability"],
-    "buildSkills": ["copilot-sdk", "mcp-builder", "foundry-evals"],
-    "deploymentSkills": ["bicep-azd-patterns", "aigbb-observability", "threadlight-safe-check", "citadel-spoke-onboarding"]
   }
 ]

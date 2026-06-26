@@ -4,7 +4,8 @@ import {
   Home, Layers, BookOpen, Sparkles, Bot, Wrench, Workflow,
   ChevronRight, PanelLeftClose, PanelLeft, Sun, Moon, Monitor, Infinity as InfinityIcon, Library, Cpu, Lightbulb, Compass, Rocket
 } from 'lucide-react';
-import { useTheme, type ThemePref } from './ThemeProvider';
+import { type ThemePref } from './ThemeContext';
+import { useTheme } from './useTheme';
 
 interface Props { collapsed: boolean; onToggle: () => void; }
 
@@ -37,7 +38,7 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
           <Home className="icon" size={18} />
           <span className="nav-label">Home</span>
         </NavLink>
-        <NavLink to="/reference/kratos" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+        <NavLink to="/kratos" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <Rocket className="icon" size={18} />
           <span className="nav-label">Kratos</span>
           <span className="nav-badge">Live</span>

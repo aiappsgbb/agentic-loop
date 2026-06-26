@@ -136,12 +136,13 @@ const BLOCKS = [
 
 export default function Azure() {
   const { hash } = useLocation();
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const hashId = hash ? hash.replace('#', '') : null;
+  const [selectedId, setSelectedId] = useState<string | null>(() => hashId);
+  const activeId = selectedId ?? hashId;
 
   useEffect(() => {
     if (!hash) return;
     const id = hash.replace('#', '');
-    setActiveId(id);
     const el = document.getElementById(id);
     if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
   }, [hash]);
@@ -170,7 +171,7 @@ export default function Azure() {
                 key={b.id}
                 id={b.id}
                 className={`platform-card ${activeId === b.id ? 'is-active' : ''}`}
-                onClick={() => setActiveId(b.id)}
+                onClick={() => setSelectedId(b.id)}
               >
                 <div className="platform-card-head">
                   <div className="platform-card-icon"><Icon size={22} /></div>
