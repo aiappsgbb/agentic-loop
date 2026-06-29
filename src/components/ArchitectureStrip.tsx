@@ -13,6 +13,7 @@ import {
   Waypoints,
   Wrench,
 } from 'lucide-react';
+import { asset } from '../data/asset';
 
 type ArchitectureVariant = 'compact' | 'full' | 'backbone';
 type ArchitectureWeight = 'spine' | 'complementary' | 'foundation';
@@ -186,8 +187,8 @@ const FOUNDATION_NODES: ArchitectureNode[] = [
 ];
 
 const BRAND_ICON_SRC: Record<Exclude<BrandIconName, 'copilot-sdk'>, string> = {
-  'hosted-agent': '/ai-agents.svg',
-  'foundry-models': '/azure-foundry-models.png',
+  'hosted-agent': asset('/ai-agents.svg'),
+  'foundry-models': asset('/azure-foundry-models.png'),
 };
 
 function BrandIcon({ type }: { type: BrandIconName }) {
@@ -216,7 +217,7 @@ function LayerLabel({ children, platform = false }: { children: string; platform
 
   return (
     <div className="architecture-layer-label architecture-layer-label-brand">
-      <img src="/ai-foundry.png" alt="" className="architecture-layer-brand-img" />
+      <img src={asset('/ai-foundry.png')} alt="" className="architecture-layer-brand-img" />
       <span>{children}</span>
     </div>
   );

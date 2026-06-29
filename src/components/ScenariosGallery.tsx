@@ -2,14 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, ChevronLeft, ChevronRight, ArrowRight, ExternalLink } from 'lucide-react';
 import scenarios from '../data/scenarios.json';
+import { asset } from '../data/asset';
 
 interface Scenario {
   id: string; name: string; industry: string; description: string; image: string; tags: string[]; link?: string;
 }
 
 function resolveImage(src: string) {
-  if (/^(https?:)?\/\//.test(src) || src.startsWith('/')) return src;
-  return '/' + src;
+  return asset(src);
 }
 
 interface Props { carousel?: boolean; showExplore?: boolean; }

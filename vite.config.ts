@@ -20,5 +20,7 @@ function mdSpaFallback(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Served from https://aiappsgbb.github.io/agentic-loop/ on GitHub Pages.
+  base: '/agentic-loop/',
   plugins: [react(), mdSpaFallback()],
 })

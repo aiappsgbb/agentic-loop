@@ -5,14 +5,14 @@ import scenarios from '../data/scenarios.json';
 import { playbooksForScenario, playbookHasDeck } from '../data/links';
 import MakeItRealModal from '../components/MakeItRealModal';
 import { buildAdvisorPackage, inferRequirementsFromSelections } from '../data/advisor';
+import { asset } from '../data/asset';
 
 interface Scenario {
   id: string; name: string; industry: string; description: string; image: string; tags: string[]; link?: string;
 }
 
 function resolveImage(src: string) {
-  if (/^(https?:)?\/\//.test(src) || src.startsWith('/')) return src;
-  return '/' + src;
+  return asset(src);
 }
 
 interface Chapter {

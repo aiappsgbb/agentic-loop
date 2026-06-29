@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { type ThemePref } from './ThemeContext';
 import { useTheme } from './useTheme';
+import { asset } from '../data/asset';
 
 interface Props { collapsed: boolean; onToggle: () => void; }
 
@@ -108,11 +109,11 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
               <span className="nav-label">Overview</span>
             </NavLink>
             <NavLink to="/concepts/platform/foundry" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <img src="/Foundry.svg" alt="" className="icon nav-asset" />
+              <img src={asset('/Foundry.svg')} alt="" className="icon nav-asset" />
               <span className="nav-label">Foundry</span>
             </NavLink>
             <NavLink to="/concepts/platform/azure" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <img src="/Azure.svg" alt="" className="icon nav-asset" />
+              <img src={asset('/Azure.svg')} alt="" className="icon nav-asset" />
               <span className="nav-label">Azure</span>
             </NavLink>
           </div>

@@ -96,9 +96,9 @@ function parsePlaybook(md: string, slug: string): Parsed {
 
   const lede = ledeLines.join('\n').trim().split(/\n\n+/)[0] ?? '';
 
-  // Rewrite relative image paths to /playbooks/<slug>/images/...
+  // Rewrite relative image paths to <base>playbooks/<slug>/images/...
   const fix = (body: string) =>
-    body.replace(/(!\[[^\]]*]\()\.?\/?images\//g, `$1/playbooks/${slug}/images/`);
+    body.replace(/(!\[[^\]]*]\()\.?\/?images\//g, `$1${import.meta.env.BASE_URL}playbooks/${slug}/images/`);
 
   return {
     title,
