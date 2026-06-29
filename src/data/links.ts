@@ -12,6 +12,7 @@ export interface Scenario {
   capabilities?: string[];
   buildingBlocks?: string[];
   patterns?: string[];
+  runSkills?: string[];
   videoFileName?: string;
   link?: string;
 }

@@ -11,8 +11,7 @@ import ShareButton from '../components/ShareButton';
 const PLAYBOOK_FILES = import.meta.glob('/playbooks/*/README.md', {
   query: '?raw',
   import: 'default',
-  eager: true,
-}) as Record<string, string>;
+}) as Record<string, () => Promise<string>>;
 
 interface Slide {
   id: string;
@@ -154,7 +153,19 @@ export default function PlaybookPage() {
   const { slug = '' } = useParams();
   const navigate = useNavigate();
   const key = `/playbooks/${slug}/README.md`;
-  const raw = PLAYBOOK_FILES[key];
+  // undefined = still loading, null = no such playbook, string = README content
+  const [raw, setRaw] = useState<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loader = PLAYBOOK_FILES[key];
+    if (!loader) { setRaw(null); return; }
+    setRaw(undefined);
+    loader()
+      .then(text => { if (!cancelled) setRaw(text); })
+      .catch(() => { if (!cancelled) setRaw(null); });
+    return () => { cancelled = true; };
+  }, [key]);
 
   const parsed = useMemo(() => (raw ? parsePlaybook(raw, slug) : null), [raw, slug]);
   const [index, setIndex] = useState(0);
@@ -169,6 +180,11 @@ export default function PlaybookPage() {
   }, [tocPinned]);
 
   const tocVisible = tocOpen || tocPinned;
+
+  // Per-route document title.
+  useEffect(() => {
+    if (parsed) document.title = `${parsed.title} · Agentic Loop`;
+  }, [parsed]);
 
   // URL hash sync
   useEffect(() => {
@@ -218,6 +234,14 @@ export default function PlaybookPage() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [parsed, navigate]);
+
+  if (raw === undefined) {
+    return (
+      <div className="playbook-missing">
+        <p className="route-loading" role="status" aria-live="polite">Loading playbook…</p>
+      </div>
+    );
+  }
 
   if (!parsed || parsed.slides.length === 0) {
     return (

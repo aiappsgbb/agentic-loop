@@ -6,12 +6,7 @@ import {
 } from 'lucide-react';
 import scenarios from '../data/scenarios.json';
 import { asset } from '../data/asset';
-
-interface Scenario {
-  id: string; name: string; industry: string; description: string; image: string;
-  tags: string[]; capabilities?: string[]; buildingBlocks?: string[]; patterns?: string[];
-  runSkills?: string[]; videoFileName?: string; link?: string;
-}
+import type { Scenario } from '../data/links';
 
 function resolveImage(src: string) {
   return asset(src);
@@ -90,6 +85,7 @@ function ScenariosCarousel({ data, carousel, showExplore }: { data: Scenario[]; 
             <Search size={15} color="var(--text-muted)" />
             <input
               placeholder="Search scenarios"
+              aria-label="Search scenarios"
               value={query}
               onChange={e => setQuery(e.target.value)}
             />
@@ -264,6 +260,7 @@ function ScenariosBrowse({ data }: { data: Scenario[] }) {
           <Search size={15} color="var(--text-muted)" />
           <input
             placeholder="Search scenarios"
+            aria-label="Search scenarios"
             value={query}
             onChange={e => setQuery(e.target.value)}
           />

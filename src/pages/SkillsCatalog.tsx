@@ -64,6 +64,7 @@ export default function SkillsCatalog() {
           <Search size={15} color="var(--text-muted)" />
           <input
             placeholder="Search skills, repos, or categories"
+            aria-label="Search skills, repos, or categories"
             value={query}
             onChange={e => setQuery(e.target.value)}
           />

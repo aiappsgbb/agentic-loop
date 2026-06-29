@@ -1,15 +1,11 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, BookOpen, PlayCircle, ArrowRight } from 'lucide-react';
 import ShareButton from '../components/ShareButton';
 import scenarios from '../data/scenarios.json';
-import { playbooksForScenario, playbookHasDeck } from '../data/links';
+import { playbooksForScenario, playbookHasDeck, type Scenario } from '../data/links';
 import GreenfieldBuilder from '../components/GreenfieldBuilder';
 import { asset } from '../data/asset';
-
-interface Scenario {
-  id: string; name: string; industry: string; description: string; image: string; tags: string[]; prompt?: string; capabilities?: string[]; buildingBlocks?: string[]; patterns?: string[]; link?: string; videoFileName?: string;
-}
 
 function resolveImage(src: string) {
   return asset(src);
@@ -18,6 +14,9 @@ function resolveImage(src: string) {
 export default function ScenarioPlaybook() {
   const { id } = useParams();
   const scenario = useMemo(() => (scenarios as Scenario[]).find(s => s.id === id), [id]);
+  useEffect(() => {
+    document.title = scenario ? `${scenario.name} · Agentic Loop` : 'Scenario not found · Agentic Loop';
+  }, [scenario]);
   if (!scenario) {
     return (
       <div className="page-head">
@@ -31,7 +30,9 @@ export default function ScenarioPlaybook() {
   return (
     <>
       <div className="scenario-detail-topbar">
-        <Link to="/scenarios" className="back-link"><ArrowLeft size={14} /> Back to scenarios</Link>
+        <Link to="/scenarios" className="playbook-back" aria-label="Back to scenarios">
+          <ArrowLeft size={16} /> <span>Scenarios</span>
+        </Link>
         <ShareButton title={scenario.name} />
       </div>
       <div className="playbook-hero">
@@ -54,7 +55,7 @@ export default function ScenarioPlaybook() {
           )}
         </div>
         <div className="playbook-hero-img">
-          <img src={resolveImage(scenario.image)} alt={scenario.name} />
+          <img src={resolveImage(scenario.image)} alt={scenario.name} loading="lazy" />
         </div>
       </div>
 

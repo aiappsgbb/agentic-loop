@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import {
   Home, Layers, BookOpen, Sparkles, Bot, Wrench, Workflow,
@@ -28,10 +28,10 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
 
   return (
     <aside className="sidebar">
-      <div className="brand">
+      <Link to="/" className="brand" aria-label="Agentic Loop home">
         <div className="brand-mark"><InfinityIcon size={20} strokeWidth={2.5} /></div>
         {!collapsed && <span className="brand-text">Agentic Loop</span>}
-      </div>
+      </Link>
 
       <nav className="nav">
         <NavLink to="/" end className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>

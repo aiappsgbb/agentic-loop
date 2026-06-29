@@ -69,7 +69,7 @@ export default function Playbooks() {
       <div className="playbook-filters">
         <div className="search-input">
           <Search size={15} color="var(--text-muted)" />
-          <input placeholder="Search playbooks" value={query} onChange={e => setQuery(e.target.value)} />
+          <input placeholder="Search playbooks" aria-label="Search playbooks" value={query} onChange={e => setQuery(e.target.value)} />
         </div>
         <CapabilityPicker label="Level" options={levelOptions} selected={levels} onChange={setLevels} triggerIcon={Layers} />
         <CapabilityPicker label="Capabilities" options={capOptions} selected={caps} onChange={setCaps} triggerIcon={Brain} />

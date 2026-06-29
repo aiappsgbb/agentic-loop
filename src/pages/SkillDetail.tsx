@@ -76,6 +76,10 @@ export default function SkillDetail() {
     return () => { cancelled = true; };
   }, [skill]);
 
+  useEffect(() => {
+    if (skill) document.title = `${skill.id} · Agentic Loop`;
+  }, [skill]);
+
   if (!skill) {
     return (
       <div className="skill-detail-missing">

@@ -37,6 +37,8 @@
   align-items: center;
   gap: 12px;
   padding: 8px 10px 18px;
+  text-decoration: none;
+  color: inherit;
 }
 .sidebar .brand-mark {
   width: 34px;
@@ -3852,4 +3854,177 @@
 
 @media (max-width: 720px) {
   .kratos-msg { max-width: 100%; }
+}
+
+/* ---------- Route loading + 404 ---------- */
+.route-loading {
+  display: grid;
+  place-items: center;
+  min-height: 40vh;
+  color: var(--text-muted);
+  font-size: 14px;
+  letter-spacing: 0.01em;
+}
+.notfound {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  padding: clamp(48px, 12vh, 120px) 20px;
+  max-width: 540px;
+  margin: 0 auto;
+}
+.notfound-mark {
+  width: 76px;
+  height: 76px;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: var(--gradient);
+  box-shadow: 0 16px 40px rgba(124, 92, 255, 0.4);
+}
+.notfound h1 {
+  margin: 4px 0 0;
+  font-size: clamp(24px, 4vw, 34px);
+  letter-spacing: -0.5px;
+}
+.notfound .lede {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+/* ---------- Global focus visibility ---------- */
+:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 2px;
+}
+/* Remove the default (non-keyboard) outline so it only shows for keyboard users. */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ---------- Mobile navigation drawer ---------- */
+.mobile-menu-btn {
+  display: none;
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 60;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-1);
+  cursor: pointer;
+  padding: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  backdrop-filter: blur(12px);
+}
+.mobile-menu-bar {
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--text);
+  transition: transform 0.2s, opacity 0.2s;
+}
+.sidebar-scrim {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(4, 6, 12, 0.55);
+  backdrop-filter: blur(2px);
+  animation: fade-up 0.2s ease both;
+}
+
+@media (max-width: 860px) {
+  .app-shell,
+  .app-shell.is-collapsed {
+    grid-template-columns: 1fr;
+  }
+  .app-main {
+    padding-top: 64px;
+  }
+  .mobile-menu-btn {
+    display: flex;
+  }
+  .sidebar-scrim {
+    display: block;
+  }
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 50;
+    width: 280px;
+    height: 100vh;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(.2,.8,.2,1);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.35);
+  }
+  .app-shell.is-mobile-open .sidebar {
+    transform: translateX(0);
+  }
+  /* Never collapse the sidebar contents on mobile — show full labels. */
+  .app-shell.is-collapsed .brand-text,
+  .app-shell.is-collapsed .nav-label,
+  .app-shell.is-collapsed .nav-section-title,
+  .app-shell.is-collapsed .sub-nav {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .collapse-btn {
+    display: none;
+  }
+}
+
+/* ---------- Mobile layout refinements ---------- */
+@media (max-width: 600px) {
+  .hero-statements {
+    grid-template-columns: 1fr;
+  }
+  .picker-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .picker-bar .picker {
+    width: 100%;
+  }
+  .search-input {
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+  .browse-toolbar .search-input,
+  .playbook-filters .search-input {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+  .stepper {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .compare-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }

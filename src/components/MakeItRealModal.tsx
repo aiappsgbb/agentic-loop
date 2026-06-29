@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Check, Copy, Terminal, Sparkles, Rocket, ArrowRight, FolderPlus, RefreshCw } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -23,16 +23,22 @@ export default function MakeItRealModal({ open, onClose, advisorPackage }: Props
   const [step, setStep] = useState(0);
   const [copied, setCopied] = useState<string | null>(null);
   const [selectedRunSkills, setSelectedRunSkills] = useState<string[]>([]);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!open) return;
+    // Remember what had focus so we can restore it when the modal closes.
+    triggerRef.current = document.activeElement as HTMLElement | null;
     function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose(); }
     document.addEventListener('keydown', onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    modalRef.current?.focus();
     return () => {
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prev;
+      triggerRef.current?.focus?.();
     };
   }, [onClose, open]);
 
@@ -59,7 +65,7 @@ export default function MakeItRealModal({ open, onClose, advisorPackage }: Props
       setCopied(key);
       window.setTimeout(() => setCopied(c => (c === key ? null : c)), 1600);
     } catch (error) {
-      console.warn('Clipboard copy failed', error);
+      if (import.meta.env.DEV) console.warn('Clipboard copy failed', error);
     }
   }
 
@@ -75,11 +81,11 @@ export default function MakeItRealModal({ open, onClose, advisorPackage }: Props
 
   return createPortal(
     <div className="modal-backdrop" onClick={closeModal}>
-      <div className="modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+      <div className="modal" ref={modalRef} tabIndex={-1} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="make-it-real-title">
         <header className="modal-head">
           <div>
             <div className="modal-eyebrow">Agentic Launchpad</div>
-            <h2>Make it real</h2>
+            <h2 id="make-it-real-title">Make it real</h2>
             <p>Set up the toolchain, run the build loop in Autopilot, and let Copilot ship a governed agentic solution.</p>
           </div>
           <button className="icon-btn" onClick={closeModal} aria-label="Close"><X size={16} /></button>
