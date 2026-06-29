@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
-  Hammer, Rocket, Search, Code2, TestTube2, GitBranch, Workflow,
-  ShieldCheck, FileCheck2, Sparkles, BookOpen, Bot, Network, Cloud, Database,
-  Eye, BarChart3, Mic, Image as ImageIcon, MessageSquare, KeyRound, Plug,
-  RefreshCw, Layers, Wand2, AudioLines, FileSearch, Boxes,
-  Code as Github
+  Hammer, Rocket, Search, Bot, Network, Cloud, Database,
+  Eye, BarChart3, Mic, Image as ImageIcon, KeyRound, Plug,
+  RefreshCw, Sparkles, ShieldCheck, BookOpen, AudioLines, FileSearch,
+  ArrowUpRight,
 } from 'lucide-react';
+import { BUILD_SKILLS } from '../data/skills';
+import type { BuildSkill } from '../data/skills';
 
 type Phase = 'build' | 'run';
 
@@ -20,87 +22,7 @@ interface Skill {
   tags: string[];
 }
 
-const SKILLS: Skill[] = [
-  // ---------------- BUILD ----------------
-  {
-    id: 'copilot-workspace',
-    name: 'Copilot Workspace',
-    description: 'Spec-to-PR workflow that turns a natural-language brief into a full implementation plan and diff for review.',
-    icon: Github, phase: 'build', category: 'Authoring',
-    surface: 'GitHub Copilot', tags: ['planning', 'PR']
-  },
-  {
-    id: 'copilot-chat',
-    name: 'Copilot Chat',
-    description: 'In-editor pair programmer with project-aware context, multi-file edits, and inline command suggestions.',
-    icon: MessageSquare, phase: 'build', category: 'Authoring',
-    surface: 'GitHub Copilot', tags: ['IDE', 'chat']
-  },
-  {
-    id: 'copilot-code-review',
-    name: 'Copilot Code Review',
-    description: 'Automated reviewer that comments on PRs with refactors, regressions, and style fixes before a human takes over.',
-    icon: FileCheck2, phase: 'build', category: 'Quality',
-    surface: 'GitHub Copilot', tags: ['PR', 'review']
-  },
-  {
-    id: 'codespaces',
-    name: 'Codespaces',
-    description: 'Cloud dev containers with the Foundry CLI preinstalled, so every contributor starts from the same baseline.',
-    icon: Code2, phase: 'build', category: 'Environment',
-    surface: 'GitHub', tags: ['devcontainer', 'cloud']
-  },
-  {
-    id: 'github-actions',
-    name: 'GitHub Actions',
-    description: 'CI/CD pipelines that run evals, package agents, and ship them to Foundry environments on every merge.',
-    icon: Workflow, phase: 'build', category: 'CI/CD',
-    surface: 'GitHub', tags: ['pipeline', 'release']
-  },
-  {
-    id: 'foundry-sdk',
-    name: 'Foundry SDK',
-    description: 'Python and TypeScript clients for declaring agents, tools, datasets, and evaluators as code.',
-    icon: Boxes, phase: 'build', category: 'Authoring',
-    surface: 'Microsoft Foundry', tags: ['SDK', 'agents']
-  },
-  {
-    id: 'prompt-flow',
-    name: 'Prompt Flow',
-    description: 'Visual graph for composing prompts, tools, and Python steps with versioning and side-by-side comparisons.',
-    icon: GitBranch, phase: 'build', category: 'Authoring',
-    surface: 'Microsoft Foundry', tags: ['graph', 'prompts']
-  },
-  {
-    id: 'eval-harness',
-    name: 'Eval Harness',
-    description: 'Batch evaluator that scores agent outputs against golden sets with groundedness, similarity, and custom metrics.',
-    icon: TestTube2, phase: 'build', category: 'Quality',
-    surface: 'Microsoft Foundry', tags: ['evals', 'scoring']
-  },
-  {
-    id: 'red-team',
-    name: 'Red Team Studio',
-    description: 'Library of adversarial prompts and jailbreak suites that probe agents for unsafe or off-policy behaviour.',
-    icon: ShieldCheck, phase: 'build', category: 'Safety',
-    surface: 'Microsoft Foundry', tags: ['safety', 'jailbreak']
-  },
-  {
-    id: 'prompt-optimizer',
-    name: 'Prompt Optimizer',
-    description: 'Closed-loop prompt search that mutates instructions and selects winners based on your eval signal.',
-    icon: Wand2, phase: 'build', category: 'Quality',
-    surface: 'Microsoft Foundry', tags: ['optimization', 'prompts']
-  },
-  {
-    id: 'dataset-curator',
-    name: 'Dataset Curator',
-    description: 'Pulls production traces into versioned eval datasets and tags failure modes for regression coverage.',
-    icon: Layers, phase: 'build', category: 'Quality',
-    surface: 'Microsoft Foundry', tags: ['datasets', 'traces']
-  },
-
-  // ---------------- RUN ----------------
+const RUN_SKILLS: Skill[] = [
   {
     id: 'agent-runtime',
     name: 'Agent Runtime',
@@ -220,12 +142,32 @@ export default function SkillsCatalog() {
   const [phaseFilter, setPhaseFilter] = useState<'all' | Phase>('all');
   const [categoryFilter, setCategoryFilter] = useState('All');
 
-  const categories = useMemo(() => ['All', ...Array.from(new Set(SKILLS.map(s => s.category)))], []);
+  const categories = useMemo(
+    () => ['All', ...Array.from(new Set([
+      ...BUILD_SKILLS.map(s => s.category),
+      ...RUN_SKILLS.map(s => s.category),
+    ]))],
+    [],
+  );
 
-  const filtered = useMemo(() => {
+  const buildSkills = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return SKILLS.filter(s => {
-      if (phaseFilter !== 'all' && s.phase !== phaseFilter) return false;
+    return BUILD_SKILLS.filter(s => {
+      if (phaseFilter === 'run') return false;
+      if (categoryFilter !== 'All' && s.category !== categoryFilter) return false;
+      if (!q) return true;
+      return s.name.toLowerCase().includes(q)
+        || s.description.toLowerCase().includes(q)
+        || s.category.toLowerCase().includes(q)
+        || s.repo.toLowerCase().includes(q)
+        || s.id.toLowerCase().includes(q);
+    });
+  }, [query, phaseFilter, categoryFilter]);
+
+  const runSkills = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return RUN_SKILLS.filter(s => {
+      if (phaseFilter === 'build') return false;
       if (categoryFilter !== 'All' && s.category !== categoryFilter) return false;
       if (!q) return true;
       return s.name.toLowerCase().includes(q)
@@ -234,9 +176,6 @@ export default function SkillsCatalog() {
         || s.surface.toLowerCase().includes(q);
     });
   }, [query, phaseFilter, categoryFilter]);
-
-  const buildSkills = filtered.filter(s => s.phase === 'build');
-  const runSkills = filtered.filter(s => s.phase === 'run');
 
   return (
     <>
@@ -252,7 +191,7 @@ export default function SkillsCatalog() {
         <div className="search-input catalog-search">
           <Search size={15} color="var(--text-muted)" />
           <input
-            placeholder="Search skills, surfaces, or tags"
+            placeholder="Search skills, repos, or categories"
             value={query}
             onChange={e => setQuery(e.target.value)}
           />
@@ -286,8 +225,8 @@ export default function SkillsCatalog() {
           <div className="catalog-phase-icon build"><Hammer size={18} /></div>
           <div>
             <div className="catalog-phase-eyebrow">Build phase</div>
-            <h2>GitHub Copilot · authoring, testing, and shipping agents.</h2>
-            <p>Everything a developer touches before traffic hits production — from spec to PR to release.</p>
+            <h2>GitHub Copilot · authoring, grounding, and shipping agents.</h2>
+            <p>The skills the loop installs while you build — agent frameworks, Azure building blocks, and deployment. Open one to read its <code>SKILL.md</code>.</p>
           </div>
           <span className="catalog-count">{buildSkills.length}</span>
         </div>
@@ -295,7 +234,7 @@ export default function SkillsCatalog() {
           <div className="catalog-empty">No build skills match your filters.</div>
         ) : (
           <div className="catalog-grid">
-            {buildSkills.map(s => <SkillCard key={s.id} s={s} />)}
+            {buildSkills.map(s => <BuildSkillCard key={s.id} s={s} />)}
           </div>
         )}
       </section>
@@ -326,6 +265,25 @@ export default function SkillsCatalog() {
         </div>
       </section>
     </>
+  );
+}
+
+function BuildSkillCard({ s }: { s: BuildSkill }) {
+  const Icon = s.icon;
+  return (
+    <Link to={`/skills/${s.id}/SKILL.md`} className="skill-card phase-build skill-card-link">
+      <div className="skill-card-head">
+        <div className="skill-card-icon"><Icon size={18} /></div>
+        <ArrowUpRight size={16} className="skill-card-open" />
+      </div>
+      <h3>{s.name}</h3>
+      <p>{s.description}</p>
+      <div className="skill-card-foot">
+        <span className="skill-surface">{s.repo}</span>
+        <span className="skill-dot">·</span>
+        <span className="skill-category">{s.category}</span>
+      </div>
+    </Link>
   );
 }
 

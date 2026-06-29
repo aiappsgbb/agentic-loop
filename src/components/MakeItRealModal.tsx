@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { X, Check, Copy, Code as Github, Terminal, Sparkles, Rocket, ArrowRight, Cloud, BookOpen, Wrench } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { X, Check, Copy, Terminal, Sparkles, Rocket, ArrowRight, FolderPlus } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { AdvisorPackage } from '../data/advisor';
 
@@ -10,16 +11,15 @@ interface Props {
 }
 
 const STEPS = [
-  { id: 'prep', title: 'Prepare your workspace', icon: Terminal },
-  { id: 'skills', title: 'Install package skills', icon: Sparkles },
-  { id: 'copilot', title: 'Hand off to GitHub Copilot', icon: Github },
-  { id: 'foundry', title: 'Deploy with azd up', icon: Cloud },
+  { id: 'prep', title: 'Prepare your environment', icon: Terminal },
+  { id: 'project', title: 'Create your project', icon: FolderPlus },
+  { id: 'loop', title: 'Run the build loop', icon: Sparkles },
+  { id: 'operate', title: 'Review & operate', icon: Rocket },
 ];
 
 export default function MakeItRealModal({ open, onClose, advisorPackage }: Props) {
   const [step, setStep] = useState(0);
   const [copied, setCopied] = useState<string | null>(null);
-  const [installed, setInstalled] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!open) return;
@@ -37,7 +37,6 @@ export default function MakeItRealModal({ open, onClose, advisorPackage }: Props
 
   function closeModal() {
     setStep(0);
-    setInstalled({});
     onClose();
   }
 
@@ -51,20 +50,16 @@ export default function MakeItRealModal({ open, onClose, advisorPackage }: Props
     }
   }
 
-  const installCmd = (s: string) => `gh copilot skills add ${s}`;
-  const allSkills = [...advisorPackage.buildSkills, ...advisorPackage.deploymentSkills];
-  const allInstalled = allSkills.length > 0 && allSkills.every(s => installed[s]);
-  const architectureChecklist = advisorPackage.runArchitecture.map(item => `- [ ] ${item}`).join('\n');
-  const playbookList = advisorPackage.playbooks.map(p => `- ${p.name}: ${p.summary}`).join('\n');
+  const specPrompt = `/spec2cloud ${advisorPackage.intent}`;
 
-  return (
+  return createPortal(
     <div className="modal-backdrop" onClick={closeModal}>
       <div className="modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
         <header className="modal-head">
           <div>
-            <div className="modal-eyebrow">Generated package · {advisorPackage.path === 'scenario' ? 'Scenario Advisor' : 'Production Launchpad'}</div>
+            <div className="modal-eyebrow">Agentic Launchpad</div>
             <h2>Make it real</h2>
-            <p>Install the existing upstream skills, copy the Copilot prompt, and deploy the generated package with <code>azd up</code>.</p>
+            <p>Set up the toolchain, run the build loop in Autopilot, and let Copilot ship a governed agentic solution.</p>
           </div>
           <button className="icon-btn" onClick={closeModal} aria-label="Close"><X size={16} /></button>
         </header>
@@ -85,73 +80,45 @@ export default function MakeItRealModal({ open, onClose, advisorPackage }: Props
         <div className="modal-body">
           {step === 0 && (
             <div className="step-pane">
-              <h3>1 · Prepare your workspace</h3>
-              <p className="muted">Open the repository where this agentic solution will live. The package is text-only here; Copilot will create the deployable code and infrastructure.</p>
-              <CodeBlock label="Install Copilot CLI" code="winget install GitHub.cli && gh extension install github/gh-copilot" k="prep-1" copied={copied} onCopy={copy} />
-              <CodeBlock label="Sign in" code="gh auth login && gh copilot auth" k="prep-2" copied={copied} onCopy={copy} />
-              <CodeBlock label="Open your repo" code="cd path\\to\\your\\repo && code ." k="prep-3" copied={copied} onCopy={copy} />
+              <h3>1 · Prepare your environment</h3>
+              <p className="muted">Install the Agentic Loop toolchain and the Spec2Cloud plugin that drives the build loop. You need an Azure subscription with Contributor access and a GitHub Copilot plan.</p>
+              <CodeBlock label="Sign in to GitHub & Azure" code="copilot login; az login" k="prep-auth" copied={copied} onCopy={copy} />
+              <CodeBlock label="Install the Spec2Cloud plugin" code="copilot plugin marketplace add Azure-Samples/Spec2Cloud && copilot plugin install lean@Spec2Cloud" k="prep-plugin" copied={copied} onCopy={copy} />
+              <CodeBlock label="Verify prerequisites" code="az account show && azd auth login --check-status && copilot plugin list" k="prep-check" copied={copied} onCopy={copy} />
             </div>
           )}
 
           {step === 1 && (
             <div className="step-pane">
-              <h3>2 · Install the package skills</h3>
-              <p className="muted">Build SKILLs create the solution. Deployment SKILLs make it deployable with Azure Developer CLI.</p>
-              <div className="skill-install-grid">
-                <SkillColumn
-                  title="Build SKILLs"
-                  subtitle="Create code, tools, agents, APIs, and schemas"
-                  skills={advisorPackage.buildSkills}
-                  installed={installed}
-                  copied={copied}
-                  installCmd={installCmd}
-                  onToggle={skill => setInstalled(p => ({ ...p, [skill]: !p[skill] }))}
-                  onCopy={(skill, cmd) => copy(cmd, skill)}
-                />
-                <SkillColumn
-                  title="Deployment SKILLs"
-                  subtitle="Create azd, Bicep, containers, security, and observability"
-                  skills={advisorPackage.deploymentSkills}
-                  installed={installed}
-                  copied={copied}
-                  installCmd={installCmd}
-                  onToggle={skill => setInstalled(p => ({ ...p, [skill]: !p[skill] }))}
-                  onCopy={(skill, cmd) => copy(cmd, skill)}
-                />
-              </div>
-              <p className="muted" style={{ marginTop: 12 }}>
-                {allInstalled ? 'All package skills marked installed — ready to hand off to Copilot.' : `${Object.values(installed).filter(Boolean).length} of ${allSkills.length} marked installed`}
-              </p>
+              <h3>2 · Create your project</h3>
+              <p className="muted">Create an empty folder (or a private repo) to hold the loop's artifacts — spec, plan, source, and infra.</p>
+              <CodeBlock label="New local folder" code="mkdir my-agentic-app && cd my-agentic-app" k="proj-mkdir" copied={copied} onCopy={copy} />
+              <CodeBlock label="…or a private GitHub repo" code="gh repo create my-agentic-app --private --clone && cd my-agentic-app" k="proj-repo" copied={copied} onCopy={copy} />
             </div>
           )}
 
           {step === 2 && (
             <div className="step-pane">
-              <h3>3 · Hand off to GitHub Copilot</h3>
-              <p className="muted">The prompt carries intent, requirements, playbooks, Build SKILLs, Deployment SKILLs, and run architecture recommendations.</p>
-              <CodeBlock label="Open Copilot" code="copilot" k="copilot-cmd" copied={copied} onCopy={copy} />
-              <PackageBlock icon={<Sparkles size={14} />} title="Copilot prompt" action="Copy prompt" copied={copied === 'prompt'} onCopy={() => copy(advisorPackage.copilotPrompt, 'prompt')}>
-                {advisorPackage.copilotPrompt}
-              </PackageBlock>
-              <PackageBlock icon={<BookOpen size={14} />} title="Selected playbooks" action="Copy playbooks" copied={copied === 'playbooks'} onCopy={() => copy(playbookList, 'playbooks')}>
-                {playbookList}
+              <h3>3 · Run the build loop</h3>
+              <p className="muted">Start by opening GitHub Copilot App or the CLI, then add your project and select your preferred coding model in Autopilot mode. Paste your prompt and run the <code>/spec2cloud</code> command to execute the complete workflow: Specify → Plan → Implement → Verify → Deploy. The agentic-loop defaults are pre-configured for seamless execution.</p>
+              <div className="modal-hint">Launch the standalone GitHub Copilot app, then open your project folder.</div>
+              <CodeBlock label="…or the Copilot CLI (all permissions)" code="copilot --allow-all" k="loop-open" copied={copied} onCopy={copy} />
+              <PackageBlock icon={<Sparkles size={14} />} title="Initial prompt" action="Copy prompt" copied={copied === 'prompt'} onCopy={() => copy(specPrompt, 'prompt')}>
+                {specPrompt}
               </PackageBlock>
             </div>
           )}
 
           {step === 3 && (
             <div className="step-pane">
-              <h3>4 · Deploy with azd up</h3>
-              <p className="muted">Deployment SKILLs should create or validate these architecture pieces before Azure deployment.</p>
-              <PackageBlock icon={<Wrench size={14} />} title="Architecture checklist" action="Copy checklist" copied={copied === 'architecture'} onCopy={() => copy(architectureChecklist, 'architecture')}>
-                {architectureChecklist}
-              </PackageBlock>
-              <CodeBlock label="Canonical deploy command" code={advisorPackage.deploymentCommand} k="foundry-2" copied={copied} onCopy={copy} />
+              <h3>4 · Review & operate</h3>
+              <p className="muted">When the loop finishes, Copilot returns the deployed frontend URL and previews it. Open the Foundry portal to review models, agents, tools, and traces in Application Insights.</p>
+              <CodeBlock label="Clean up when you're done" code="azd down --purge --force" k="operate-cleanup" copied={copied} onCopy={copy} />
               <div className="success-banner">
                 <Rocket size={16} />
                 <div>
                   <strong>You're in the loop.</strong>
-                  <span> Copilot builds the package; Foundry and Azure run it with governance, telemetry, and evals.</span>
+                  <span> Copilot builds the agentic solution; Foundry and Azure runs the agentic loop with governance, telemetry, and evals.</span>
                 </div>
               </div>
             </div>
@@ -170,38 +137,8 @@ export default function MakeItRealModal({ open, onClose, advisorPackage }: Props
           )}
         </footer>
       </div>
-    </div>
-  );
-}
-
-function SkillColumn(props: {
-  title: string;
-  subtitle: string;
-  skills: string[];
-  installed: Record<string, boolean>;
-  copied: string | null;
-  installCmd: (skill: string) => string;
-  onToggle: (skill: string) => void;
-  onCopy: (skill: string, cmd: string) => void;
-}) {
-  return (
-    <div>
-      <div className="skill-install-title">{props.title} <span>{props.subtitle}</span></div>
-      {props.skills.map(skill => {
-        const cmd = props.installCmd(skill);
-        return (
-          <SkillRow
-            key={skill}
-            skill={skill}
-            cmd={cmd}
-            installed={!!props.installed[skill]}
-            onToggle={() => props.onToggle(skill)}
-            onCopy={() => props.onCopy(skill, cmd)}
-            copied={props.copied === skill}
-          />
-        );
-      })}
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -229,23 +166,6 @@ function CodeBlock({ label, code, k, copied, onCopy }: { label: string; code: st
         </button>
       </div>
       <pre>{code}</pre>
-    </div>
-  );
-}
-
-function SkillRow({ skill, cmd, installed, onToggle, onCopy, copied }: { skill: string; cmd: string; installed: boolean; onToggle: () => void; onCopy: () => void; copied: boolean }) {
-  return (
-    <div className={`skill-row ${installed ? 'is-installed' : ''}`}>
-      <button className="skill-check" onClick={onToggle} aria-label={installed ? 'Mark uninstalled' : 'Mark installed'}>
-        {installed && <Check size={12} />}
-      </button>
-      <div className="skill-info">
-        <span className="skill-name">{skill}</span>
-        <code className="skill-cmd">{cmd}</code>
-      </div>
-      <button className="ghost-btn" onClick={onCopy}>
-        {copied ? <Check size={13} /> : <Copy size={13} />}
-      </button>
     </div>
   );
 }

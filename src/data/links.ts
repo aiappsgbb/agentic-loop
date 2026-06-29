@@ -16,36 +16,49 @@ export interface Playbook {
   name: string;
   icon: string;
   level: string;
-  steps: number;
   summary: string;
   use_when: string;
-  techniques: string[];
+  patterns: string[];
+  capabilities?: string[];
+  building_blocks?: string[];
   buildSkills?: string[];
-  deploymentSkills?: string[];
 }
 
 export const scenarios = scenariosData as Scenario[];
 export const playbooks = playbooksData as Playbook[];
 
-/** Only the getting-started playbook currently ships a rendered slide deck. */
+/** Slugs of playbooks that ship a rendered README (and are therefore clickable). */
+const PLAYBOOK_DECKS = new Set(
+  Object.keys(import.meta.glob('/playbooks/*/README.md')).map(
+    path => path.split('/')[2],
+  ),
+);
+
+/** A playbook is interactive when it ships a `playbooks/<slug>/README.md`. */
 export function playbookHasDeck(slug: string): boolean {
-  return slug === 'getting-started';
+  return PLAYBOOK_DECKS.has(slug);
 }
 
-/** Playbooks whose techniques intersect a scenario's tags (getting-started always included). */
+/** All matchable tags for a playbook: patterns + capabilities + building blocks (the '*' wildcard excluded). */
+export function playbookMatchTags(p: Playbook): string[] {
+  return [...(p.patterns ?? []), ...(p.capabilities ?? []), ...(p.building_blocks ?? [])]
+    .filter(t => t !== '*');
+}
+
+/** Playbooks whose tags intersect a scenario's tags (wildcard playbooks always included). */
 export function playbooksForScenario(scenario: Scenario): Playbook[] {
   const tags = new Set(scenario.tags);
   return playbooks.filter(p =>
-    p.techniques.includes('*') || p.techniques.some(t => tags.has(t))
+    p.patterns.includes('*') || playbookMatchTags(p).some(t => tags.has(t))
   );
 }
 
-/** Scenarios that exercise a given playbook's techniques. */
+/** Scenarios that exercise a given playbook (wildcard playbooks match all). */
 export function scenariosForPlaybook(playbook: Playbook, limit?: number): Scenario[] {
-  if (playbook.techniques.includes('*')) {
+  if (playbook.patterns.includes('*')) {
     return typeof limit === 'number' ? scenarios.slice(0, limit) : scenarios;
   }
-  const techniques = new Set(playbook.techniques);
-  const matches = scenarios.filter(s => s.tags.some(t => techniques.has(t)));
+  const tags = new Set(playbookMatchTags(playbook));
+  const matches = scenarios.filter(s => s.tags.some(t => tags.has(t)));
   return typeof limit === 'number' ? matches.slice(0, limit) : matches;
 }

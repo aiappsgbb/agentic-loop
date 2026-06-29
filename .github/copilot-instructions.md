@@ -1,47 +1,26 @@
-# Spec2Cloud — Copilot Instructions
+# Copilot Instructions
 
-You are the Spec2Cloud coding agent operating on an **Agentic SDLC** with five stages: **Specify → Plan → Implement → Verify → Deploy** (each backed by a skill of the same name).
+## Playbooks
 
-The **spec is the source of truth.** Any implementation change ⇒ update `./docs/spec.md`.
+A playbook = **metadata entry** + **markdown content**.
 
-## Workspace layout
+1. **Metadata** — add an entry to `src/data/playbooks.json`:
+   - `slug` (must match the folder name in step 2), `name`, `icon` (lucide icon name), `level`, `summary`, `use_when`, `patterns` (use `["*"]` to match all scenarios), `capabilities`, `building_blocks`, `buildSkills`.
+2. **Content** — create `playbooks/<slug>/README.md` (body rendered on the page). Put images in `playbooks/<slug>/images/` and reference them as `./images/<file>` (paths are auto-rewritten).
 
-```
-./
-├── docs/
-│   ├── spec.md              # requirements (single source of truth)
-│   ├── plan.md              # implementation plan
-│   ├── implementation.md    # implementation notes
-│   ├── verify.md            # local verification guide
-│   └── deploy.md            # Azure deployment + end-to-end test guide
-├── .azure/
-│   └── deployment-plan.md   # Azure deployment plan
-├── src/                     # application source (sub-folders below are optional — include only those required by the spec)
-│   ├── frontend/            # frontend app (optional)
-│   ├── backend/             # backend services (optional)
-│   ├── mcp/                 # MCP servers, one per sub-folder (optional)
-│   │   └── <server-name>/
-│   └── agents/              # agents, one per sub-folder (optional)
-│       └── <agent-name>/
-├── infra/                   # IaC (Bicep/Terraform)
-└── .github/
-    └── skills/              # installed skills
-```
+Routing/data flow is automatic: `/playbooks` lists cards, `/playbooks/:slug` renders the README. Loaded via `import.meta.glob` in `src/pages/PlaybookPage.tsx` and `src/data/links.ts`.
 
-## Stage → azd command
+## Scenarios
 
-| Stage | azd command |
-| --- | --- |
-| Specify | _none_ |
-| Plan | identify the `azd` template to use |
-| Implement | `azd init -t <azd template>` - scaffold the infrastructure |
-| Verify | `azd provision` - provision the Azure resources needed to verify the implementation |
-| Deploy | `azd deploy` - deploy the implementation to Azure if `azd provision` has been run; `azd up` otherwise |
+Scenarios are metadata-only. Add an entry to `src/data/scenarios.json`:
+- `id` (used in the `/scenarios/:id` route), `name`, `industry`, `description`, `image` (`images/<file>`), `tags`, optional `link`.
 
-## Rules
+## Linking scenarios &harr; playbooks
 
-- Never plan before `./docs/spec.md` exists.
-- Never implement before `./docs/plan.md` exists.
-- Never verify or deploy before `./docs/implementation.md` exists.
-- All Azure provisioning and deployment goes through `azd`.
-- Information lives in `SKILL.md` OR a referenced template/resource file, not both.
+Matching is by scenario `tags` &harr; a playbook's combined `patterns` + `capabilities` + `building_blocks` (see `playbookMatchTags` in `src/data/links.ts`): a playbook shows for a scenario when any of those values intersect the scenario `tags`, or when `patterns` is `["*"]`. Keep the strings consistent across both files.
+
+## Build
+
+- Editing existing `.md`/`.json`: `npm run dev` hot-reloads — just save.
+- For production: `npm run build`, then deploy `dist/`.
+

@@ -1,26 +1,89 @@
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  BookOpen, Rocket, ShieldCheck, GitBranch, Database, Eye, ArrowRight, Layers, Wrench, Cloud,
+  BookOpen, Rocket, ShieldCheck, GitBranch, Database, Eye, ArrowRight, Layers, Wrench, CloudSun,
+  Search, X, Brain, Workflow, Tag,
 } from 'lucide-react';
 import { playbooks, playbookHasDeck, scenariosForPlaybook } from '../data/links';
+import { getBuildSkill } from '../data/skills';
+import CapabilityPicker, { type PickerOption } from '../components/CapabilityPicker';
 
 const ICONS: Record<string, typeof Rocket> = {
-  Rocket, GitBranch, Database, ShieldCheck, Eye, BookOpen,
+  Rocket, GitBranch, Database, ShieldCheck, Eye, BookOpen, CloudSun,
 };
 
+function toOptions(values: string[]): PickerOption[] {
+  return [...new Set(values)].sort().map(v => ({ id: v, label: v, icon: Tag }));
+}
+
 export default function Playbooks() {
+  const [query, setQuery] = useState('');
+  const [levels, setLevels] = useState<string[]>([]);
+  const [caps, setCaps] = useState<string[]>([]);
+  const [blocks, setBlocks] = useState<string[]>([]);
+  const [pats, setPats] = useState<string[]>([]);
+
+  const levelOptions = useMemo(() => toOptions(playbooks.map(p => p.level)), []);
+  const capOptions = useMemo(() => toOptions(playbooks.flatMap(p => p.capabilities ?? [])), []);
+  const blockOptions = useMemo(() => toOptions(playbooks.flatMap(p => p.building_blocks ?? [])), []);
+  const patternOptions = useMemo(
+    () => toOptions(playbooks.flatMap(p => p.patterns ?? []).filter(x => x !== '*')),
+    [],
+  );
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return playbooks.filter(p => {
+      if (q) {
+        const hay = [
+          p.name, p.summary, p.use_when,
+          ...(p.patterns ?? []), ...(p.capabilities ?? []), ...(p.building_blocks ?? []),
+          ...(p.buildSkills ?? []),
+        ].join(' ').toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      if (levels.length && !levels.includes(p.level)) return false;
+      if (caps.length && !caps.some(c => (p.capabilities ?? []).includes(c))) return false;
+      if (blocks.length && !blocks.some(b => (p.building_blocks ?? []).includes(b))) return false;
+      if (pats.length) {
+        const pp = p.patterns ?? [];
+        if (!(pp.includes('*') || pats.some(x => pp.includes(x)))) return false;
+      }
+      return true;
+    });
+  }, [query, levels, caps, blocks, pats]);
+
+  const activeCount = levels.length + caps.length + blocks.length + pats.length + (query.trim() ? 1 : 0);
+  const clearAll = () => { setQuery(''); setLevels([]); setCaps([]); setBlocks([]); setPats([]); };
+
   return (
     <>
       <div className="page-head">
         <div className="page-eyebrow">Playbooks · the HOW</div>
-        <h1>Master a reusable technique.</h1>
+        <h1>Master a reusable pattern.</h1>
         <p className="lede">
           Playbooks are horizontal, step-by-step guides to a single capability — grounding, orchestration, governance, evaluation, voice. Combine several and you get a <Link to="/scenarios">Scenario</Link>. Use a playbook when you want to learn <em>how</em> to do one thing well.
         </p>
       </div>
 
+      <div className="playbook-filters">
+        <div className="search-input">
+          <Search size={15} color="var(--text-muted)" />
+          <input placeholder="Search playbooks" value={query} onChange={e => setQuery(e.target.value)} />
+        </div>
+        <CapabilityPicker label="Level" options={levelOptions} selected={levels} onChange={setLevels} triggerIcon={Layers} />
+        <CapabilityPicker label="Capabilities" options={capOptions} selected={caps} onChange={setCaps} triggerIcon={Brain} />
+        <CapabilityPicker label="Building blocks" options={blockOptions} selected={blocks} onChange={setBlocks} triggerIcon={ShieldCheck} />
+        <CapabilityPicker label="Patterns" options={patternOptions} selected={pats} onChange={setPats} triggerIcon={Workflow} />
+        {activeCount > 0 && (
+          <button className="playbook-filter-clear" type="button" onClick={clearAll}>
+            <X size={13} /> Clear
+          </button>
+        )}
+      </div>
+
       <div className="playbook-list">
-        {playbooks.map(p => {
+        {filtered.map(p => {
           const Icon = ICONS[p.icon] ?? BookOpen;
           const usedIn = scenariosForPlaybook(p, 3);
           const totalUsedIn = scenariosForPlaybook(p).length;
@@ -48,23 +111,27 @@ export default function Playbooks() {
                   </div>
                 )}
                 <div className="playbook-skill-bindings">
-                  <div>
-                    <span className="playbook-skill-label"><Wrench size={13} /> Build SKILLs</span>
-                    <div className="advisor-chip-list compact">
-                      {(p.buildSkills ?? []).slice(0, 4).map(skill => <span key={skill} className="skill-pill">{skill}</span>)}
-                    </div>
-                  </div>
-                  <div>
-                    <span className="playbook-skill-label"><Cloud size={13} /> Deployment SKILLs</span>
-                    <div className="advisor-chip-list compact">
-                      {(p.deploymentSkills ?? []).slice(0, 4).map(skill => <span key={skill} className="skill-pill run">{skill}</span>)}
-                    </div>
+                  <span className="playbook-skill-label"><Wrench size={13} /> Build SKILLs:</span>
+                  <div className="advisor-chip-list compact">
+                    {(p.buildSkills ?? []).slice(0, 6).map(skill => (
+                      getBuildSkill(skill)
+                        ? (
+                          <Link
+                            key={skill}
+                            to={`/skills/${skill}/SKILL.md`}
+                            className="skill-pill skill-pill-link"
+                            onClick={e => e.stopPropagation()}
+                          >
+                            {skill}
+                          </Link>
+                        )
+                        : <span key={skill} className="skill-pill">{skill}</span>
+                    ))}
                   </div>
                 </div>
               </div>
               <div className="meta">
                 <span className="difficulty">{p.level}</span>
-                <span>{p.steps} steps</span>
                 {interactive && <span className="playbook-open">Open <ArrowRight size={12} /></span>}
               </div>
             </>
@@ -78,6 +145,10 @@ export default function Playbooks() {
           );
         })}
       </div>
+
+      {filtered.length === 0 && (
+        <p className="playbook-empty">No playbooks match your search and filters.</p>
+      )}
     </>
   );
 }

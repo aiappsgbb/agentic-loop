@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Sparkles, Mic, Plus, Brain, ImageIcon, Volume2, Headphones, MessagesSquare,
   FileSearch, BookOpen, Eye, ShieldCheck, Network, Database, Workflow,
   Building2, GraduationCap, Wrench, Rocket,
-  Plug, Waypoints, KeyRound, HardDrive, Cloud,
+  Plug, Waypoints, KeyRound, HardDrive,
 } from 'lucide-react';
 import CapabilityPicker, { type PickerOption } from './CapabilityPicker';
 import MakeItRealModal from './MakeItRealModal';
@@ -12,6 +13,8 @@ import {
   buildAdvisorPackage,
   inferRequirementsFromSelections,
 } from '../data/advisor';
+import { playbooks, playbookMatchTags } from '../data/links';
+import { getBuildSkill } from '../data/skills';
 
 const CAPABILITIES: PickerOption[] = [
   { id: 'frontier-models', label: 'Frontier Models', description: 'GPT, Claude, Llama, Phi', icon: Brain, link: '/concepts/platform/foundry#frontier-models' },
@@ -67,6 +70,22 @@ export default function GreenfieldBuilder() {
     });
   }, [requirementIds, text]);
 
+  const selectedLabels = useMemo(
+    () => selectedIds.map(id => labelMap.get(id)).filter((x): x is string => Boolean(x)),
+    [selectedIds, labelMap],
+  );
+
+  const relatedPlaybooks = useMemo(() => {
+    const sel = new Set(selectedLabels);
+    return playbooks.filter(p => p.patterns.includes('*') || playbookMatchTags(p).some(t => sel.has(t)));
+  }, [selectedLabels]);
+
+  const relatedBuildSkills = useMemo(() => {
+    const ids = new Set<string>();
+    relatedPlaybooks.forEach(p => (p.buildSkills ?? []).forEach(s => { if (getBuildSkill(s)) ids.add(s); }));
+    return [...ids];
+  }, [relatedPlaybooks]);
+
   function craftPrompt() {
     const caps = capabilities.map(c => labelMap.get(c)).filter(Boolean);
     const bls = blocks.map(c => labelMap.get(c)).filter(Boolean);
@@ -85,18 +104,18 @@ export default function GreenfieldBuilder() {
   return (
     <section className="greenfield" id="prompt">
       <div className="greenfield-head">
-        <div className="section-eyebrow">Path 2 · Production Launchpad</div>
+        <div className="section-eyebrow">Path 2 · Agentic Launchpad</div>
         <h2>Have a concrete idea? Turn it into a Copilot-led deployment.</h2>
         <p>
-          Choose the capabilities, building blocks, and theme from dropdowns, then get a deterministic package:
-          Build SKILLs, Deployment SKILLs, playbooks, tools, architecture recommendations, and an <code>azd up</code> hand-off.
+          Craft your prompt, then click <strong>Make it real</strong> for a guided, step-by-step
+          process that takes you from idea to a deployed agentic solution.
         </p>
       </div>
 
       <div className="picker-bar">
         <CapabilityPicker label="Capabilities" options={CAPABILITIES} selected={capabilities} onChange={setCapabilities} triggerIcon={Brain} />
         <CapabilityPicker label="Building blocks" options={BUILDING_BLOCKS} selected={blocks} onChange={setBlocks} triggerIcon={ShieldCheck} />
-        <CapabilityPicker label="Themes" options={THEMES} selected={themes} onChange={setThemes} triggerIcon={Workflow} />
+        <CapabilityPicker label="Pattern" options={THEMES} selected={themes} onChange={setThemes} triggerIcon={Workflow} />
         <button className="craft-btn" onClick={craftPrompt}>
           <Sparkles size={15} /> Craft the prompt
         </button>
@@ -114,9 +133,8 @@ export default function GreenfieldBuilder() {
             <button className="icon-btn" aria-label="Attach"><Plus size={16} /></button>
             <button
               className="craft-btn primary"
-              onClick={() => setModalOpen(true)}
-              disabled={!advisorPackage}
-              title={advisorPackage ? 'Open the generated package' : 'Describe your agent first'}
+              onClick={() => { if (!text.trim()) craftPrompt(); setModalOpen(true); }}
+              title="Open the generated package"
             >
               <Rocket size={15} /> Make it real
             </button>
@@ -125,29 +143,18 @@ export default function GreenfieldBuilder() {
       </div>
 
       {advisorPackage && (
-        <>
-          <div className="skills-result advisor-result">
-            <SkillCard title="Build SKILLs" icon={<Wrench size={14} />} sub="Existing upstream skills Copilot should use to create solution code." skills={advisorPackage.buildSkills} />
-            <SkillCard title="Deployment SKILLs" icon={<Cloud size={14} />} sub="Existing upstream skills that make the package deployable with azd up." skills={advisorPackage.deploymentSkills} variant="run" />
-          </div>
-
-          <div className="advisor-package-preview">
-            <div>
-              <h3>Selected playbooks</h3>
-              <p>Reusable HOW guidance composed into the Copilot prompt.</p>
-              <div className="advisor-chip-list">
-                {advisorPackage.playbooks.map(p => <span key={p.slug} className="scenario-bridge-pill">{p.name}</span>)}
-              </div>
-            </div>
-            <div>
-              <h3>Run architecture</h3>
-              <p>Foundry/Azure recommendations derived from the selected requirements.</p>
-              <div className="advisor-chip-list">
-                {advisorPackage.runArchitecture.map(item => <span key={item} className="scenario-bridge-pill">{item}</span>)}
-              </div>
+        <div className="advisor-package-preview">
+          <SkillCard title="Build SKILLs" icon={<Wrench size={14} />} sub="Existing upstream skills Copilot should use to create solution code." skills={relatedBuildSkills} />
+          <div>
+            <h3>Related playbooks</h3>
+            <p>Reusable HOW guidance matched from your selections.</p>
+            <div className="advisor-chip-list">
+              {relatedPlaybooks.map(p => (
+                <Link key={p.slug} to={`/playbooks/${p.slug}`} className="scenario-bridge-pill scenario-bridge-pill-link">{p.name}</Link>
+              ))}
             </div>
           </div>
-        </>
+        </div>
       )}
 
       <MakeItRealModal
@@ -159,16 +166,18 @@ export default function GreenfieldBuilder() {
   );
 }
 
-function SkillCard({ title, icon, sub, skills, variant }: { title: string; icon: ReactNode; sub: string; skills: string[]; variant?: 'run' }) {
+function SkillCard({ title, icon, sub, skills }: { title: string; icon: ReactNode; sub: string; skills: string[] }) {
   return (
     <div className="skills-card">
       <h3>{icon} {title}</h3>
       <p className="sub">{sub}</p>
-      {skills.map(s => (
-        <span key={s} className={`skill-pill ${variant ?? ''}`}>
-          <Sparkles size={12} /> {s}
-        </span>
-      ))}
+      <div className="advisor-chip-list">
+        {skills.map(s => (
+          <Link key={s} to={`/skills/${s}/SKILL.md`} className="skill-pill skill-pill-link">
+            <Sparkles size={12} /> {s}
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

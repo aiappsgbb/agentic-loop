@@ -13,7 +13,7 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
   const location = useLocation();
   const conceptsActive = location.pathname.startsWith('/concepts') && !location.pathname.startsWith('/concepts/platform');
   const platformActive = location.pathname.startsWith('/concepts/platform');
-  const [conceptsOpen, setConceptsOpen] = useState(true);
+  const [conceptsOpen, setConceptsOpen] = useState(false);
   const [platformOpen, setPlatformOpen] = useState(true);
   const conceptsExpanded = conceptsOpen || conceptsActive;
   const platformExpanded = platformOpen || platformActive;
@@ -33,7 +33,6 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
       </div>
 
       <nav className="nav">
-        <div className="nav-section-title">Start here</div>
         <NavLink to="/" end className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <Home className="icon" size={18} />
           <span className="nav-label">Home</span>
@@ -45,10 +44,6 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
         </NavLink>
 
         <div className="nav-section-title">Build</div>
-        <NavLink to="/scenarios" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-          <Layers className="icon" size={18} />
-          <span className="nav-label">Scenarios</span>
-        </NavLink>
         <NavLink to="/playbooks" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <BookOpen className="icon" size={18} />
           <span className="nav-label">Playbooks</span>
@@ -56,6 +51,10 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
         <NavLink to="/skills" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <Library className="icon" size={18} />
           <span className="nav-label">Skills catalog</span>
+        </NavLink>
+        <NavLink to="/scenarios" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <Layers className="icon" size={18} />
+          <span className="nav-label">Industry scenarios</span>
         </NavLink>
 
         <div className="nav-section-title">Learn</div>

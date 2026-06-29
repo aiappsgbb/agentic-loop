@@ -13,7 +13,7 @@ const PATHS = [
   },
   {
     label: 'Path 2',
-    title: 'Production Launchpad',
+    title: 'Agentic Launchpad',
     sub: 'Bring a concrete idea, shape the pilot, and generate a Copilot-led deployment path.',
     to: '#prompt',
     icon: Sparkles,

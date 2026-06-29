@@ -1,4 +1,4 @@
-import { playbooks, playbooksForScenario, type Playbook, type Scenario } from './links';
+import { playbooks, playbooksForScenario, playbookMatchTags, type Playbook, type Scenario } from './links';
 
 export type AdvisorPath = 'idea' | 'scenario';
 
@@ -277,7 +277,6 @@ export function buildAdvisorPackage(args: {
   const deploymentSkills = unique([
     ...DEFAULT_DEPLOYMENT_SKILLS,
     ...requirements.flatMap(r => r.deploymentSkills),
-    ...selectedPlaybooks.flatMap(p => p.deploymentSkills ?? []),
   ]);
   const tools = unique(requirements.flatMap(r => r.tools));
   const runArchitecture = unique([
@@ -304,7 +303,7 @@ export function buildAdvisorPackage(args: {
     runArchitecture,
     deploymentCommand: 'azd up',
     copilotPrompt:
-      `/lean:implement ${args.intent.trim()}\n\n` +
+      `/spec2cloud ${args.intent.trim()}\n\n` +
       `Respect the existing repository. Use the Agentic Loop playbook approach and produce an azd-deployable package.\n\n` +
       `Path: ${args.path === 'scenario' ? 'Scenario Advisor' : 'Production Launchpad'}\n` +
       (args.scenario ? `Scenario: ${args.scenario.name} (${args.scenario.industry})\n` : '') +
@@ -321,7 +320,7 @@ function selectPlaybooks(requirements: AdvisorRequirement[], scenario?: Scenario
   const fromScenario = scenario ? playbooksForScenario(scenario) : [];
   const techniques = new Set(requirements.flatMap(r => r.techniques));
   const fromRequirements = playbooks.filter(p =>
-    p.techniques.includes('*') || p.techniques.some(t => techniques.has(t))
+    p.patterns.includes('*') || playbookMatchTags(p).some(t => techniques.has(t))
   );
   const selected = uniqueBySlug([...fromScenario, ...fromRequirements]);
   return selected.length ? selected : playbooks.filter(p => p.slug === 'getting-started');

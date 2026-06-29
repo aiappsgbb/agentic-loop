@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import { ArrowLeft, ArrowRight, Copy, Check, Info, Lightbulb, AlertTriangle, ListOrdered, X, Pin, PinOff } from 'lucide-react';
+import Mermaid from '../components/Mermaid';
 
 const PLAYBOOK_FILES = import.meta.glob('/playbooks/*/README.md', {
   query: '?raw',
@@ -28,6 +30,9 @@ interface Parsed {
 function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
+
+/** Accent color per chapter/stage, cycled by chapter index. */
+const STAGE_ACCENTS = ['#8b6dff', '#06b6d4', '#22c55e', '#f59e0b', '#ec4899', '#ef4444'];
 
 function parsePlaybook(md: string, slug: string): Parsed {
   const lines = md.split(/\r?\n/);
@@ -95,18 +100,11 @@ function parsePlaybook(md: string, slug: string): Parsed {
   const fix = (body: string) =>
     body.replace(/(!\[[^\]]*]\()\.?\/?images\//g, `$1/playbooks/${slug}/images/`);
 
-  const introSlide: Slide = {
-    id: 'intro',
-    chapter: 'Intro',
-    title: title,
-    body: lede,
-  };
-
   return {
     title,
     lede,
-    chapters: ['Intro', ...chapters],
-    slides: [introSlide, ...slides.map(s => ({ ...s, body: fix(s.body) }))],
+    chapters,
+    slides: slides.map(s => ({ ...s, body: fix(s.body) })),
   };
 }
 
@@ -138,6 +136,17 @@ function calloutKind(text: string): 'note' | 'tip' | 'warning' | null {
   if (k === 'tip') return 'tip';
   if (k === 'warning' || k === 'important') return 'warning';
   return 'note';
+}
+
+/** Reconstruct raw text from React children (rehype-highlight wraps code in spans). */
+function childrenToText(children: React.ReactNode): string {
+  if (children == null || children === false) return '';
+  if (typeof children === 'string' || typeof children === 'number') return String(children);
+  if (Array.isArray(children)) return children.map(childrenToText).join('');
+  if (typeof children === 'object' && 'props' in children) {
+    return childrenToText((children as { props: { children?: React.ReactNode } }).props.children);
+  }
+  return '';
 }
 
 export default function PlaybookPage() {
@@ -209,7 +218,7 @@ export default function PlaybookPage() {
     return () => window.removeEventListener('keydown', onKey);
   }, [parsed, navigate]);
 
-  if (!parsed) {
+  if (!parsed || parsed.slides.length === 0) {
     return (
       <div className="playbook-missing">
         <h1>Playbook not found</h1>
@@ -222,9 +231,13 @@ export default function PlaybookPage() {
   const slide = parsed.slides[index];
   const progress = ((index + 1) / parsed.slides.length) * 100;
   const chapterIndex = parsed.chapters.indexOf(slide.chapter);
+  const accent = STAGE_ACCENTS[(chapterIndex < 0 ? 0 : chapterIndex) % STAGE_ACCENTS.length];
 
   return (
-    <div className={`playbook-page ${tocPinned ? 'toc-pinned' : ''}`}>
+    <div
+      className={`playbook-page ${tocPinned ? 'toc-pinned' : ''}`}
+      style={{ '--pb-accent': accent } as CSSProperties}
+    >
       <div className="playbook-topbar">
         <Link to="/playbooks" className="playbook-back" aria-label="Back to Playbooks">
           <ArrowLeft size={16} /> <span>Playbooks</span>
@@ -287,6 +300,9 @@ export default function PlaybookPage() {
             components={{
               pre: ({ children }) => <>{children}</>,
               code: ({ className, children, ...props }) => {
+                if (/language-mermaid/.test(className ?? '')) {
+                  return <Mermaid chart={childrenToText(children).replace(/\n$/, '')} />;
+                }
                 const isBlock = /language-/.test(className ?? '') || String(children).includes('\n');
                 if (isBlock) return <CodeBlock className={className}>{children}</CodeBlock>;
                 return <code className={className} {...props}>{children}</code>;
