@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import { ArrowLeft, ArrowRight, Copy, Check, Info, Lightbulb, AlertTriangle, ListOrdered, X, Pin, PinOff } from 'lucide-react';
 import Mermaid from '../components/Mermaid';
+import ShareButton from '../components/ShareButton';
 
 const PLAYBOOK_FILES = import.meta.glob('/playbooks/*/README.md', {
   query: '?raw',
@@ -245,6 +246,7 @@ export default function PlaybookPage() {
         <div className="playbook-title-strip">
           <span className="playbook-crumb">{parsed.title}</span>
         </div>
+        <ShareButton title={parsed.title} />
         <button
           className={`playbook-toc-btn ${tocVisible ? 'active' : ''}`}
           type="button"

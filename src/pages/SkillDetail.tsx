@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import { ArrowLeft, ExternalLink, Copy, Check, Terminal, AlertTriangle } from 'lucide-react';
+import ShareButton from '../components/ShareButton';
 import {
   getSkill, skillRepoUrl, skillRawUrl, skillInstallCommand,
 } from '../data/skills';
@@ -107,6 +108,7 @@ export default function SkillDetail() {
           <ArrowLeft size={16} /> <span>Skills</span>
         </Link>
         <span className="skill-detail-repo">{skill.repo || 'Reused skill'}</span>
+        <ShareButton title={displayName} />
       </div>
 
       <header className="skill-detail-head">

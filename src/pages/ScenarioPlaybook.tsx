@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, BookOpen, PlayCircle, ArrowRight } from 'lucide-react';
+import ShareButton from '../components/ShareButton';
 import scenarios from '../data/scenarios.json';
 import { playbooksForScenario, playbookHasDeck } from '../data/links';
 import GreenfieldBuilder from '../components/GreenfieldBuilder';
@@ -29,7 +30,10 @@ export default function ScenarioPlaybook() {
 
   return (
     <>
-      <Link to="/scenarios" className="back-link"><ArrowLeft size={14} /> Back to scenarios</Link>
+      <div className="scenario-detail-topbar">
+        <Link to="/scenarios" className="back-link"><ArrowLeft size={14} /> Back to scenarios</Link>
+        <ShareButton title={scenario.name} />
+      </div>
       <div className="playbook-hero">
         <div className="playbook-hero-body">
           <div className="page-eyebrow">{scenario.industry} · Scenario</div>

@@ -2733,6 +2733,31 @@
 }
 .playbook-crumb { font-weight: 500; color: var(--text); }
 
+/* ---------- Share button (playbooks / skills / scenarios) ---------- */
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.share-btn:hover { border-color: var(--accent-2); }
+.scenario-detail-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
 .playbook-chapter-rail {
   display: flex;
   gap: 8px;
