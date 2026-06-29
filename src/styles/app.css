@@ -1738,7 +1738,11 @@
   justify-content: center;
   align-self: stretch;
   gap: 6px;
-  width: 100%;
+  /* Span the full inner width of the spine node: pull left under the
+     54px brand icon + 12px flex gap so the badge lines up with the
+     outer Hosted Agent box on both edges. */
+  width: calc(100% + 66px);
+  margin-left: -66px;
   margin-top: 6px;
   padding: 5px 9px;
   border-radius: 999px;
@@ -1747,7 +1751,7 @@
   color: var(--accent-4);
   font-size: 11px;
   font-weight: 700;
-  max-width: 100%;
+  max-width: none;
   white-space: nowrap;
   line-height: 1.3;
 }
