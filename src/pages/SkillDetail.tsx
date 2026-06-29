@@ -5,7 +5,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import { ArrowLeft, ExternalLink, Copy, Check, Terminal, AlertTriangle } from 'lucide-react';
 import {
-  getBuildSkill, skillRepoUrl, skillRawUrl, skillInstallCommand,
+  getSkill, skillRepoUrl, skillRawUrl, skillInstallCommand,
 } from '../data/skills';
 
 interface Frontmatter {
@@ -39,13 +39,22 @@ type LoadState =
 
 export default function SkillDetail() {
   const { name } = useParams<{ name: string }>();
-  const skill = name ? getBuildSkill(name) : undefined;
+  const found = name ? getSkill(name) : undefined;
+  const skill = found?.skill;
+  const hasRepo = !!skill?.repo;
   const [state, setState] = useState<LoadState>({ status: 'loading' });
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!skill) return;
     let cancelled = false;
+
+    // Skills without a published repo (reused run skills) have no fetchable SKILL.md.
+    if (!skill.repo) {
+      setState({ status: 'ready', fm: {}, body: '' });
+      return;
+    }
+
     setState({ status: 'loading' });
 
     fetch(skillRawUrl(skill))
@@ -70,13 +79,13 @@ export default function SkillDetail() {
     return (
       <div className="skill-detail-missing">
         <h1>Skill not found</h1>
-        <p>No build skill named <code>{name}</code> in the catalog.</p>
+        <p>No skill named <code>{name}</code> in the catalog.</p>
         <Link to="/skills" className="btn-pill"><ArrowLeft size={14} /> Back to Skills</Link>
       </div>
     );
   }
 
-  const displayName = (state.status === 'ready' && state.fm.name) || skill.name;
+  const displayName = skill.id;
   const displayDesc = (state.status === 'ready' && state.fm.description) || skill.description;
   const installCmd = skillInstallCommand(skill);
   const repoUrl = skillRepoUrl(skill);
@@ -97,7 +106,7 @@ export default function SkillDetail() {
         <Link to="/skills" className="playbook-back" aria-label="Back to Skills">
           <ArrowLeft size={16} /> <span>Skills</span>
         </Link>
-        <span className="skill-detail-repo">{skill.repo}</span>
+        <span className="skill-detail-repo">{skill.repo || 'Reused skill'}</span>
       </div>
 
       <header className="skill-detail-head">
@@ -105,18 +114,20 @@ export default function SkillDetail() {
         <p className="lede">{displayDesc}</p>
       </header>
 
-      <div className="skill-detail-actions">
-        <a className="btn-pill" href={repoUrl} target="_blank" rel="noreferrer">
-          <ExternalLink size={14} /> Open <code>SKILL.md</code> on GitHub
-        </a>
-        <div className="skill-install">
-          <Terminal size={14} className="skill-install-icon" />
-          <code>{installCmd}</code>
-          <button type="button" className="skill-install-copy" onClick={copyInstall} aria-label="Copy install command">
-            {copied ? <Check size={14} /> : <Copy size={14} />}
-          </button>
+      {hasRepo && (
+        <div className="skill-detail-actions">
+          <a className="btn-pill" href={repoUrl} target="_blank" rel="noreferrer">
+            <ExternalLink size={14} /> Open <code>SKILL.md</code> on GitHub
+          </a>
+          <div className="skill-install">
+            <Terminal size={14} className="skill-install-icon" />
+            <code>{installCmd}</code>
+            <button type="button" className="skill-install-copy" onClick={copyInstall} aria-label="Copy install command">
+              {copied ? <Check size={14} /> : <Copy size={14} />}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       <article className="skill-detail-body md">
         {state.status === 'loading' && (
@@ -131,7 +142,14 @@ export default function SkillDetail() {
             </div>
           </div>
         )}
-        {state.status === 'ready' && (
+        {state.status === 'ready' && !hasRepo && (
+          <div className="md-callout">
+            <div className="md-callout-body">
+              <p>This is a reusable <strong>run-phase</strong> skill with no published repository. When a prompt explicitly names it, the agent reuses the existing skill instead of authoring a new one — it's downloaded into <code>./skills/{skill.id}/</code>, versioned on the Foundry project, and attached to the agent's toolbox.</p>
+            </div>
+          </div>
+        )}
+        {state.status === 'ready' && hasRepo && (
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeHighlight]}

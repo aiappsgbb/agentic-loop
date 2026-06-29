@@ -8,6 +8,11 @@ export interface Scenario {
   description: string;
   image: string;
   tags: string[];
+  prompt?: string;
+  capabilities?: string[];
+  buildingBlocks?: string[];
+  patterns?: string[];
+  videoFileName?: string;
   link?: string;
 }
 
@@ -22,6 +27,7 @@ export interface Playbook {
   capabilities?: string[];
   building_blocks?: string[];
   buildSkills?: string[];
+  runSkills?: string[];
 }
 
 export const scenarios = scenariosData as Scenario[];

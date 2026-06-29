@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Check, Copy, Terminal, Sparkles, Rocket, ArrowRight, FolderPlus } from 'lucide-react';
+import { X, Check, Copy, Terminal, Sparkles, Rocket, ArrowRight, FolderPlus, RefreshCw } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { AdvisorPackage } from '../data/advisor';
+import { getRunSkill } from '../data/skills';
 
 interface Props {
   open: boolean;
@@ -13,13 +14,15 @@ interface Props {
 const STEPS = [
   { id: 'prep', title: 'Prepare your environment', icon: Terminal },
   { id: 'project', title: 'Create your project', icon: FolderPlus },
-  { id: 'loop', title: 'Run the build loop', icon: Sparkles },
+  { id: 'skills', title: 'Choose skills', icon: Sparkles },
+  { id: 'loop', title: 'Run the build loop', icon: RefreshCw },
   { id: 'operate', title: 'Review & operate', icon: Rocket },
 ];
 
 export default function MakeItRealModal({ open, onClose, advisorPackage }: Props) {
   const [step, setStep] = useState(0);
   const [copied, setCopied] = useState<string | null>(null);
+  const [selectedRunSkills, setSelectedRunSkills] = useState<string[]>([]);
 
   useEffect(() => {
     if (!open) return;
@@ -33,11 +36,21 @@ export default function MakeItRealModal({ open, onClose, advisorPackage }: Props
     };
   }, [onClose, open]);
 
+  // Reset run-skill selection (unselected by default) whenever the package changes.
+  useEffect(() => {
+    if (!open || !advisorPackage) return;
+    setSelectedRunSkills([]);
+  }, [open, advisorPackage]);
+
   if (!open || !advisorPackage) return null;
 
   function closeModal() {
     setStep(0);
     onClose();
+  }
+
+  function toggleRunSkill(id: string) {
+    setSelectedRunSkills(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   }
 
   async function copy(text: string, key: string) {
@@ -50,7 +63,15 @@ export default function MakeItRealModal({ open, onClose, advisorPackage }: Props
     }
   }
 
-  const specPrompt = `/spec2cloud ${advisorPackage.intent}`;
+  const runSkillIds = new Set<string>();
+  advisorPackage.playbooks.forEach(p => (p.runSkills ?? []).forEach(s => { if (getRunSkill(s)) runSkillIds.add(s); }));
+  const availableRunSkills = [...runSkillIds];
+
+  const chosenRunSkills = availableRunSkills.filter(s => selectedRunSkills.includes(s));
+  const runSkillsLine = chosenRunSkills.length
+    ? `\n\nUse the following skills when running the agent(s): ${chosenRunSkills.join(', ')}.`
+    : '';
+  const specPrompt = `/spec2cloud ${advisorPackage.intent}${runSkillsLine}`;
 
   return createPortal(
     <div className="modal-backdrop" onClick={closeModal}>
@@ -99,7 +120,35 @@ export default function MakeItRealModal({ open, onClose, advisorPackage }: Props
 
           {step === 2 && (
             <div className="step-pane">
-              <h3>3 · Run the build loop</h3>
+              <h3>3 · Choose skills</h3>
+              <p className="muted"><strong>Build skills</strong> are identified and installed automatically by Copilot while it implements your solution — you don't need to pick them. <strong>Run skills</strong> are reused by the agent at execution time; select the ones you want from the suggestions below and they'll be appended to your prompt.</p>
+
+              {availableRunSkills.length > 0 ? (
+                <div className="run-skill-checklist">
+                  {availableRunSkills.map(s => {
+                    const meta = getRunSkill(s);
+                    const checked = selectedRunSkills.includes(s);
+                    return (
+                      <label key={s} className={`run-skill-option ${checked ? 'checked' : ''}`}>
+                        <input type="checkbox" checked={checked} onChange={() => toggleRunSkill(s)} />
+                        <span className="run-skill-check"><Check size={12} /></span>
+                        <span className="run-skill-info">
+                          <span className="run-skill-name">{s}</span>
+                          {meta?.description && <span className="run-skill-desc">{meta.description}</span>}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="modal-hint"><Rocket size={14} /> No run skills suggested for this package — Copilot will generate any it needs during the build phase.</div>
+              )}
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="step-pane">
+              <h3>4 · Run the build loop</h3>
               <p className="muted">Start by opening GitHub Copilot App or the CLI, then add your project and select your preferred coding model in Autopilot mode. Paste your prompt and run the <code>/spec2cloud</code> command to execute the complete workflow: Specify → Plan → Implement → Verify → Deploy. The agentic-loop defaults are pre-configured for seamless execution.</p>
               <div className="modal-hint">Launch the standalone GitHub Copilot app, then open your project folder.</div>
               <CodeBlock label="…or the Copilot CLI (all permissions)" code="copilot --allow-all" k="loop-open" copied={copied} onCopy={copy} />
@@ -109,9 +158,9 @@ export default function MakeItRealModal({ open, onClose, advisorPackage }: Props
             </div>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <div className="step-pane">
-              <h3>4 · Review & operate</h3>
+              <h3>5 · Review & operate</h3>
               <p className="muted">When the loop finishes, Copilot returns the deployed frontend URL and previews it. Open the Foundry portal to review models, agents, tools, and traces in Application Insights.</p>
               <CodeBlock label="Clean up when you're done" code="azd down --purge --force" k="operate-cleanup" copied={copied} onCopy={copy} />
               <div className="success-banner">

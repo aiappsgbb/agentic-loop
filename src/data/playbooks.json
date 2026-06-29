@@ -9,7 +9,8 @@
     "patterns": ["*"],
     "capabilities": ["Frontier Models"],
     "building_blocks": ["Observability"],
-    "buildSkills": ["microsoft-foundry", "copilot-sdk", "python-mcp-server-generator", "appinsights-instrumentation"]
+    "buildSkills": ["microsoft-foundry", "copilot-sdk", "python-mcp-server-generator", "appinsights-instrumentation"],
+    "runSkills": []
   },
   {
     "slug": "enterprise-knowledge-grounding",
@@ -21,7 +22,8 @@
     "patterns": ["Knowledge Grounding"],
     "capabilities": ["Knowledge", "Forms Recognition"],
     "building_blocks": ["Storage", "Identity & Access"],
-    "buildSkills": ["azure-ai-projects-py", "agent-framework-azure-ai-py", "azure-storage-blob-py", "azure-identity-py", "bicep-azd-patterns", "aigbb-azure-security", "aigbb-observability"]
+    "buildSkills": ["azure-ai-projects-py", "agent-framework-azure-ai-py", "azure-storage-blob-py", "azure-identity-py", "bicep-azd-patterns", "aigbb-azure-security", "aigbb-observability"],
+    "runSkills": ["roundup", "tldr-prompt", "md-to-docx"]
   },
   {
     "slug": "multi-agent-orchestration",
@@ -33,7 +35,8 @@
     "patterns": ["Workflow Automation", "Domain-Specific Agents"],
     "capabilities": ["Frontier Models"],
     "building_blocks": ["Integration", "Observability"],
-    "buildSkills": ["copilot-sdk", "agent-framework-azure-ai-py", "mcp-builder", "pydantic-models-py", "aigbb-azd-compliance", "bicep-azd-patterns", "containerization", "aigbb-observability"]
+    "buildSkills": ["copilot-sdk", "agent-framework-azure-ai-py", "mcp-builder", "pydantic-models-py", "aigbb-azd-compliance", "bicep-azd-patterns", "containerization", "aigbb-observability"],
+    "runSkills": ["finalize-agent-prompt", "roundup"]
   },
   {
     "slug": "governance-safety-baseline",
@@ -45,7 +48,8 @@
     "patterns": ["Governance"],
     "capabilities": ["Frontier Models"],
     "building_blocks": ["Identity & Access", "AI Gateway", "Observability"],
-    "buildSkills": ["azure-ai-projects-py", "aigbb-azure-security", "pydantic-models-py", "aigbb-observability", "bicep-azd-patterns", "aigbb-azd-compliance"]
+    "buildSkills": ["azure-ai-projects-py", "aigbb-azure-security", "pydantic-models-py", "aigbb-observability", "bicep-azd-patterns", "aigbb-azd-compliance"],
+    "runSkills": ["incident-postmortem"]
   },
   {
     "slug": "continuous-evaluation-loop",
@@ -57,7 +61,8 @@
     "patterns": ["Continuous Evaluation"],
     "capabilities": ["Predictive Analytics"],
     "building_blocks": ["Observability"],
-    "buildSkills": ["azure-ai-projects-py", "pydantic-models-py", "copilot-sdk", "aigbb-observability", "aigbb-azd-compliance", "bicep-azd-patterns"]
+    "buildSkills": ["azure-ai-projects-py", "pydantic-models-py", "copilot-sdk", "aigbb-observability", "aigbb-azd-compliance", "bicep-azd-patterns"],
+    "runSkills": ["eyeball", "tldr-prompt"]
   },
   {
     "slug": "voice-first-agent-blueprint",
@@ -69,6 +74,7 @@
     "patterns": ["Voice-First"],
     "capabilities": ["Speech to Text", "Text to Speech", "Real-Time Conversations", "Frontier Models"],
     "building_blocks": ["Observability"],
-    "buildSkills": ["azure-ai-voicelive-py", "agent-framework-azure-ai-py", "azure-ai-projects-py", "containerization", "aigbb-azd-compliance", "aigbb-observability"]
+    "buildSkills": ["azure-ai-voicelive-py", "agent-framework-azure-ai-py", "azure-ai-projects-py", "containerization", "aigbb-azd-compliance", "aigbb-observability"],
+    "runSkills": []
   }
 ]

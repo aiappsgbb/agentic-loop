@@ -6,12 +6,12 @@ export default function Scenarios() {
     <>
       <div className="page-head">
         <div className="page-eyebrow">Scenarios · the WHAT</div>
-        <h1>Start from a proven outcome.</h1>
+        <h1>Start from a vertical use case.</h1>
         <p className="lede">
-          Scenarios are vertical, industry-shaped blueprints — each one ships with a reference repo, Foundry deployment, and an evaluation harness so you can fork, adapt, and ship in a single sprint. Every scenario is assembled from reusable <Link to="/playbooks">Playbooks</Link>. Pick a scenario when you know the <em>outcome</em> you want.
+          Scenarios are vertical, industry-shaped blueprints. Every scenario is assembled from reusable <Link to="/playbooks">Playbooks</Link>.
         </p>
       </div>
-      <ScenariosGallery showExplore={false} />
+      <ScenariosGallery browse showExplore={false} />
     </>
   );
 }

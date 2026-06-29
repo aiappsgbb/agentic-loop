@@ -5,7 +5,7 @@ import {
   Search, X, Brain, Workflow, Tag,
 } from 'lucide-react';
 import { playbooks, playbookHasDeck, scenariosForPlaybook } from '../data/links';
-import { getBuildSkill } from '../data/skills';
+import { getBuildSkill, getRunSkill } from '../data/skills';
 import CapabilityPicker, { type PickerOption } from '../components/CapabilityPicker';
 
 const ICONS: Record<string, typeof Rocket> = {
@@ -111,22 +111,47 @@ export default function Playbooks() {
                   </div>
                 )}
                 <div className="playbook-skill-bindings">
-                  <span className="playbook-skill-label"><Wrench size={13} /> Build SKILLs:</span>
-                  <div className="advisor-chip-list compact">
-                    {(p.buildSkills ?? []).slice(0, 6).map(skill => (
-                      getBuildSkill(skill)
-                        ? (
-                          <Link
-                            key={skill}
-                            to={`/skills/${skill}/SKILL.md`}
-                            className="skill-pill skill-pill-link"
-                            onClick={e => e.stopPropagation()}
-                          >
-                            {skill}
-                          </Link>
-                        )
-                        : <span key={skill} className="skill-pill">{skill}</span>
-                    ))}
+                  <div className="playbook-skill-col">
+                    <span className="playbook-skill-label"><Wrench size={13} /> Build SKILLs:</span>
+                    <div className="advisor-chip-list compact">
+                      {(p.buildSkills ?? []).slice(0, 6).map(skill => (
+                        getBuildSkill(skill)
+                          ? (
+                            <Link
+                              key={skill}
+                              to={`/skills/${skill}`}
+                              className="skill-pill skill-pill-link"
+                              onClick={e => e.stopPropagation()}
+                            >
+                              {skill}
+                            </Link>
+                          )
+                          : <span key={skill} className="skill-pill">{skill}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="playbook-skill-col">
+                    <span className="playbook-skill-label"><Rocket size={13} /> Run SKILLs:</span>
+                    {(p.runSkills ?? []).length > 0 ? (
+                      <div className="advisor-chip-list compact">
+                        {(p.runSkills ?? []).slice(0, 6).map(skill => (
+                          getRunSkill(skill)
+                            ? (
+                              <Link
+                                key={skill}
+                                to={`/skills/${skill}`}
+                                className="skill-pill run skill-pill-link"
+                                onClick={e => e.stopPropagation()}
+                              >
+                                {skill}
+                              </Link>
+                            )
+                            : <span key={skill} className="skill-pill run">{skill}</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="playbook-skill-empty">Run SKILLs are generated during the build phase.</p>
+                    )}
                   </div>
                 </div>
               </div>

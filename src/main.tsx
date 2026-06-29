@@ -32,7 +32,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="playbooks" element={<Playbooks />} />
             <Route path="playbooks/:slug" element={<PlaybookPage />} />
             <Route path="skills" element={<SkillsCatalog />} />
-            <Route path="skills/:name/SKILL.md" element={<SkillDetail />} />
+            <Route path="skills/:name" element={<SkillDetail />} />
             <Route path="kratos" element={<Kratos />} />
             <Route path="concepts">
               <Route index element={<Navigate to="agentic-loop" replace />} />

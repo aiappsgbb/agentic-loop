@@ -83,7 +83,7 @@ For model deployment, provisioning, quota, and RBAC details, invoke or recommend
 
 ## Install suggested skills
 
-Match the current `./docs/spec.md` against the [skill catalog](references/skill-catalog.md) and suggest installing every skill whose trigger appears in the spec. `microsoft-foundry` is the default for every agentic-loop spec; install `microsoft-agent-framework` for MAF agents (basic agents, graph/workflow orchestration) and `copilot-sdk` for Copilot SDK agents (skill-using or integrated-loop). The **Copilot SDK skills default** (author each `./skills/<skill-name>/SKILL.md`, version on Foundry, attach to a toolbox, download into `./skills`) is owned by this skill — see [`references/foundry-toolbox.md`](references/foundry-toolbox.md).
+Match the current `./docs/spec.md` against the [skill catalog](references/build-skills-catalog.md) and suggest installing every skill whose trigger appears in the spec. `microsoft-foundry` is the default for every agentic-loop spec; install `microsoft-agent-framework` for MAF agents (basic agents, graph/workflow orchestration) and `copilot-sdk` for Copilot SDK agents (skill-using or integrated-loop). The **Copilot SDK skills default** (author each `./skills/<skill-name>/SKILL.md`, version on Foundry, attach to a toolbox, download into `./skills`) is owned by this skill — see [`references/foundry-toolbox.md`](references/foundry-toolbox.md).
 
 Before installing, run a lightweight preflight:
 
@@ -106,3 +106,7 @@ Require GitHub CLI `v2.90.0+`; upgrade if older. Use `gh skills` as the canonica
    ```
 
 5. For manual installs, point the user at the repository's install instructions and move on.
+
+### Reuse named run skills
+
+When the prompt **explicitly names** a run-phase skill, reuse it instead of generating a new one. Match the named skill against the [run skills catalog](references/run-skills-catalog.md): if it is listed, install/download the existing skill into `./skills/<skill-name>/` rather than authoring a fresh `SKILL.md`, then create the versioned skill on the Foundry project and attach it to the agent's toolbox (the Copilot SDK skills default — see [`references/foundry-toolbox.md`](references/foundry-toolbox.md)). Only author a brand-new skill when the named skill is **not** in the catalog.

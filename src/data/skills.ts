@@ -2,6 +2,7 @@ import {
   Boxes, Sparkles, Network, Eye, BarChart3, Database, MessageSquare,
   KeyRound, ShieldCheck, FileCheck2, Rocket, Plug,
   Code as Github,
+  Wand2, Briefcase, TrendingUp, AlertTriangle, Share2, FileText, Newspaper, ScrollText,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -20,7 +21,7 @@ export interface BuildSkill {
 
 /**
  * Build-phase skills suggested by the `agentic-loop` skill catalog.
- * Source: agentic-loop/skills/agentic-loop/references/skill-catalog.md
+ * Source: agentic-loop/skills/agentic-loop/references/build-skills-catalog.md
  */
 export const BUILD_SKILLS: BuildSkill[] = [
   {
@@ -158,16 +159,122 @@ export function getBuildSkill(id: string): BuildSkill | undefined {
 }
 
 /** GitHub web URL for the skill folder. */
-export function skillRepoUrl(skill: BuildSkill): string {
+export function skillRepoUrl(skill: BuildSkill | RunSkill): string {
   return `https://github.com/${skill.repo}/tree/main/skills/${skill.id}`;
 }
 
 /** Raw SKILL.md URL used to fetch and render the skill content. */
-export function skillRawUrl(skill: BuildSkill): string {
+export function skillRawUrl(skill: BuildSkill | RunSkill): string {
   return `https://raw.githubusercontent.com/${skill.repo}/main/skills/${skill.id}/SKILL.md`;
 }
 
 /** GitHub CLI command to install the skill. */
-export function skillInstallCommand(skill: BuildSkill): string {
+export function skillInstallCommand(skill: BuildSkill | RunSkill): string {
   return `gh skill install ${skill.repo} ${skill.id}`;
+}
+
+export interface RunSkill {
+  /** Skill folder name — matches `skills/<id>/SKILL.md` and the named-skill trigger. */
+  id: string;
+  /** Display name. */
+  name: string;
+  /** GitHub repository in `owner/repo` form, or '' when the skill has no published repo. */
+  repo: string;
+  /** Reuse trigger — what the prompt must explicitly name for this skill to be reused. */
+  description: string;
+  category: string;
+  icon: LucideIcon;
+}
+
+/**
+ * Run-phase skills the agent itself runs at execution time. Reuse — don't regenerate —
+ * when the prompt explicitly names one of these.
+ * Source: agentic-loop/skills/agentic-loop/references/run-skills-catalog.md
+ */
+export const RUN_SKILLS: RunSkill[] = [
+  {
+    id: 'eyeball',
+    name: 'Eyeball',
+    repo: 'github/awesome-copilot',
+    description: 'Visually inspect a rendered UI or screenshot and report what is on screen or off-spec.',
+    category: 'Review',
+    icon: Eye,
+  },
+  {
+    id: 'finalize-agent-prompt',
+    name: 'Finalize Agent Prompt',
+    repo: 'github/awesome-copilot',
+    description: "Polish and finalize an agent's system / instruction prompt.",
+    category: 'Prompting',
+    icon: Wand2,
+  },
+  {
+    id: 'gtm-enterprise-account-planning',
+    name: 'GTM Enterprise Account Planning',
+    repo: '',
+    description: 'Build an enterprise go-to-market account plan.',
+    category: 'Go-to-market',
+    icon: Briefcase,
+  },
+  {
+    id: 'gtm-product-led-growth',
+    name: 'GTM Product-Led Growth',
+    repo: '',
+    description: 'Plan a product-led-growth (PLG) go-to-market motion.',
+    category: 'Go-to-market',
+    icon: TrendingUp,
+  },
+  {
+    id: 'incident-postmortem',
+    name: 'Incident Postmortem',
+    repo: 'github/awesome-copilot',
+    description: 'Draft a structured incident postmortem — timeline, impact, root cause, action items.',
+    category: 'Operations',
+    icon: AlertTriangle,
+  },
+  {
+    id: 'linkedin-post-formatter',
+    name: 'LinkedIn Post Formatter',
+    repo: '',
+    description: 'Format content into a LinkedIn-ready post.',
+    category: 'Content',
+    icon: Share2,
+  },
+  {
+    id: 'md-to-docx',
+    name: 'Markdown to DOCX',
+    repo: 'github/awesome-copilot',
+    description: 'Convert Markdown into a DOCX document.',
+    category: 'Documents',
+    icon: FileText,
+  },
+  {
+    id: 'roundup',
+    name: 'Roundup',
+    repo: 'github/awesome-copilot',
+    description: 'Summarize multiple sources or items into a single roundup.',
+    category: 'Content',
+    icon: Newspaper,
+  },
+  {
+    id: 'tldr-prompt',
+    name: 'TL;DR Prompt',
+    repo: 'github/awesome-copilot',
+    description: 'Produce a concise TL;DR summary of long content.',
+    category: 'Content',
+    icon: ScrollText,
+  },
+];
+
+export function getRunSkill(id: string): RunSkill | undefined {
+  return RUN_SKILLS.find(s => s.id === id);
+}
+
+/** Look up a skill in either catalog. */
+export function getSkill(id: string): { skill: BuildSkill | RunSkill; phase: 'build' | 'run' } | undefined {
+  const build = getBuildSkill(id);
+  if (build) return { skill: build, phase: 'build' };
+  const run = getRunSkill(id);
+  if (run) return { skill: run, phase: 'run' };
+  return undefined;
 }

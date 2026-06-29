@@ -1,0 +1,22 @@
+[
+  "A modern weather web app that leverages agents to provide information using integrated agent skills for specialized weather forecasting",
+  "A travel planning app where agents combine flight, hotel, and weather MCP servers with itinerary agent skills to assemble end-to-end trips",
+  "A personal finance dashboard whose agents use banking MCP servers and budgeting agent skills to categorize spending and forecast cash flow",
+  "A recipe assistant where agents query a pantry MCP server and use meal-planning agent skills to generate shopping lists and step-by-step cooking guidance",
+  "A customer support portal whose agents pull from a CRM MCP server and use ticket-triage agent skills to resolve issues and draft replies",
+  "A fitness coaching app where agents read wearable data through an MCP server and apply workout-planning agent skills to tailor daily routines",
+  "A real estate explorer whose agents use listings and maps MCP servers with mortgage-calculator agent skills to compare neighborhoods and affordability",
+  "A news briefing app where agents aggregate sources via MCP servers and use summarization agent skills to deliver a personalized daily digest",
+  "A code review assistant whose agents connect to a GitHub MCP server and use static-analysis agent skills to flag issues and suggest fixes",
+  "A language-learning companion where agents use a dictionary MCP server and pronunciation agent skills to run adaptive conversation practice",
+  "A project management hub whose agents read from an issue-tracker MCP server and use sprint-planning agent skills to balance workloads and deadlines",
+  "A health symptom checker where agents query a medical-reference MCP server and use triage agent skills to recommend next steps safely",
+  "A shopping concierge whose agents use catalog and reviews MCP servers with price-comparison agent skills to find the best deals across stores",
+  "A document workspace where agents connect to a storage MCP server and use contract-analysis agent skills to extract clauses and summarize risk",
+  "A smart-home controller whose agents use device MCP servers and automation agent skills to orchestrate routines based on context and presence",
+  "A research assistant where agents pull from academic-search MCP servers and use citation agent skills to build annotated literature reviews",
+  "A social media planner whose agents use analytics MCP servers and content agent skills to draft, schedule, and optimize posts across channels",
+  "An e-commerce ops console where agents read an inventory MCP server and use demand-forecasting agent skills to automate restock decisions",
+  "A legal intake app whose agents use a case-management MCP server and document-drafting agent skills to prepare filings and client summaries",
+  "An HR onboarding assistant where agents connect to an identity MCP server and use policy agent skills to provision access and answer new-hire questions"
+]

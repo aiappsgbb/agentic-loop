@@ -14,7 +14,7 @@ const PATHS = [
   {
     label: 'Path 2',
     title: 'Agentic Launchpad',
-    sub: 'Bring a concrete idea, shape the pilot, and generate a Copilot-led deployment path.',
+    sub: 'Bring a concrete idea, craft your spec, and generate a Copilot-led deployment path.',
     to: '#prompt',
     icon: Sparkles,
     meta: 'Build from idea',
@@ -22,8 +22,8 @@ const PATHS = [
   },
   {
     label: 'Path 3',
-    title: 'Scenario Advisor',
-    sub: 'Start from a predefined outcome and generate the same package pre-seeded by scenario context.',
+    title: 'Industry scenarios',
+    sub: 'Start from a vertical use case and adapt to your specific requirements.',
     to: '/scenarios',
     icon: Layers,
     meta: 'Start from scenario',
@@ -35,7 +35,7 @@ export default function WhatToUseWhen() {
   return (
     <section className="wtuw" id="what-to-use-when">
       <div className="wtuw-head">
-        <div className="section-eyebrow">Choose your production path</div>
+        <div className="section-eyebrow">Choose your innovation path</div>
         <h2>Where do you want to start?</h2>
         <p>
           Three paths, one loop: try Kratos, build your own idea, or start from a scenario.
