@@ -1152,22 +1152,42 @@
 .loop-back {
   position: relative;
   grid-column: 1 / -1;
-  margin: 0 clamp(24px, 12%, 96px);
-  height: 36px;
+  height: 46px;
+  margin: 0;
   display: grid;
   place-items: center;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--accent-3) 50%, var(--border));
-  background: color-mix(in srgb, var(--bg-1) 78%, transparent);
+  border: 0;
+  background: transparent;
   color: var(--accent-3);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-.loop-back::before,
-.loop-back::after {
-  display: none;
+.loop-back::before {
+  content: "";
+  position: absolute;
+  left: clamp(48px, 12%, 120px);
+  right: clamp(48px, 12%, 120px);
+  top: -14px;
+  bottom: 22px;
+  --loop-back-line: color-mix(in srgb, var(--accent-3) 54%, transparent);
+  background:
+    linear-gradient(var(--loop-back-line), var(--loop-back-line)) left top / 2px 100% no-repeat,
+    linear-gradient(var(--loop-back-line), var(--loop-back-line)) right top / 2px 100% no-repeat,
+    linear-gradient(var(--loop-back-line), var(--loop-back-line)) left bottom / 100% 2px no-repeat;
+}
+.loop-back span {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 clamp(22px, 8vw, 140px);
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent-3) 50%, var(--border));
+  background: color-mix(in srgb, var(--bg-1) 92%, transparent);
 }
 .agentic-loop-callout {
   margin-top: 34px;
@@ -1196,6 +1216,9 @@
     margin-top: 8px;
     margin-right: 0;
     margin-left: 0;
+  }
+  .loop-back::before {
+    display: none;
   }
 }
 
