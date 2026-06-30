@@ -20,6 +20,7 @@ const AgenticLoopConcept = lazy(() => import('./pages/concepts/AgenticLoop'));
 const Agents = lazy(() => import('./pages/concepts/Agents'));
 const Skills = lazy(() => import('./pages/concepts/Skills'));
 const Tools = lazy(() => import('./pages/concepts/Tools'));
+const AgentHarness = lazy(() => import('./pages/concepts/AgentHarness'));
 const PlatformOverview = lazy(() => import('./pages/concepts/PlatformOverview'));
 const Foundry = lazy(() => import('./pages/concepts/Foundry'));
 const Azure = lazy(() => import('./pages/concepts/Azure'));
@@ -49,6 +50,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path="agents" element={lazyRoute(<Agents />)} />
               <Route path="skills" element={lazyRoute(<Skills />)} />
               <Route path="tools" element={lazyRoute(<Tools />)} />
+              <Route path="agent-harness" element={lazyRoute(<AgentHarness />)} />
               <Route path="platform">
                 <Route index element={lazyRoute(<PlatformOverview />)} />
                 <Route path="overview" element={lazyRoute(<PlatformOverview />)} />

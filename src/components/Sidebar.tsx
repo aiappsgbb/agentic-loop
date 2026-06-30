@@ -2,7 +2,7 @@ import { NavLink, Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import {
   Home, Layers, BookOpen, Sparkles, Bot, Wrench, Workflow,
-  ChevronRight, PanelLeftClose, PanelLeft, Sun, Moon, Monitor, Infinity as InfinityIcon, Library, Cpu, Lightbulb, Compass, Rocket
+  ChevronRight, PanelLeftClose, PanelLeft, Sun, Moon, Monitor, Infinity as InfinityIcon, Library, Cpu, Lightbulb, Compass, Rocket, Boxes
 } from 'lucide-react';
 import { type ThemePref } from './ThemeContext';
 import { useTheme } from './useTheme';
@@ -85,6 +85,10 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
             <NavLink to="/concepts/tools" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <Wrench className="icon" size={16} />
               <span className="nav-label">Tools</span>
+            </NavLink>
+            <NavLink to="/concepts/agent-harness" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <Boxes className="icon" size={16} />
+              <span className="nav-label">Agent Harness</span>
             </NavLink>
           </div>
         )}

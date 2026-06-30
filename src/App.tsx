@@ -14,6 +14,7 @@ const TITLES: Record<string, string> = {
   '/concepts/agents': 'Agents',
   '/concepts/skills': 'Skills',
   '/concepts/tools': 'Tools',
+  '/concepts/agent-harness': 'Agent Harness',
   '/concepts/platform': 'Platform overview',
   '/concepts/platform/overview': 'Platform overview',
   '/concepts/platform/foundry': 'Microsoft Foundry',
