@@ -7,18 +7,13 @@ The Agentic Loop describes how an agent turns a natural-language request into a 
 ```mermaid
 flowchart LR
   prompt[User prompt<br/>Natural language task or question]
-  context[Context sources<br/>Conversation, files, memory,<br/>knowledge, state, telemetry]
-  skills[SKILL catalog<br/>Reusable instructions,<br/>tool bundles, schemas, evals]
-  reason[1. Reason<br/>Gather context<br/><br/>Analyze prompt + history<br/>Decide what context is missing<br/>Select SKILLs and tools<br/>Form execution plan]
-  act[2. Act<br/>Execute SKILL or tool call<br/><br/>Invoke MCP SKILL<br/>Search, API, code generation,<br/>file operations, shell command<br/>Stream partial results]
+  reason[1. Reason<br/>Gather context<br/><br/>Analyze prompt + history<br/>Load relevant context<br/>Select tools to call<br/>Form execution plan]
+  act[2. Act<br/>Execute tool call<br/><br/>Invoke MCP SKILL<br/>Search, API, code generation,<br/>file operations, shell command<br/>Stream partial results]
   observe[3. Observe<br/>Decide<br/><br/>Parse tool output<br/>Auto-compact context<br/>Enough? respond<br/>Need more? loop back]
   response[Streamed response<br/>Final answer streamed back to the user]
 
   prompt --> reason --> act --> observe --> response
-  context -. pulled as needed .-> reason
-  skills -. selected as needed .-> reason
-  skills -. invoked by .-> act
-  observe -- More information needed --> reason
+  observe -- Loop back if more information is needed --> reason
 ```
 
 ## 1. Reason: gather context
