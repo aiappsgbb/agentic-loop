@@ -1192,12 +1192,20 @@
   font-size: 18px;
   letter-spacing: -0.2px;
 }
+.loop-end h2 {
+  max-width: 100%;
+  font-size: clamp(15px, 1.15vw, 17px);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
 .loop-end p,
 .loop-stage p {
   margin: 6px 0 0;
   color: var(--text-dim);
   font-size: 13px;
   line-height: 1.5;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 .loop-output {
   border-color: color-mix(in srgb, var(--success) 45%, var(--border));
