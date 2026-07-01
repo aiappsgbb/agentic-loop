@@ -148,7 +148,7 @@ function ScenariosCarousel({ data, carousel, showExplore }: { data: Scenario[]; 
         open={videoModalOpen}
         onClose={() => setVideoModalOpen(false)}
         videoSrc={selectedScenario?.video ? asset(`videos/${selectedScenario.video}`) : ''}
-        title={selectedScenario ? `${selectedScenario.name} Demo` : ''}
+        title={selectedScenario?.name ?? ''}
       />
     </section>
   );
@@ -373,7 +373,7 @@ function ScenariosBrowse({ data }: { data: Scenario[] }) {
         open={videoModalOpen}
         onClose={() => setVideoModalOpen(false)}
         videoSrc={selectedScenario?.video ? asset(`videos/${selectedScenario.video}`) : ''}
-        title={selectedScenario ? `${selectedScenario.name} Demo` : ''}
+        title={selectedScenario?.name ?? ''}
       />
     </section>
   );

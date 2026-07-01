@@ -115,7 +115,7 @@ export default function ScenarioPlaybook() {
         open={videoModalOpen}
         onClose={() => setVideoModalOpen(false)}
         videoSrc={scenario.video ? asset(`videos/${scenario.video}`) : ''}
-        title={`${scenario.name} Demo`}
+        title={scenario.name}
       />
 
       <GreenfieldBuilder
