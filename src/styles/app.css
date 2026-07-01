@@ -1213,18 +1213,12 @@
 .loop-stage-wrap {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
   gap: 14px 12px;
   padding-bottom: 0;
 }
 .loop-stage-group {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px;
-}
-.loop-stage-group:last-child {
-  grid-template-columns: 1fr;
+  display: contents;
 }
 .loop-stage {
   min-height: 260px;
@@ -1349,6 +1343,7 @@
     padding-bottom: 0;
   }
   .loop-stage-group {
+    display: grid;
     grid-template-columns: 1fr;
   }
   .loop-stage-arrow {
