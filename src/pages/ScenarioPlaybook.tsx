@@ -1,7 +1,8 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, BookOpen, PlayCircle, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ExternalLink, BookOpen, PlayCircle, ArrowRight, Play } from 'lucide-react';
 import ShareButton from '../components/ShareButton';
+import VideoModal from '../components/VideoModal';
 import scenarios from '../data/scenarios.json';
 import { playbooksForScenario, playbookHasDeck, type Scenario } from '../data/links';
 import GreenfieldBuilder from '../components/GreenfieldBuilder';
@@ -14,6 +15,8 @@ function resolveImage(src: string) {
 export default function ScenarioPlaybook() {
   const { id } = useParams();
   const scenario = useMemo(() => (scenarios as Scenario[]).find(s => s.id === id), [id]);
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  
   useEffect(() => {
     document.title = scenario ? `${scenario.name} · Agentic Loop` : 'Scenario not found · Agentic Loop';
   }, [scenario]);
@@ -90,18 +93,30 @@ export default function ScenarioPlaybook() {
               <p>See the {scenario.name} agent in action for {scenario.industry}.</p>
             </div>
           </div>
-          <div className="scenario-demo-video">
-            <video
-              controls
-              poster={resolveImage(scenario.image)}
-              src={scenario.videoFileName ? asset(`videos/${scenario.videoFileName}`) : undefined}
-            >
-              Your browser does not support the video tag.
-            </video>
-            {!scenario.videoFileName && <span className="scenario-demo-badge">Coming soon</span>}
+          <div 
+            className={`scenario-demo-video ${scenario.video ? 'clickable' : ''}`}
+            onClick={() => scenario.video && setVideoModalOpen(true)}
+          >
+            <img 
+              src={resolveImage(scenario.image)} 
+              alt={scenario.name}
+            />
+            {scenario.video && (
+              <span className="scenario-play-watermark">
+                <Play size={22} />
+              </span>
+            )}
+            {!scenario.video && <span className="scenario-demo-badge">Coming soon</span>}
           </div>
         </div>
       </section>
+
+      <VideoModal
+        open={videoModalOpen}
+        onClose={() => setVideoModalOpen(false)}
+        videoSrc={scenario.video ? asset(`videos/${scenario.video}`) : ''}
+        title={`${scenario.name} Demo`}
+      />
 
       <GreenfieldBuilder
         key={scenario.id}

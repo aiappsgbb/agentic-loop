@@ -7,6 +7,7 @@ import {
 import scenarios from '../data/scenarios.json';
 import { asset } from '../data/asset';
 import type { Scenario } from '../data/links';
+import VideoModal from './VideoModal';
 
 function resolveImage(src: string) {
   return asset(src);
@@ -34,9 +35,16 @@ function ScenariosCarousel({ data, carousel, showExplore }: { data: Scenario[]; 
   const industries = useMemo(() => ['All', ...Array.from(new Set(data.map(s => s.industry)))], [data]);
   const [filter, setFilter] = useState('All');
   const [query, setQuery] = useState('');
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const chipsRef = useRef<HTMLDivElement>(null);
   const [chipScroll, setChipScroll] = useState({ left: false, right: false });
+
+  function handlePlayClick(scenario: Scenario) {
+    setSelectedScenario(scenario);
+    setVideoModalOpen(true);
+  }
 
   useEffect(() => {
     const el = chipsRef.current;
@@ -129,24 +137,42 @@ function ScenariosCarousel({ data, carousel, showExplore }: { data: Scenario[]; 
           </>
         )}
         <div className="carousel-track" ref={trackRef}>
-          {filtered.map(s => <ScenarioCard key={s.id} s={s} />)}
+          {filtered.map(s => <ScenarioCard key={s.id} s={s} onPlayClick={handlePlayClick} />)}
           {filtered.length === 0 && (
             <div style={{ padding: 40, color: 'var(--text-muted)' }}>No scenarios match your filters.</div>
           )}
         </div>
       </div>
+
+      <VideoModal
+        open={videoModalOpen}
+        onClose={() => setVideoModalOpen(false)}
+        videoSrc={selectedScenario?.video ? asset(`videos/${selectedScenario.video}`) : ''}
+        title={selectedScenario ? `${selectedScenario.name} Demo` : ''}
+      />
     </section>
   );
 }
 
-function ScenarioCard({ s }: { s: Scenario }) {
+function ScenarioCard({ s, onPlayClick }: { s: Scenario; onPlayClick?: (scenario: Scenario) => void }) {
   return (
     <Link to={`/scenarios/${s.id}`} className="scenario-card">
       <div className="scenario-img">
         <span className="scenario-industry">{s.industry}</span>
-        {s.videoFileName && <span className="scenario-video-badge"><Video size={12} /> Demo</span>}
+        {s.video && <span className="scenario-video-badge"><Video size={12} /> Demo</span>}
         <img src={resolveImage(s.image)} alt={s.name} loading="lazy" />
-        {s.videoFileName && <span className="scenario-play-watermark"><Play size={22} /></span>}
+        {s.video && (
+          <span 
+            className="scenario-play-watermark"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onPlayClick?.(s);
+            }}
+          >
+            <Play size={22} />
+          </span>
+        )}
       </div>
       <div className="scenario-body">
         <h3>{s.name}</h3>
@@ -173,13 +199,24 @@ function ScenarioCard({ s }: { s: Scenario }) {
   );
 }
 
-function ScenarioRow({ s }: { s: Scenario }) {
+function ScenarioRow({ s, onPlayClick }: { s: Scenario; onPlayClick?: (scenario: Scenario) => void }) {
   return (
     <Link to={`/scenarios/${s.id}`} className="scenario-row">
       <div className="scenario-row-img">
         <img src={resolveImage(s.image)} alt={s.name} loading="lazy" />
-        {s.videoFileName && <span className="scenario-video-badge"><Video size={11} /></span>}
-        {s.videoFileName && <span className="scenario-play-watermark"><Play size={18} /></span>}
+        {s.video && <span className="scenario-video-badge"><Video size={11} /></span>}
+        {s.video && (
+          <span 
+            className="scenario-play-watermark"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onPlayClick?.(s);
+            }}
+          >
+            <Play size={18} />
+          </span>
+        )}
       </div>
       <div className="scenario-row-body">
         <div className="scenario-row-head">
@@ -201,6 +238,13 @@ function ScenariosBrowse({ data }: { data: Scenario[] }) {
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [facets, setFacets] = useState<Record<FacetKey, string[]>>(EMPTY_FACETS);
   const [hasVideo, setHasVideo] = useState(false);
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(null);
+
+  function handlePlayClick(scenario: Scenario) {
+    setSelectedScenario(scenario);
+    setVideoModalOpen(true);
+  }
 
   function toggleFacet(key: FacetKey, val: string) {
     setFacets(prev => {
@@ -246,7 +290,7 @@ function ScenariosBrowse({ data }: { data: Scenario[] }) {
     if (facets.buildingBlocks.length && !(s.buildingBlocks ?? []).some(t => facets.buildingBlocks.includes(t))) return false;
     if (facets.patterns.length && !(s.patterns ?? []).some(t => facets.patterns.includes(t))) return false;
     if (facets.runSkills.length && !(s.runSkills ?? []).some(t => facets.runSkills.includes(t))) return false;
-    if (hasVideo && !s.videoFileName) return false;
+    if (hasVideo && !s.video) return false;
     return true;
   }), [data, query, facets, hasVideo]);
 
@@ -272,7 +316,7 @@ function ScenariosBrowse({ data }: { data: Scenario[] }) {
             aria-pressed={hasVideo}
           >
             <Video size={14} /> Demo available
-            <span className="facet-count">{data.filter(s => s.videoFileName).length}</span>
+            <span className="facet-count">{data.filter(s => s.video).length}</span>
           </button>
           <div className="view-toggle" role="tablist" aria-label="View">
             <button
@@ -317,13 +361,20 @@ function ScenariosBrowse({ data }: { data: Scenario[] }) {
         <div className="browse-empty">No scenarios match your filters.</div>
       ) : view === 'grid' ? (
         <div className="scenario-grid">
-          {filtered.map(s => <ScenarioCard key={s.id} s={s} />)}
+          {filtered.map(s => <ScenarioCard key={s.id} s={s} onPlayClick={handlePlayClick} />)}
         </div>
       ) : (
         <div className="scenario-list">
-          {filtered.map(s => <ScenarioRow key={s.id} s={s} />)}
+          {filtered.map(s => <ScenarioRow key={s.id} s={s} onPlayClick={handlePlayClick} />)}
         </div>
       )}
+
+      <VideoModal
+        open={videoModalOpen}
+        onClose={() => setVideoModalOpen(false)}
+        videoSrc={selectedScenario?.video ? asset(`videos/${selectedScenario.video}`) : ''}
+        title={selectedScenario ? `${selectedScenario.name} Demo` : ''}
+      />
     </section>
   );
 }

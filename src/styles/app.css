@@ -718,10 +718,13 @@
   color: #fff;
   box-shadow: 0 4px 18px rgba(0,0,0,0.35);
   transition: transform 0.2s ease, background 0.2s ease;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: pointer;
 }
 .scenario-play-watermark svg { margin-left: 2px; }
-.scenario-card:hover .scenario-play-watermark {
+.scenario-card:hover .scenario-play-watermark,
+.scenario-row:hover .scenario-play-watermark,
+.scenario-play-watermark:hover {
   transform: translate(-50%, -50%) scale(1.08);
   background: rgba(7,8,12,0.65);
 }
@@ -1755,6 +1758,30 @@
 }
 .step-counter { margin-left: auto; font-size: 12px; color: var(--text-muted); }
 .modal-foot .primary-btn { padding: 9px 16px; }
+
+/* ---------- Video Modal ---------- */
+.video-modal {
+  width: min(1200px, 95vw);
+  max-height: 95vh;
+}
+.video-modal .modal-body {
+  padding: 0;
+  min-height: auto;
+  max-height: none;
+  overflow: visible;
+}
+.video-modal-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-0);
+  padding: 24px;
+}
+.video-modal video {
+  width: 100%;
+  max-height: 75vh;
+  border-radius: 8px;
+}
 
 /* ---------- Scenario playbook page ---------- */
 .back-link {
@@ -4007,8 +4034,21 @@
   border: 1px solid var(--border-strong);
   background: var(--bg-0);
   aspect-ratio: 16 / 9;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.scenario-demo-video video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.scenario-demo-video.clickable {
+  cursor: pointer;
+}
+.scenario-demo-video.clickable:hover {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+.scenario-demo-video.clickable:hover .scenario-play-watermark {
+  transform: translate(-50%, -50%) scale(1.08);
+  background: rgba(7,8,12,0.65);
+}
+.scenario-demo-video video,
+.scenario-demo-video img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .scenario-demo-badge {
   position: absolute;
   top: 12px;

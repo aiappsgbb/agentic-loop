@@ -13,7 +13,7 @@ export interface Scenario {
   buildingBlocks?: string[];
   patterns?: string[];
   runSkills?: string[];
-  videoFileName?: string;
+  video?: string;
   link?: string;
 }
 
