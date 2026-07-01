@@ -1,0 +1,76 @@
+name: Deploy site (fruocco-2)
+
+# Builds the Vite app and deploys it to the production Azure Static Web App
+# (stapp-agentic-loop-livetest, behind afd-agentic-loop Front Door) in the
+# ME-MngEnvMCAP979166-fruocco-2 subscription.
+#
+# Auth is keyless: GitHub OIDC -> user-assigned managed identity
+# id-agentic-loop-cicd (rg-agentic-loop-livetest). The SWA deployment token is
+# fetched at runtime, so no long-lived secret is stored in the repo.
+
+on:
+  push:
+    branches: [main]
+    # Only ignore pure documentation. NOTE: top-level playbooks/*/README.md and
+    # playbooks/*/images/*.svg are BUILD INPUTS (import.meta.glob in src/data/links.ts
+    # and src/pages/PlaybookPage.tsx), so they must NOT be ignored here.
+    paths-ignore:
+      - 'docs/**'
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # required for OIDC token exchange
+  contents: read
+
+concurrency:
+  # Don't cancel an in-flight production deploy; queue the next one instead.
+  group: deploy-site-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      VITE_KRATOS_BASE: /kratos
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get Static Web App deployment token
+        id: swa
+        run: |
+          token=$(az staticwebapp secrets list \
+            --name stapp-agentic-loop-livetest \
+            --resource-group rg-agentic-loop-livetest \
+            --query "properties.apiKey" -o tsv)
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to Static Web App (production)
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ steps.swa.outputs.token }}
+          action: upload
+          app_location: dist
+          output_location: ''
+          skip_app_build: true
