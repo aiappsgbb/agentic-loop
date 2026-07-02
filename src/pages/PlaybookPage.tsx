@@ -13,6 +13,15 @@ const PLAYBOOK_FILES = import.meta.glob('/playbooks/*/README.md', {
   import: 'default',
 }) as Record<string, () => Promise<string>>;
 
+// Eagerly resolve every playbook image to its hashed, bundled URL. Keeps
+// `playbooks/<slug>/images/` as the single source of truth (no `public/` copy)
+// while letting Vite handle hashing and base-path rewriting for GitHub Pages.
+const PLAYBOOK_IMAGES = import.meta.glob('/playbooks/*/images/*', {
+  query: '?url',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+
 interface Slide {
   id: string;
   chapter: string;
@@ -96,9 +105,16 @@ function parsePlaybook(md: string, slug: string): Parsed {
 
   const lede = ledeLines.join('\n').trim().split(/\n\n+/)[0] ?? '';
 
-  // Rewrite relative image paths to <base>playbooks/<slug>/images/...
+  // Rewrite relative image paths (`./images/foo.png`, `images/foo.png`) to the
+  // hashed URL Vite produced for the bundled asset in `playbooks/<slug>/images/`.
   const fix = (body: string) =>
-    body.replace(/(!\[[^\]]*]\()\.?\/?images\//g, `$1${import.meta.env.BASE_URL}playbooks/${slug}/images/`);
+    body.replace(
+      /(!\[[^\]]*]\()\.?\/?images\/([^)\s]+)/g,
+      (match, prefix: string, file: string) => {
+        const resolved = PLAYBOOK_IMAGES[`/playbooks/${slug}/images/${file}`];
+        return resolved ? `${prefix}${resolved}` : match;
+      },
+    );
 
   return {
     title,
