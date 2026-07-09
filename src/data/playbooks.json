@@ -67,7 +67,7 @@
   {
     "slug": "voice-first-agent-blueprint",
     "name": "Voice-First Agent Blueprint",
-    "icon": "BookOpen",
+    "icon": "Mic",
     "level": "Intermediate",
     "summary": "Combine real-time STT, TTS, and frontier reasoning for low-latency conversational experiences.",
     "use_when": "Your experience is spoken or real-time conversational, not text-first.",
