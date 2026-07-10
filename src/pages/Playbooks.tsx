@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   BookOpen, Rocket, ShieldCheck, GitBranch, Database, Eye, ArrowRight, Layers, Wrench, CloudSun,
-  Search, X, Brain, Workflow, Tag, Castle, Waypoints,
+  Search, X, Brain, Workflow, Tag, Castle, Waypoints, Sparkles,
 } from 'lucide-react';
 import { playbooks, playbookHasDeck, scenariosForPlaybook } from '../data/links';
 import { getBuildSkill, getRunSkill } from '../data/skills';
@@ -156,17 +156,20 @@ export default function Playbooks() {
                 </div>
               </div>
               <div className="meta">
+                {p.accelerator && (
+                  <span className="playbook-accelerator"><Sparkles size={11} /> Accelerator</span>
+                )}
                 <span className="difficulty">{p.level}</span>
                 {interactive && <span className="playbook-open">Open <ArrowRight size={12} /></span>}
               </div>
             </>
           );
           return interactive ? (
-            <Link key={p.slug} to={`/playbooks/${p.slug}`} className="playbook-row interactive">
+            <Link key={p.slug} to={`/playbooks/${p.slug}`} className={`playbook-row interactive${p.accelerator ? ' playbook-row--accelerator' : ''}`}>
               {inner}
             </Link>
           ) : (
-            <div key={p.slug} className="playbook-row">{inner}</div>
+            <div key={p.slug} className={`playbook-row${p.accelerator ? ' playbook-row--accelerator' : ''}`}>{inner}</div>
           );
         })}
       </div>
