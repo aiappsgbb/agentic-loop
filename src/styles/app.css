@@ -4790,3 +4790,219 @@ select:focus-visible,
   background: var(--gradient-soft);
 }
 .source-link span { color: inherit; }
+
+/* ══════ Kratos embed: curated/custom toggle, persona gallery, persona builder (restored) ══════ */
+/* ── Kratos split: persona builder + launcher ───────────── */
+.kratos-try-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  max-width: 940px;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+.kratos-try-split > .persona-builder,
+.kratos-try-split > .kratos-launcher {
+  border-radius: var(--radius);
+  background: var(--gradient-soft);
+  border: 1px solid var(--border-strong);
+}
+@media (max-width: 820px) {
+  .kratos-try-split { grid-template-columns: 1fr; }
+}
+
+/* ── Kratos "Try it" — curated/custom segmented toggle ──── */
+.kratos-try-section { margin-top: 8px; }
+.kratos-mode-toggle {
+  display: inline-flex;
+  gap: 6px;
+  margin: 20px 0 4px;
+  padding: 6px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+}
+@media (max-width: 560px) {
+  .kratos-mode-toggle { display: flex; width: 100%; }
+}
+.kratos-mode-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: none;
+  font: inherit;
+  font-size: 13.5px; font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, border-color 0.18s, box-shadow 0.18s;
+}
+@media (max-width: 560px) {
+  .kratos-mode-pill { flex: 1; justify-content: center; }
+}
+.kratos-mode-pill:hover { color: var(--text); }
+.kratos-mode-pill.active {
+  background: var(--gradient);
+  color: #fff;
+  box-shadow: var(--shadow-1);
+}
+.kratos-mode-pill-tag {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+.kratos-mode-pill:not(.active) .kratos-mode-pill-tag {
+  background: var(--surface-strong);
+  border: 1px solid var(--border-strong);
+  color: var(--accent-2);
+}
+.kratos-mode-panel { margin-top: 18px; }
+.kratos-mode-panel-lede {
+  margin: 0 0 2px; font-size: 13.5px; line-height: 1.55; color: var(--text-dim);
+}
+.kratos-mode-panel-builder {
+  max-width: 640px;
+}
+.kratos-mode-panel-builder > .persona-builder {
+  border-radius: var(--radius);
+  background: var(--gradient-soft);
+  border: 1px solid var(--border-strong);
+}
+
+/* ── Curated persona gallery (no inner chat — click a card to open live) ── */
+.kratos-gallery-section { margin-top: 8px; }
+.kratos-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+.kratos-persona-card {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  gap: 10px;
+  padding: 20px 20px 18px;
+  border-radius: var(--radius);
+  background: var(--surface-strong);
+  border: 1px solid var(--border-strong);
+  cursor: pointer;
+  font: inherit;
+  color: var(--text);
+  transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s;
+}
+.kratos-persona-card:hover,
+.kratos-persona-card:focus-visible {
+  border-color: var(--accent);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-1);
+  outline: none;
+}
+.kratos-persona-card-top {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.kratos-persona-mark {
+  width: 38px; height: 38px; flex-shrink: 0;
+  border-radius: 11px; display: grid; place-items: center;
+  background: var(--gradient); color: #fff;
+}
+.kratos-persona-skillcount {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+  padding: 4px 9px; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.kratos-persona-name { margin: 4px 0 0; font-size: 16px; line-height: 1.25; }
+.kratos-persona-tagline {
+  margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--text-dim);
+  flex: 1;
+}
+.kratos-persona-skills { display: flex; flex-wrap: wrap; gap: 6px; }
+.kratos-persona-chip {
+  font-size: 10.5px; font-weight: 500;
+  padding: 3px 8px; border-radius: 7px;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.kratos-persona-chip.more { color: var(--accent-2); border-color: var(--border-strong); }
+.kratos-persona-open {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-top: 4px;
+  font-size: 12.5px; font-weight: 600; color: var(--accent-2);
+}
+
+/* ── Persona builder (describe → create in Kratos) ──────── */
+.persona-builder { display: flex; flex-direction: column; padding: 22px 24px; height: 100%; }
+.persona-builder-optional { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--text-muted); }
+.persona-builder-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--bg-1);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font: inherit; font-size: 13.5px;
+}
+.persona-builder-input:focus { outline: none; border-color: var(--accent-2); }
+.persona-builder-textarea {
+  width: 100%;
+  margin-top: 2px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--bg-1);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font: inherit; font-size: 14px; line-height: 1.55;
+  resize: vertical; min-height: 96px;
+}
+.persona-builder-textarea:focus { outline: none; border-color: var(--accent-2); }
+.persona-builder-textarea::placeholder { color: var(--text-muted); }
+.persona-builder-examples {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  margin-top: 10px; font-size: 11.5px; color: var(--text-muted);
+}
+.persona-builder-chip {
+  font-size: 11.5px; padding: 4px 10px; border-radius: 999px;
+  background: var(--bg-1); border: 1px solid var(--border);
+  color: var(--text-dim); cursor: pointer;
+  transition: border-color 0.18s;
+}
+.persona-builder-chip:hover { border-color: var(--accent-2); }
+.persona-builder-preview {
+  margin-top: 14px; padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--bg-1); border: 1px solid var(--border);
+}
+.persona-builder-preview-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.persona-builder-preview-row strong { font-size: 14px; }
+.persona-builder-count { font-size: 11.5px; color: var(--accent-2); font-weight: 600; }
+.persona-builder-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.persona-builder-tag {
+  font-size: 11px; padding: 3px 9px; border-radius: 999px;
+  background: var(--gradient-soft); border: 1px solid var(--border);
+  color: var(--accent-2);
+}
+.persona-builder-error {
+  display: flex; align-items: center; gap: 7px;
+  margin-top: 12px; padding: 9px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent-3) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-3) 40%, transparent);
+  color: var(--text); font-size: 12.5px; line-height: 1.45;
+}
+.persona-builder-cta {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 16px;
+  padding: 11px 18px;
+  border: 0; border-radius: 12px;
+  background: var(--gradient); color: #fff;
+  font: inherit; font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.persona-builder-cta:hover:not(:disabled) { transform: translateY(-1px); }
+.persona-builder-cta:disabled { opacity: 0.45; cursor: not-allowed; }
