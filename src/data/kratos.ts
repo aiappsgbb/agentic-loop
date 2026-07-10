@@ -1,5 +1,7 @@
 export interface KratosPersona {
   id: string;
+  /** Persona slug (use-case name) in the deployed Kratos app, for live hand-off. */
+  liveSlug: string;
   name: string;
   skillCount: number;
   tagline: string;
@@ -10,6 +12,7 @@ export interface KratosPersona {
 export const KRATOS_PERSONAS: KratosPersona[] = [
   {
     id: 'generic-assistant',
+    liveSlug: 'generic',
     name: 'Generic Assistant',
     skillCount: 9,
     tagline: 'General-purpose enterprise AI assistant with web search, code execution, data analysis, and document skills.',
@@ -17,6 +20,7 @@ export const KRATOS_PERSONAS: KratosPersona[] = [
   },
   {
     id: 'insurance-service-advisor',
+    liveSlug: 'insurance',
     name: 'Insurance Service Advisor',
     skillCount: 9,
     tagline: 'Helps policyholders with claims, coverage questions, and policy servicing.',
@@ -24,6 +28,7 @@ export const KRATOS_PERSONAS: KratosPersona[] = [
   },
   {
     id: 'retail-banking-assistant',
+    liveSlug: 'retail-banking',
     name: 'Retail Banking Assistant',
     skillCount: 13,
     tagline: 'Supports everyday banking — accounts, payments, cards, and product guidance.',
@@ -31,12 +36,38 @@ export const KRATOS_PERSONAS: KratosPersona[] = [
   },
   {
     id: 'wealth-management-advisor',
+    liveSlug: 'wealth-management',
     name: 'Wealth Management Advisor',
     skillCount: 10,
     tagline: 'Assists advisors with portfolios, planning, and branded client reports.',
     skills: ['Portfolio Analysis', 'Market Data', 'Wealth Report (PDF)', 'Data Analysis', 'Code Interpreter', 'Rag Search', 'Web Search', 'Document Summary', 'Pptx Editor', 'Email Draft'],
   },
 ];
+
+/**
+ * Base URL of the deployed (live) Kratos app. `aka.ms/kratos` drops the query
+ * string on redirect, so we target the resolved host directly. Override at build
+ * time with `VITE_KRATOS_LIVE_URL` (no trailing slash needed).
+ */
+export const KRATOS_LIVE_BASE_URL = (
+  (import.meta.env.VITE_KRATOS_LIVE_URL as string | undefined) ||
+  'https://victorious-wave-07077a40f.2.azurestaticapps.net'
+).replace(/\/+$/, '');
+
+/**
+ * Build a deep-link into the live Kratos app that auto-selects a persona and,
+ * optionally, auto-starts a first message. `embed=1` is required — the live
+ * app's embed bootstrap only applies `persona`/`prompt` when embed is set (and
+ * it renders chromeless, ideal for a focused hand-off in a new tab).
+ */
+export function buildKratosLiveUrl(personaLiveSlug: string, prompt?: string): string {
+  const url = new URL(KRATOS_LIVE_BASE_URL + '/');
+  url.searchParams.set('embed', '1');
+  if (personaLiveSlug) url.searchParams.set('persona', personaLiveSlug);
+  const text = prompt?.trim();
+  if (text) url.searchParams.set('prompt', text);
+  return url.toString();
+}
 
 export const KRATOS_STARTER_PROMPTS = [
   'Search the web for the latest AI trends in 2026 and summarize the top 5',

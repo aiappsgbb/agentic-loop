@@ -4207,6 +4207,13 @@
   padding: 1px 5px; border-radius: 5px;
   background: var(--surface); border: 1px solid var(--border-strong);
 }
+.kratos-preview-link {
+  font: inherit; color: var(--text-muted);
+  background: none; border: none; padding: 0; cursor: pointer;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.kratos-preview-link:hover:not(:disabled) { color: var(--text); }
+.kratos-preview-link:disabled { opacity: 0.5; cursor: default; text-decoration: none; }
 
 /* On the Kratos page, give the launcher a card surface */
 .kratos-try {

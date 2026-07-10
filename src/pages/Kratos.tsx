@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Bot, Boxes, RefreshCw, Cloud, Code2 as Github, Database, Eye, ArrowRight,
-  ExternalLink, Construction, Plug, Layers, BookOpen, Sparkles,
+  ExternalLink, Construction, Plug, Layers, BookOpen, Sparkles, Zap,
 } from 'lucide-react';
 import KratosChatMock from '../components/KratosChatMock';
 import KratosLauncher from '../components/KratosLauncher';
+import { buildKratosLiveUrl } from '../data/kratos';
 
-const KRATOS_REPO = 'https://github.com/kmavrodis/kratos-agent';
+const KRATOS_REPO = 'https://github.com/aiappsgbb/kratos-agent';
 
 const PILLARS = [
   { icon: Bot, title: 'One agent, N skills', desc: 'A single agent backed by swappable MCP skills — simpler to reason about, debug, and extend than multi-agent handoffs.' },
@@ -45,10 +46,19 @@ export default function Kratos() {
           <strong>Kratos</strong> is a production-shaped reference implementation of the Agentic Loop: a single
           agent with persona switching, backed by swappable <strong>MCP skills</strong>, powered by the
           <strong> GitHub Copilot SDK</strong> and hosted on <strong>Microsoft Foundry</strong>. Pick a persona
-          and start a chat below to experience it — this preview is mocked.
+          and start a chat below — it opens the <strong>live</strong> Kratos agent in a new tab (or preview the
+          mock inline).
         </p>
         <div className="kratos-cta-row">
-          <a className="kratos-cta primary" href={KRATOS_REPO} target="_blank" rel="noreferrer">
+          <a
+            className="kratos-cta primary"
+            href={buildKratosLiveUrl('generic')}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <Zap size={16} /> Launch live Kratos <ExternalLink size={13} />
+          </a>
+          <a className="kratos-cta" href={KRATOS_REPO} target="_blank" rel="noreferrer">
             <Github size={16} /> View the repo <ExternalLink size={13} />
           </a>
           <Link className="kratos-cta" to="/concepts/agentic-loop">
@@ -89,7 +99,7 @@ export default function Kratos() {
           <p>
             Content for Kratos — guided playbook, dual-compute diagram, and persona demos — is being authored.
             In the meantime, explore the source on{' '}
-            <a href={KRATOS_REPO} target="_blank" rel="noreferrer">github.com/kmavrodis/kratos-agent</a>.
+            <a href={KRATOS_REPO} target="_blank" rel="noreferrer">github.com/aiappsgbb/kratos-agent</a>.
           </p>
         </div>
       </div>
