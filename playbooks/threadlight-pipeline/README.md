@@ -1,236 +1,319 @@
 # Threadlight Pipeline
 
-## The pitch
+## Idea to production
 
-### You describe it. Copilot builds it. Foundry runs and governs it.
+### The loop gets you a demo. Threadlight gets you production.
 
-Watch one paragraph become a **governed agent** — native on Microsoft Foundry, in your own tenant.
+The [Agentic Loop](../getting-started/README.md) is brilliant at one thing: getting you to a *working agent*. A paragraph in, a Foundry hosted agent answering questions minutes later. That is a proof of concept — and a PoC is not something a review board signs, an SRE carries a pager for, or a regulator accepts.
 
-Threadlight is the advanced, opinionated end of the [Agentic Loop](../getting-started/README.md). Where the Getting Started playbook drives [`lean-spec2cloud`](https://github.com/Azure-Samples/Spec2Cloud/tree/main/plugins/lean-spec2cloud) to a working agent with the [`agentic-loop`](../../skills/agentic-loop/SKILL.md) GBB defaults, Threadlight takes the *same* idea‑to‑production motion and hardens it into a paved pipeline: **17 skills that carry a one‑paragraph brief all the way to a red‑teamed, evaluated, production‑scored agent** — in a single continuous run.
+**Threadlight is everything past the PoC.** Same "describe it, let the agent build it" motion — carried all the way to a governed, evaluated, red-teamed, cost-modelled agent running in *your* Azure tenant, with the compliance file and the customer hand-off pack already written.
 
-The division of labour is the whole idea:
+You still start with one paragraph. The paragraph is only the *input*. The point is what comes out the other end:
 
-- **You describe it** — one paragraph, in plain English. No backlog, no architecture, no model chosen.
-- **Copilot builds it** — a coding agent follows the skills in your repo. No `azd` by hand, no scripts, no manual laptop deploys.
-- **Foundry runs & governs it** — hosted agents, keyless identity, evals, red‑team, and a readiness scorecard, on the platform.
+> **Idea → production, in one continuous run.** Driven from GitHub Copilot; everything past the PoC handled — govern, evals, red-team, scorecard, hand-off.
 
-> Tip: Reach for the Getting Started playbook to *learn* the loop on a toy agent. Reach for Threadlight when a customer conversation needs to become a **governed pilot they can actually ship** — and you're ready to accept strong defaults in exchange for speed.
+### Where the loop stops, and Threadlight keeps going
 
-### Builds, runs, governs
+The loop hands you a demo. Every column on the right is what a demo is missing — and what Threadlight adds, in the same run:
 
-Threadlight's 17 skills are **Markdown playbooks GitHub Copilot follows in your repo to drive Azure AI Foundry — not replace it.** They split cleanly into three jobs, and four words you'll see repeated through the run:
+| The Agentic Loop gives you | Threadlight adds on top |
+| --- | --- |
+| A **working agent** from a paragraph | A **governed** one — policy enforced at the container boundary |
+| Answers in the playground | **Evals + red-team** gates, streaming to App Insights |
+| Something to show | A **defensible cost model** and an **EU AI Act evidence pack** |
+| A prototype | A **13-pillar scorecard** and a **customer hand-off** an ARB signs |
 
-| Job | Owner | What happens |
-|---|---|---|
-| **Build** | GitHub Copilot | A brief becomes a spec, tools, seed data, and a locally‑tested agent — a working project, not slideware. |
-| **Run** | Microsoft Foundry | `azd up` provisions Foundry, a hosted‑agent container, Cosmos, and App Insights into *your* subscription. Live in a workspace or Microsoft Teams. |
-| **Govern** | Foundry models + evals + red‑team | Runtime policy, quality evals, an adversarial scan, and a 13‑pillar readiness score — before anyone signs off. |
-
-A quick glossary so the rest of the deck reads clean:
-
-- **Agent** — the reasoning service Foundry hosts and runs.
-- **Skill** — a versioned Markdown playbook Copilot follows (`SKILL.md` is the source of truth).
-- **Tool** — a function the agent can call (here, the four credit‑decision tools).
-- **Hosted runtime** — the Foundry‑managed container the agent runs in, with identity and telemetry wired in.
-
-### The advanced, opinionated path
-
-Threadlight is opinionated on purpose. That's what separates a paved pipeline from a pile of prompts.
-
-| | Vanilla loop (Getting Started) | Threadlight |
-|---|---|---|
-| **Goal** | Learn the loop; a working prototype | A governed pilot a customer can ship |
-| **Defaults** | GBB defaults, flexible | Strong, deterministic contracts |
-| **Governance** | You add it | Evals + red‑team + readiness gate baked in |
-| **Output** | A running agent | A running agent **+ a signed scorecard + a customer hand‑off kit** |
-
-You give up some freedom — a Threadlight skill has bounded inputs and one right answer — and in exchange the pipeline is repeatable, auditable, and hard to get wrong. When a customer's environment *does* need to bend the defaults, that happens in an overlay, not by editing skills (see **Fit it to their production**).
-
----
-
-## The proof
-
-### From a brief to governed production
-
-Threadlight tells its whole story through one scenario, run **for real** — not a write‑up *about* the pipeline, but a captured end‑to‑end run on a live Azure subscription.
-
-A bank's SMB lending team wanted to compress **credit‑memo** preparation. They handed Threadlight one paragraph: for each SME loan application, pull the credit‑bureau report, compute **DSCR** and **LTV**, then approve, refer, or decline — drafting a memo that cites the governing policy rule, with floors **DSCR ≥ 1.25** and **LTV ≤ 0.80**. The brief named no model, no resource, and no architecture. **The pipeline decided all three.**
-
-Fourteen stages later — idea → live MVP → a governed production agent — an applicant (`APP‑4821`) at **DSCR 1.18 / LTV 0.74 / FICO 706** lands below the DSCR floor and is **referred to an underwriter**, with the memo citing the exact rule. Every model call in the run was routed through a **Citadel AI gateway**. Fictional customer (*Meridian Commercial Bank*); real subscription, real gateway, real spend.
-
-> Note: **Dogfooded, not demoed.** An operator typed each stage's prompt by hand; a separate `copilot` on Claude Opus 4.8 executed the real skills against live Azure; every artifact was captured and independently re‑checked before the next stage ran. 2,306 OpenTelemetry records, nothing mocked.
-
-### The receipts
-
-Every number below was observed on live Azure and independently re‑derived from raw artifacts — not asserted by the agent that built it — and captured in the public [case study](https://aiappsgbb.github.io/threadlight-skills/case-study.html).
-
-| Receipt | Result |
-|---|---|
-| **Stages completed** | 14 / 14 — idea to governed production, the whole arc. |
-| **Independent verdicts** | 13 PASS, 1 conditional (the safe‑check gate, expected pre‑onboarding). |
-| **Policy citations** | 100% of assessment lines cited their governing clause; 100% of seeded exceptions caught. |
-| **Deprecated model** | Banned `gpt‑4`‑class model → **403 at the gateway**. Approved `gpt‑5` model → **200**. |
-| **Deploy‑identity RBAC** | Exactly **2** assignments, both scoped to the prod resource group. Nothing wider. |
-| **The bill** | The language model was a **rounding error** — the real cost driver was the policy search index. |
-| **Readiness** | **92 / 100** across 13 pillars — *ship with two waivers*. |
-
-> Tip: The point isn't credit memos. Swap the brief and the same chain produces a claims‑triage, KYC, or field‑service agent. Threadlight encodes the *shape* of the work, not the domain.
-
-### The six-stage reel
-
-The public demo compresses the run into a **scrubbable six‑stage reel** — the seller‑facing framing of the same chain:
-
-**Brief → Design → Local → Deploy → Govern → Scorecard**
-
-1. **One paragraph in** *(Brief)* — you describe the agent in plain English; `threadlight-design` pulls out the process, entities, decision branches, and hard credit rules.
-2. **Specced & scaffolded** *(Design)* — it writes the spec and the AGENTS file, scaffolds the four tools, seeds realistic sample data, adds killer‑prompt tests, and even renders a **customer talk‑deck** and a **seller prep‑guide**. A working project, not slideware.
-3. **Validated on your local PC** *(Local)* — `threadlight-local-test` runs the agent on your machine *before any cloud spend*; it calls the tools live and writes a credit memo with its reasoning.
-4. **Deployed to your Azure** *(Deploy)* — `threadlight-deploy` runs `azd up` straight into your subscription — Foundry, a hosted‑agent container, Cosmos, App Insights — and the agent goes live, reachable in a workspace or Microsoft Teams.
-5. **Governed & gated** *(Govern)* — `threadlight-govern` enforces runtime policy, `threadlight-evals` scores quality, `threadlight-redteam` runs an adversarial PyRIT scan; the deprecated model is refused at the boundary.
-6. **Scored for production** *(Scorecard)* — `threadlight-production-ready` scores the agent across thirteen pillars and writes the customer hand‑off package: **92/100, ship with two waivers**.
-
-One paragraph → a governed agent on your Azure, in roughly **50 minutes**, every artefact auditable. Under the hood, the reel maps onto the Microsoft Responsible‑AI‑for‑Foundry operating loop — **Discover** and **Protect** run *before* the readiness gate so the scorecard verifies each control actually ran, not just that it was declared:
+It is one opinionated pipeline — each stage produces a checkable artefact, and each stage gates the next:
 
 ```mermaid
 flowchart LR
-  D[Design] --> B[Build / Deploy]
-  B --> Di[Discover: evals + red-team]
-  Di --> P[Protect: AGT runtime governance]
-  P --> G[Govern: readiness gate]
-  G --> I[Improve: learnings + router bench]
-  I -. next iteration .-> D
+  A["Agentic Loop<br/>describe it → working agent"]:::loop --> D["a demo<br/>ungoverned PoC"]:::loop
+  D --> S1["spec"]:::tl --> S2["scaffold"]:::tl --> S3["local-test"]:::tl --> S4["deploy"]:::tl --> S5["govern · evals<br/>red-team"]:::tl --> S6["score"]:::tl --> S7["hand-off"]:::tl --> P["production<br/>governed · costed · signed"]:::prod
+  classDef loop fill:#e6f0ff,stroke:#4a7fd6,color:#0b2545;
+  classDef tl fill:#fff4e6,stroke:#e08a2b,color:#5a3210;
+  classDef prod fill:#e8f7ee,stroke:#2fa15a,color:#0d3d22;
 ```
+
+> Tip: One sentence captures the stack. **Build with the loop. Govern with [Citadel](../citadel-governance-hub/README.md). Productionize with Threadlight.** Threadlight's deploy routes its LLM traffic through Citadel's gateway and onboards the agent as a Citadel spoke — the three are designed to compose.
 
 ---
 
-## The pipeline
+## When to reach for it
 
-### The canonical flow
+### Reach for it — or don't
 
-Skills fire in a canonical order. The **spine** is the happy path; several legs are conditional on what the SPEC declares (human‑in‑the‑loop, a UI, event triggers, private‑network CI/CD).
+**Reach for Threadlight when:**
 
-```mermaid
-flowchart TB
-  design[threadlight-design] --> data[threadlight-demo-data-factory]
-  data --> local[threadlight-local-test]
-  local --> deploy[threadlight-deploy]
-  deploy --> safe[threadlight-safe-check · gate]
-  safe --> cost[threadlight-consumption-iq]
-  cost --> evals[threadlight-evals]
-  cost --> redteam[threadlight-redteam]
-  evals --> govern[threadlight-govern]
-  redteam --> govern
-  govern --> ready[threadlight-production-ready · advisory]
-  ready --> review[Customer architecture review]
-  review --> cicd[threadlight-cicd]
-  cicd --> customize[threadlight-customize]
-  ready -. offline .-> bench[threadlight-router-bench]
+- You have an **idea or a PoC** and you need it to become something an **ARB can sign and an SRE can run** — governed, evaluated, red-teamed, costed — fast.
+- You are walking into a customer and need to go from **their brief to a governed pilot** in a single engagement, with receipts, not a demo you have to caveat.
+- You want the **paved, opinionated path**: strong GBB defaults for network, identity, evals, responsible AI and reliability, in exchange for speed.
+
+**Don't reach for it when:**
+
+- You only need a **quick proof of concept**. Stop at the [Agentic Loop](../getting-started/README.md) — Threadlight is deliberately heavier.
+- You want to **hand-assemble every architectural choice**. Threadlight is opinionated on purpose; that is where the speed comes from.
+
+---
+
+## Get started
+
+### Install two plugins — zero clone
+
+Threadlight is a set of **skills you drive from GitHub Copilot**, not a repo you clone and hand-edit. It is deliberately **thin where the [`awesome-gbb`](https://github.com/aiappsgbb/awesome-gbb) `foundry-*` family is already deep** — so the pipeline is *two* marketplace plugins: `awesome-gbb` underneath, `threadlight-skills` on top.
+
+```bash
+# 1 · awesome-gbb — the foundry-* foundation Threadlight builds on
+copilot plugin marketplace add aiappsgbb/awesome-gbb
+copilot plugin install awesome-gbb@awesome-gbb
+
+# 2 · threadlight-skills — the idea-to-production pipeline itself
+copilot plugin marketplace add aiappsgbb/threadlight-skills
+copilot plugin install threadlight-skills@threadlight-skills
 ```
 
-> Note: `foundry-observability` is layered into `threadlight-deploy` by default, and `foundry-evals` runs after every deploy. The pilot ships with telemetry, evals, and a safe‑check gate on day one — or it isn't a Threadlight pilot.
+`awesome-gbb` is a **hard dependency, not a nicety** — Threadlight's gate skills call straight into it: `threadlight-govern` drives [`foundry-agt`](https://github.com/aiappsgbb/awesome-gbb/tree/main/skills/foundry-agt), `threadlight-evals` drives [`foundry-evals`](https://github.com/aiappsgbb/awesome-gbb/tree/main/skills/foundry-evals), the deploy leg builds on [`foundry-hosted-agents`](https://github.com/aiappsgbb/awesome-gbb/tree/main/skills/foundry-hosted-agents) + [`azd-patterns`](https://github.com/aiappsgbb/awesome-gbb/tree/main/skills/azd-patterns), and the supply-chain pillar checks [`foundry-skill-catalog`](https://github.com/aiappsgbb/awesome-gbb/tree/main/skills/foundry-skill-catalog). Install both and there is no repository to fork, no skill files to edit.
 
-### The contracts that make it opinionated
+> Tip: Prefer zero install? [Open the repo in a Codespace](https://codespaces.new/aiappsgbb/threadlight-skills) — the `.devcontainer` pre-wires all sixteen threadlight skills; add `awesome-gbb` with the block above for the full pipeline, then `copilot` and `/login` (device-flow, first launch only).
 
-Threadlight is repeatable because the skills share **contracts**, not conventions:
+> Note: You'll want an **Azure subscription** you can deploy into (the deploy stage runs `azd up` for real), **GitHub Copilot CLI**, and — recommended — a **[Citadel](../citadel-governance-hub/README.md) AI gateway** to route production LLM traffic through, so governance and cost attribution are in place from day one.
 
-- **`specs/SPEC.md`** — numbered business rules (`BR‑XXX`), data models with system‑of‑record tracking, tool contracts, `§ 8` human‑interaction points, `§ 9` eval scenarios, `§ 11c` tech‑stack selectors, `§ 12` load profile.
-- **`specs/manifest.json`** — a machine‑readable **kebab‑case selector vocabulary**: the single input contract every downstream skill reads. Invent a selector without registering it and `threadlight-safe-check` flags it as drift.
-- **Skills & tools as governed artifacts** — capabilities are pinned by version, promoted canary‑first, and fetched at deploy (never cloned at runtime). `threadlight-production-ready`'s supply‑chain pillar enforces this.
+### The one prompt that starts it
 
-### The full roster, by role
+There is no wizard to learn. You hand the first skill, `threadlight-design`, a plain-English brief. This is the **real, verbatim prompt** that opened the reference run — copied from the captured transcript. Read it as the *shape of the input*: a brief, a hard rule, and a note that production routes through Citadel. The pipeline chose the model, the resources and the architecture — the brief named none of them.
 
-You met the headliners in the reel — `design`, `local-test`, `deploy`, `govern`, `evals`, `redteam`, `production-ready`. Here's the whole cast behind them, so you know what's available when a SPEC calls for it. Each links to its `SKILL.md` source.
+```text
+Use the threadlight-design skill to design a pilot agent end-to-end from this brief.
 
-| Build core | Role |
-|---|---|
-| [`threadlight-design`](https://github.com/aiappsgbb/threadlight-skills/tree/main/skills/threadlight-design) | Brief → `SPEC.md` + `manifest.json` + agent surface. Also renders the talk‑deck + prep‑guide. |
-| [`threadlight-demo-data-factory`](https://github.com/aiappsgbb/threadlight-skills/tree/main/skills/threadlight-demo-data-factory) | Industry‑realistic seed data for demos. |
-| [`threadlight-local-test`](https://github.com/aiappsgbb/threadlight-skills/tree/main/skills/threadlight-local-test) | Boots the agent locally for rapid inner‑loop iteration. |
-| [`threadlight-deploy`](https://github.com/aiappsgbb/threadlight-skills/tree/main/skills/threadlight-deploy) | 7‑phase `azd up` — ACR, Bicep, hooks, Foundry, Citadel. |
-| [`threadlight-safe-check`](https://github.com/aiappsgbb/threadlight-skills/tree/main/skills/threadlight-safe-check) | Pre/post‑deploy gate — validates every resource selector before go‑live. |
+BRIEF — A commercial bank's SMB lending team wants to compress credit-memo
+preparation. For an incoming loan request, the agent should (1) pull the
+borrower's financials and existing exposure, (2) compute standard credit metrics
+(DSCR, leverage, liquidity) and score the request against the bank's lending
+policy, (3) flag policy exceptions and risk factors, and (4) draft a structured
+credit memo that a credit officer reviews and signs off. A human-in-the-loop
+approval gate is required before any memo is finalized, and every step must be
+auditable.
 
-| Human & surface *(conditional)* | Role |
-|---|---|
-| [`threadlight-hitl-patterns`](https://github.com/aiappsgbb/threadlight-skills/tree/main/skills/threadlight-hitl-patterns) | Human‑in‑the‑loop gates via Teams Adaptive Cards + audit trail. |
-| [`threadlight-workspace-ui`](https://github.com/aiappsgbb/threadlight-skills/tree/main/skills/threadlight-workspace-ui) | Operator dashboard (React workspace) behind Easy Auth. |
-| [`threadlight-event-triggers`](https://github.com/aiappsgbb/threadlight-skills/tree/main/skills/threadlight-event-triggers) | ACA Jobs, Event Grid, and cron receivers wired into deploy. |
+CONSTRAINTS — MODEL POLICY (HARD RULE): use a current-generation model (gpt-5
+family). The production deployment will route LLM calls through an existing
+Citadel AI gateway.
+```
 
-| Quality & safety gates | Role |
-|---|---|
-| [`threadlight-consumption-iq`](https://github.com/aiappsgbb/threadlight-skills/tree/main/skills/threadlight-consumption-iq) | Post‑deploy phased cost projection from Azure Retail Prices. |
-| [`threadlight-evals`](https://github.com/aiappsgbb/threadlight-skills/tree/main/skills/threadlight-evals) | Offline batch evals + Foundry Continuous Evaluation + A/B gate. |
-| [`threadlight-redteam`](https://github.com/aiappsgbb/threadlight-skills/tree/main/skills/threadlight-redteam) | AI Red Teaming Agent (PyRIT) scan — jailbreak, injection, exfiltration. |
-| [`threadlight-govern`](https://github.com/aiappsgbb/threadlight-skills/tree/main/skills/threadlight-govern) | Wraps `foundry-agt` — in‑process runtime governance + verifier report. |
+One paragraph in; a governed agent on your Azure out.
 
-| Production & ops | Role |
-|---|---|
-| [`threadlight-production-ready`](https://github.com/aiappsgbb/threadlight-skills/tree/main/skills/threadlight-production-ready) | Advisory scorecard — 13 pillars, Defender / Policy / quota / restore‑drill. |
-| [`threadlight-cicd`](https://github.com/aiappsgbb/threadlight-skills/tree/main/skills/threadlight-cicd) | GitHub Actions or Azure DevOps OIDC/WIF pipelines for locked‑down envs. |
-| [`threadlight-customize`](https://github.com/aiappsgbb/threadlight-skills/tree/main/skills/threadlight-customize) | Onboard into one customer's environment via a pinned fork + overlay (no skill edits). |
-| [`threadlight-router-bench`](https://github.com/aiappsgbb/threadlight-skills/tree/main/skills/threadlight-router-bench) | Offline Improve leg — learnings digest + model‑router cost/quality bench. |
-| [`threadlight-auto`](https://github.com/aiappsgbb/threadlight-skills/tree/main/skills/threadlight-auto) | Orchestrator — drives the chain end‑to‑end from one prompt; resumes + recovers. |
+---
 
-> Warning: `threadlight-auto` is a **pilot driver**, not a production CI/CD orchestrator. Use it for first runs, demos, and resumption. For real pipelines use `threadlight-cicd` + your CI tool. `threadlight-customize` and `threadlight-router-bench` are manual — `auto` does not drive them.
+## The arc
 
-### Where to jump in
+*Told through the reference run — a fictional customer, [Meridian Commercial Bank](https://aiappsgbb.github.io/threadlight-skills/case-study.html), on a real Azure subscription, real gateway, real spend. Each stage is one prompt, and each leaves a checkable artefact.*
 
-You rarely start at the top every time. The entry‑skill picker maps intent to a starting skill:
+### Stage 1 — From a paragraph to a spec
 
-| You want to… | Start with |
-|---|---|
-| Turn a brief into a spec (works in Copilot Cowork) | `threadlight-design` |
-| Iterate the agent locally before any cloud | `threadlight-local-test` |
-| Ship it to the customer tenant | `threadlight-deploy` |
-| Verify a deployment before go‑live | `threadlight-safe-check` |
-| Walk it to a readiness scorecard | `threadlight-production-ready` |
-| Run the **whole arc** from one prompt (demos, first‑timers) | `threadlight-auto` |
+`threadlight-design` parses the brief into a process, entities, decision branches and hard credit rules — then writes them down. The brief above became a **958-line specification**: twelve numbered business rules, an explicit model policy, and a mandatory human approval gate, with **zero `[NEEDS CLARIFICATION]`** left dangling.
 
-> Tip: `threadlight-design` is the only skill that runs cleanly inside **Microsoft Copilot Cowork** — the seller surface. Everything below it needs a real shell, where the **solution engineer** picks up the same chain. That seller → SE hand‑off is the persona split the pipeline is built around.
+### Stage 2 — Specced *and* scaffolded
+
+The same skill writes the `AGENTS` file, scaffolds the four tools against a real contract, seeds realistic sample data (`threadlight-demo-data-factory`), and adds killer-prompt tests. It even renders the **customer talk-deck** and the **seller prep-guide** — a working project, not slideware.
+
+![The customer talk-deck auto-rendered by threadlight-design — the title slide of an eleven-slide Meridian Commercial Bank × Microsoft pitch, produced from the same run that built the agent.](./images/sales-kit-deck.png)
+
+The tools it scaffolds are real, contract-bound skills — not boilerplate. Here is one it generated, with an operational contract and spec-grounded gates:
+
+```markdown
+---
+name: fraud-escalation
+description: Apply the value ceiling and serial-returner / flagged-account risk
+  gates and route cases to a human supervisor. USE FOR deciding whether a case
+  must be escalated. DO NOT USE FOR the base eligibility check.
+---
+# Fraud & Escalation Gate
+> Implements BR-003 (escalate high-value or high-risk).
+
+## Procedure
+1. Escalate if ANY gate fires:
+   - amount > 250 (auto-approve ceiling), OR
+   - lifetime_return_rate ≥ 0.40 (serial-returner risk), OR
+   - account_status == review_flagged
+2. If a gate fires → escalate_to_supervisor; summarize which gate(s) + the risk.
+3. If no gate fires → proceed (carry the eligibility verdict forward).
+```
+
+### Stage 3 — Validated on your own PC
+
+Before a cent of cloud spend, `threadlight-local-test` boots the agent **on your machine**, discovers the tools from the spec, and runs them live. Drive it with a real application:
+
+```text
+Use the threadlight-local-test skill to run the agent on my machine, then triage
+APP-4821 — Riverside Welding LLC, $480k equipment loan over 60 months.
+Approve, refer, or decline?
+```
+
+It wires up locally and shows its work — the tool calls, then the verdict:
+
+```console
+threadlight-local-test · discovering tools from SPEC.md
+  MAF agent + SkillsProvider · tools wired
+  agent ready · running on your machine
+▶ triage APP-4821
+  → get_application(APP-4821)      Riverside Welding LLC · $480k · 60mo
+  → get_bureau_pull(APP-4821)      2 late payments / 24mo · no liens
+  → compute_metrics()              DSCR 1.18 · LTV 0.74 · NOI $172k
+  → score_against_policy()         DSCR 1.18 < 1.25 floor  ✗
+  → draft_memo(CM-4821)            verdict: refer_to_underwriter
+```
+
+It doesn't rubber-stamp the deal. It applies the policy, cites the rule that failed, and drafts the human-review memo. **The result it wrote — memo `CM-4821`, no cloud spend:**
+
+**Refer to underwriter.** DSCR **1.18** is below the 1.25 floor — NOI $172k ÷ debt service $146k. LTV **0.74** passes. Bureau shows 2 late payments in 24 months, no liens. Recommends referral, with a conditional-approval path if a **$60k cash injection** lifts DSCR to **1.27**. Every figure traces to a tool call; the officer signs, the agent never does.
+
+> Tip: Local-test also seeds a ranked **killer-prompt suite** — the top prompts are wired into the deployed agent as one-tap starters, and each is copied verbatim from a row in the eval set, so the demo prompt and the graded prompt are the same string.
+
+### Stage 4 — Deployed to your Azure, then the gates
+
+`threadlight-deploy` runs **`azd up`** straight into your subscription — Foundry, a hosted-agent container, Cosmos and App Insights, provisioned and wired. The agent goes live in your tenant, usable in a workspace or in Teams. Nothing is mocked.
+
+```text
+Use the threadlight-deploy skill to azd up this agent into my Azure subscription,
+routing its model calls through my Citadel gateway. Then run the three gate
+skills: threadlight-govern, threadlight-evals, and threadlight-redteam.
+```
+
+![The deployed Credit Memo Agent live in a workspace — triaging APP-4821, showing the tool calls, the DSCR 1.18 / LTV 0.74 / bureau panel, a "refer to underwriter" verdict, and the deployed estate: Foundry hosted agent, Cosmos DB, App Insights tracing.](./images/deploy-workspace.png)
+
+Then come the runtime gates:
+
+- **`threadlight-govern`** installs the **Agent Governance Toolkit (AGT)** policy as middleware at the container boundary and emits `govern-manifest.json`. A deprecated model is **refused at the door — 403** — before it can answer.
+- **`threadlight-evals`** runs 15 offline scenarios plus continuous evaluation, streaming quality signals to App Insights.
+- **`threadlight-redteam`** runs an adversarial **PyRIT** scan for jailbreak, prompt-injection, data-exfiltration and harmful content.
+
+### Stage 5 — Scored for production
+
+A deployed MVP isn't the finish line — the scorecard is. `threadlight-production-ready` scores the agent across **thirteen pillars** and writes the customer hand-off package.
+
+```text
+Use the threadlight-production-ready skill to score this deployment across the
+thirteen pillars and write the ARB hand-off package.
+```
+
+For the reference run, the score comes back concrete — the number a board reads:
+
+| Hand-off artefact | Result |
+| --- | --- |
+| Production-ready score | **92 / 100 — ship with 2 waivers** |
+| Pillars verified | **13** — for ARB sign-off & SRE hand-off |
+| Cost model (`threadlight-consumption-iq`) | **$326 → $795 → $6,804 / mo** — pilot · scale · production |
+| Governance contract | routed through **Citadel**, onboarded as a **Citadel spoke** |
+| Walk-in kit | customer talk-deck + seller prep-guide |
+
+That is the polished reel. What makes the score *trustworthy* is that the same skill scores an honest run honestly — which the committed receipts show next.
+
+---
+
+## Read the receipts
+
+*"Don't trust the agent — read the receipts." Threadlight publishes real, sanitized runs in the [`examples/`](https://github.com/aiappsgbb/threadlight-skills/tree/main/examples) directory so you can open what the skills actually generate and govern, file by file.*
+
+### A run committed warts-and-all
+
+The [`returns-triage-governed`](https://github.com/aiappsgbb/threadlight-skills/tree/main/examples/returns-triage-governed) sample is a full end-to-end run captured on **2026-07-07** on a private Citadel hub — spec, network-isolated IaC, generated skills, a committed governance policy, and a readiness scorecard. Credentials were stripped; everything else is exactly what the skills produced. It is the honest counterweight to the polished reel — and it is far more convincing.
+
+### What AGT is — and the policy this run committed
+
+The **Agent Governance Toolkit (AGT)** is a runtime policy engine that runs **in-process, as middleware at the agent's container boundary**. Every model call and tool call is checked against a declarative policy *before* it executes — and the verdict is one of **allow · deny · escalate · audit**. It is **deny-by-default**: anything the policy doesn't explicitly permit is blocked. That is how a deprecated model is refused with a 403 at the door, not logged after the fact.
+
+`threadlight-govern` generated this **spec-grounded** policy — four rules, each traced to a business rule:
+
+```yaml
+deny_by_default: true
+rules:
+  - name: block-dangerous-tools     # deny shell_exec, send_external_email
+    action: deny
+  - name: refund-above-ceiling-needs-human   # BR-003: amount > 250
+    action: escalate
+  - name: cap-tool-calls-per-turn   # > 6 tool calls in one turn
+    action: block
+  - name: audit-all-decisions       # every approve / deny / escalate / request
+    action: audit
+```
+
+The wiring report is just as honest — it returns a verdict of **PARTIAL** and *refuses to fake* an `agt verify` badge it can't prove:
+
+| Capability | Status |
+| --- | --- |
+| `policy_artefact_present` · `policy_versioned` · `rai_policy_present` | ✅ pass |
+| `asi_reference_present` (OWASP ASI 2026) | ✅ pass |
+| `verifier_artefact_present` | 🟠 should-fix — no committed verify evidence |
+| `middleware_wired_at_boundary` | ⚪ not-verified — no entry-point to inspect |
+
+### The scorecard a lean PoC actually earns
+
+`threadlight-production-ready` scored that same run **31% — 🔴 NOT READY**, and named the eighteen must-fix gaps. That is the point: a fresh PoC *should* score low until the production work is done, and the scorecard maps every gap to its fix.
+
+| Pillar | Score | | Pillar | Score |
+| --- | --- | --- | --- | --- |
+| 1. Network posture | 🔴 16% | | 8. HITL & audit | 🔴 32% |
+| 2. Agent governance (AGT) | 🟡 71% | | 9. Supply chain | 🔴 26% |
+| 3. Identity & access | 🔴 29% | | 10. Cost | 🔴 21% |
+| 4. Secrets | 🔴 19% | | 11. Reliability | 🔴 8% |
+| 5. Observability | 🔴 23% | | 12. SRE handover | 🔴 5% |
+| 6. Continuous evals | 🔴 50% | | 13. Model lifecycle | 🟡 43% |
+| 7. Responsible AI | 🔴 60% | | **Overall** | **🔴 31%** |
+
+> Important: The scorecard **never invents coverage**. A `not-verified` finding earns *zero* score credit — a missing probe is an honest blank, not a passing grade — and a `must-fix` finding **cannot** be waived: it exits the gate non-zero and names itself. That honesty is exactly what makes the 92/100 version worth something.
 
 ---
 
 ## Ship it for real
 
-### Prove it can ship
+*How the red scorecard turns green — the production leg, and the evidence a board actually signs.*
 
-Your pilot works. Now prove it can *ship*. `threadlight-production-ready` turns a working demo into the **evidence‑backed scorecard a customer's review board signs** — so the pilot ships instead of stalling in the lab.
+### Governance enforced at runtime
 
-It scores the agent across **13 production pillars**, grouped four ways, then hands you the exact skill that closes each gap — amber turns green in a prompt, not a four‑week scramble:
+Governance is enforced at runtime, not attached afterwards. The AGT policy and middleware sit **in-process at the container boundary**, so model policy, tool allow-lists and safety are checked *before* the agent acts — deny-by-default, every decision audited to `govern-manifest.json`. Responsible-AI controls ride the same boundary: **content filtering, prompt-shield and PII blocking**, aligned to the **OWASP ASI 2026** agentic-security references. A non-compliant or deprecated model never gets to answer — it is refused with a **403** at the edge.
 
-| Group | Pillars |
-|---|---|
-| **Network & identity** | 01 Network posture · 03 Identity & access · 04 Secrets |
-| **Governance & HITL** | 02 Agent governance · 07 Responsible AI · 08 HITL & audit |
-| **Ops & cost** | 05 Observability · 06 Continuous evals · 10 Cost · 11 Reliability · 12 SRE hand‑over |
-| **Lifecycle & supply‑chain** | 09 Supply chain · 13 Model lifecycle |
+### CI/CD a locked-down tenant will actually accept
 
-> Important: **Agent governance, not platform governance.** Citadel and the platform team secure the landing zone — the hub, the shared AI gateway, network and policy. Threadlight proves the *agent* you run in it: these 13 pillars, plus a supply‑chain SBOM, an agent‑identity AI‑BOM, and an EU AI Act evidence pack. The governance deliverable isn't a meeting — it's that record, in the repo, versioned with the code and gating every deploy. See the [Citadel Governance Hub](../citadel-governance-hub/README.md) playbook for the platform half.
+This is where most pilots die — a great agent that no enterprise pipeline will deploy. `threadlight-cicd` generates the production deploy pipeline for exactly that environment, and it is **secret-free by construction**:
 
-### Fit it to their production
+- **GitHub Actions *or* Azure DevOps** pipelines, your choice, generated to match.
+- **OIDC / workload-identity federation** — a user-assigned managed identity with federated credentials, **no long-lived secrets** anywhere in the pipeline.
+- **Least-privilege RBAC**, scoped to the **spoke resource group** — not subscription-wide.
+- An **onboarding-path gate** that picks the right topology up front: *standalone*, *spoke-onboard* (into an existing Citadel hub), or *hub-deploy-then-spoke*.
+- A **`central-platform-boundary.md`** that keeps the pilot pipeline cleanly **separate** from central-platform deployment (`citadel-hub-deploy`) — the field team ships the agent without ever touching the platform team's hub.
 
-A working pilot isn't *their* production. `threadlight-customize` is the engagement runbook that fits a Threadlight pilot to one customer's real environment — their landing zone, identity, network, and governance — **without ever editing a skill file**.
+> Note: For a fully private customer estate, the deploy-and-validate loop must run from **inside the perimeter** — `threadlight-cicd` ships a **private-VNet runner runbook** whose pre-flight is non-negotiable: private DNS resolves to private IPs, `443` reaches every private endpoint, and control-plane egress is allowed — *only then* deploy. A half-resolved DNS zone fails a deploy looking like an auth error and burns an afternoon; the checklist catches it first.
 
-- **Structured intake** — a `customer-profile.md` captures their environment, requirements, and mandated templates, so nothing about production is guessed.
-- **Overlay, not fork‑edit** — every customer value lives in `overlay/` beside the untouched skills, so `git merge upstream/main` keeps pulling our fixes.
-- **A signed‑off boundary** — a `non-coverage.md` states what Threadlight deliberately *doesn't* automate, and the architecture review approves it.
+### The EU AI Act evidence pack
 
-Four production‑onboarding skills are where the customer's environment bites — expect to override all four: `threadlight-deploy`, `threadlight-cicd`, plus the private‑network and dev‑box constraints. Same skills, same code — only the inputs change. That's the whole point.
+The same committed artefacts that turn the scorecard green map, **article by article**, onto the EU AI Act — so the deploy carries its own compliance file. It is tenant-local, offline, deterministic, and it **never invents coverage**: a missing source is flagged as an honest gap, not green-washed.
 
-### How it composes with the loop and Citadel
+| Artefact | Maps to |
+| --- | --- |
+| `annex-iv-technical-file.md` | Art 11 / Annex IV technical documentation — every gap flagged |
+| `ai-act-evidence.json` | the article map + coverage, with a **SHA-256 per source** |
+| `fria-scaffold.md` | Art 27 fundamental-rights template, for a human to complete |
 
-Threadlight is **the wedge**: it delivers a governed agent in one working session, and the wider families extend it over the following weeks.
+### One baseline: quality, cost, safety
 
-| Family | What it adds |
-|---|---|
-| **`agentic-loop` / `lean-spec2cloud`** | The base loop Threadlight is the opinionated, production‑grade expression of. |
-| **`foundry-*` building blocks** | The Foundry primitives Threadlight composes — hosted agents, IQ, evals, observability, in‑process AGT. |
-| **`citadel-*` governance** | The production landing zone — AI Gateway, Access Contracts, keyless spokes. Threadlight proves the agent; **Citadel secures the platform**. |
-| **`gbb-*` content** | Pitch‑side artefacts — deck generators, narrative humanisers. |
+The go-live call rests on **one baseline**, not three dashboards. `threadlight-consumption-iq` walks the Bicep and `azd env`, prices every resource against **Azure Retail Prices** (with 2–3 SKU alternatives each), and emits the phased forecast — **$326 → $795 → $6,804/mo** for the reference run. That unit-cost line sits **beside the eval quality signal and the red-team safety signal**, so a regression on *any one* — "cheaper but worse", "safer but 8× the cost" — trips the gate before the next deploy ships.
 
-> Note: Threadlight and Citadel compose directly. `threadlight-deploy` can target a Citadel spoke, and the case‑study run routed every model call through a Citadel gateway. Pilots start standalone and adopt a governed spoke when they graduate — the keyless Option‑B path in the Citadel playbook is exactly what a Threadlight agent uses.
+---
+
+## How it composes
+
+### Build → govern → productionize
+
+Threadlight is one third of a deliberate stack, and it sits on the `awesome-gbb` `foundry-*` foundation. Use each where it is strongest:
+
+- **[Agentic Loop](../getting-started/README.md)** — get to a working agent fast.
+- **[Citadel Governance Hub](../citadel-governance-hub/README.md)** — the governed AI gateway and landing zone. Threadlight's production deploy **routes its LLM traffic through Citadel** and onboards the agent as a **Citadel spoke** — that is the "governance contract" line on the receipts.
+- **[`awesome-gbb`](https://github.com/aiappsgbb/awesome-gbb)** — the `foundry-*` skill family Threadlight's gates delegate into (`foundry-agt`, `foundry-evals`, `foundry-hosted-agents`, `azd-patterns`). **Installed as a required plugin alongside Threadlight.**
+- **Threadlight** — carry the idea the rest of the way: gates, scorecard, compliance file, hand-off.
 
 ### Start here
 
-- **Live narrative** — [aiappsgbb.github.io/threadlight-skills](https://aiappsgbb.github.io/threadlight-skills/): the scrubbable demo, the [case study](https://aiappsgbb.github.io/threadlight-skills/case-study.html), the [production‑ready](https://aiappsgbb.github.io/threadlight-skills/production.html) and [customize](https://aiappsgbb.github.io/threadlight-skills/customize.html) chapters.
-- **Technical briefing** — [`THREADLIGHT.md`](https://github.com/aiappsgbb/threadlight-skills/blob/main/THREADLIGHT.md): the canonical flow and per‑skill surface map.
-- **Run the arc** — install the [`threadlight-skills`](https://github.com/aiappsgbb/threadlight-skills) family, then invoke `threadlight-design` on a one‑paragraph brief — or `threadlight-auto` to drive the whole chain from a single prompt.
+1. **See the whole arc** on the Threadlight [homepage](https://aiappsgbb.github.io/threadlight-skills/index.html) and the dogfooded [case study](https://aiappsgbb.github.io/threadlight-skills/case-study.html).
+2. **Install both plugins** — `awesome-gbb` then `threadlight-skills` (marketplace, two lines each), or open a [Codespace](https://codespaces.new/aiappsgbb/threadlight-skills) and add `awesome-gbb` for the full pipeline.
+3. **Hand `threadlight-design` a one-paragraph brief** of the agent you want, and let the arc run — design → deploy → gates → score.
+4. **Read the scorecard before you ship**, and inspect a real run in [`examples/returns-triage-governed`](https://github.com/aiappsgbb/threadlight-skills/tree/main/examples/returns-triage-governed) — the policy, the verdict, the 13-pillar scorecard.
+
+> Tip: Browse the full skill set in the [threadlight-skills repository](https://github.com/aiappsgbb/threadlight-skills). You don't learn them one by one — the arc invokes them for you, in order.
