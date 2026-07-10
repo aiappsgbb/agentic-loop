@@ -1,0 +1,115 @@
+name: Deploy to Azure Front Door (SWA origin)
+
+# Runs alongside the GitHub Pages deploy (deploy.yml). GitHub Pages remains the
+# canonical build, served at https://aiappsgbb.github.io/agentic-loop/ with the
+# baked-in base path `/agentic-loop/`.
+#
+# This job restores the bare-root production site behind Azure Front Door. It
+# rebuilds the app with a ROOT base (`--base=/`, overriding vite.config.ts) and
+# publishes it to the existing Azure Static Web App `stapp-agentic-loop-livetest`,
+# which is the origin for the `afd-agentic-loop` Front Door endpoint
+# (subscription ME-MngEnvMCAP979166-fruocco-2). A root base is required because
+# the app's react-router basename is `import.meta.env.BASE_URL`; serving the
+# `/agentic-loop/` build at the AFD root would leave the router unable to match
+# any route.
+#
+# Auth is keyless: GitHub OIDC -> user-assigned managed identity
+# id-agentic-loop-cicd (rg-agentic-loop-livetest). The SWA deployment token is
+# fetched at runtime, so no long-lived secret is stored in the repo. After a
+# successful upload the Front Door endpoint is purged so the new content is
+# served immediately.
+
+on:
+  push:
+    branches: [main]
+    # Only ignore pure documentation. Everything under src/, public/, skills/,
+    # playbooks/ can be a build input, so do not broaden this list.
+    paths-ignore:
+      - 'docs/**'
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # required for OIDC token exchange
+  contents: read
+
+concurrency:
+  # Don't cancel an in-flight production deploy; queue the next one instead.
+  group: deploy-afd-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      AFD_RESOURCE_GROUP: rg-agentic-loop-livetest
+      AFD_PROFILE: afd-agentic-loop
+      AFD_ENDPOINT: agentic-loop
+      SWA_NAME: stapp-agentic-loop-livetest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Override the GitHub Pages base (/agentic-loop/) with a root base so the
+      # app is served at the Front Door root (https://<endpoint>/...).
+      - name: Build (root base)
+        run: npm run build -- --base=/
+
+      # Azure Static Web Apps needs an explicit SPA navigation fallback so deep
+      # links (e.g. /scenarios, /skills/<name>) return index.html on reload. The
+      # GitHub Pages build relies on public/404.html instead, which SWA ignores.
+      - name: Add Static Web App SPA fallback
+        run: |
+          cat > dist/staticwebapp.config.json <<'JSON'
+          {
+            "navigationFallback": {
+              "rewrite": "/index.html",
+              "exclude": [
+                "/assets/*",
+                "/*.{css,js,mjs,json,txt,md,map,svg,png,jpg,jpeg,gif,ico,webp,woff,woff2,ttf}"
+              ]
+            }
+          }
+          JSON
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get Static Web App deployment token
+        id: swa
+        run: |
+          token=$(az staticwebapp secrets list \
+            --name "$SWA_NAME" \
+            --resource-group "$AFD_RESOURCE_GROUP" \
+            --query "properties.apiKey" -o tsv)
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to Static Web App (production)
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ steps.swa.outputs.token }}
+          action: upload
+          app_location: dist
+          skip_app_build: true
+
+      - name: Purge Front Door cache
+        run: |
+          az afd endpoint purge \
+            --resource-group "$AFD_RESOURCE_GROUP" \
+            --profile-name "$AFD_PROFILE" \
+            --endpoint-name "$AFD_ENDPOINT" \
+            --content-paths "/*"
