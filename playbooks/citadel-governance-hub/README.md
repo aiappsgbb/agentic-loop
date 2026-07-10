@@ -1,28 +1,40 @@
 # Citadel Governance Hub
 
-## Intro
+## Why govern
 
-### Deploy a governed AI Gateway hub, then onboard your agents as spokes.
+### Every use case must earn its way to production
 
-Citadel is the production landing zone for enterprise AI: a central **APIM AI Gateway** in front of Microsoft Foundry that gives every team one governed endpoint with identity, quotas, cost attribution, and policy. This playbook takes field and platform teams from nothing to a **running Layer‑1 Governance Hub**, then wires a Foundry project in as a **keyless spoke** that calls models through the gateway.
+The [Agentic Loop](../getting-started/README.md) is brilliant at getting you to a working agent. You drive [`lean-spec2cloud`](https://github.com/Azure-Samples/Spec2Cloud/tree/main/plugins/lean-spec2cloud) from a single prompt, the [`agentic-loop`](../../skills/agentic-loop/SKILL.md) skill applies the GBB defaults, and minutes later a Foundry hosted agent is answering questions in your tenant.
 
-**Use when:** Multiple teams need to share Foundry capacity behind one governed, observable, cost‑attributed endpoint — not a pile of direct keys.
+Then the review board shows up. **A demo is not a production system.** Before that agent can serve real users it has to answer questions the loop alone doesn't:
 
-**Core tech stack:** APIM AI Gateway, Microsoft Foundry, Entra ID, Application Insights, `azd` + Bicep
+- **Who is it acting as?** A managed identity, not a key pasted into an env var.
+- **What is it allowed to spend?** A quota and a cost line, not an open tap on shared capacity.
+- **Which model, which region, which policy?** Enforced centrally, not trusted per team.
+- **Who else is on this endpoint, and can I prove it?** Attribution and audit, not a shared master key.
 
-This playbook wraps two GBB skills — [`citadel-hub-deploy`](https://github.com/aiappsgbb/awesome-gbb/tree/main/skills/citadel-hub-deploy) (the infra) and [`citadel-spoke-onboarding`](https://github.com/aiappsgbb/awesome-gbb/tree/main/skills/citadel-spoke-onboarding) (the per‑team wiring) — both built on the `Azure-Samples/ai-hub-gateway-solution-accelerator` (`citadel-v1` branch).
+This playbook is about that graduation. **Citadel** is the production landing zone every loop-built agent plugs into: a governed **AI Gateway** in front of Microsoft Foundry that turns "it works on my subscription" into "it's governed, attributed, and safe to share."
 
-The playbook is organized in three chapters:
+> Tip: Build with the loop, govern with Citadel. The two are complementary — the loop is how the agent gets *made*; Citadel is how it gets *shipped* without handing every team a raw key to shared model capacity.
 
-- **Build the hub** — deploy the Layer‑1 gateway from a paved `azd` profile and prove it works.
-- **Onboard a spoke** — grant a team a governed, keyless path to models via an Access Contract.
-- **Scale** — add spokes, private networking, defense‑in‑depth, and cost telemetry.
+### Platform governance is not agent governance
 
----
+The single most useful idea to hold in your head: **there are two governance jobs, and they belong to two different owners.**
 
-### What we will build
+| | Platform governance | Agent governance |
+|---|---|---|
+| **Owner** | Platform / landing-zone team | The team that built the agent |
+| **Secures** | The hub, the shared AI gateway, network, policy, quotas | The agent's behaviour — evals, red‑team, responsible AI, HITL |
+| **Answers** | "Is the *place* it runs safe and attributable?" | "Is the *agent* itself correct and non‑harmful?" |
+| **Delivered by** | **Citadel** (this playbook) | The agent's own build (e.g. the [Threadlight](../threadlight-pipeline/README.md) `production-ready` scorecard) |
 
-You will deploy a **hub‑and‑spoke** topology. The **hub** is a shared APIM instance that fronts a Foundry model pool and enforces routing, PII policy, JWT, quotas, and telemetry. Each **spoke** is a team's Foundry project that receives an **Access Contract** (an APIM Product + Subscription, optionally a Foundry connection) so its agents call models through the gateway with a project managed identity — no long‑lived keys.
+Citadel owns the **left column**. It secures the landing zone — the hub, the shared gateway, the network, the policy — so that *any* agent that runs behind it inherits identity, quotas, routing, and audit for free. The agent's own build owns the right column: proving the model reasons correctly and refuses the jailbreak.
+
+You need both, and they compose. A perfectly evaluated agent calling models with a long‑lived key on an un‑attributed endpoint is not production‑ready. Neither is a beautifully governed gateway fronting an agent nobody tested. Defense in depth means the gateway catches what the agent misses, and vice‑versa.
+
+### The AI Gateway pattern
+
+Citadel's Layer‑1 answer to platform governance is one **APIM AI Gateway** in front of a shared Foundry model pool. Instead of every team holding its own keys and calling models directly, every call goes through one governed door:
 
 ```mermaid
 flowchart LR
@@ -30,13 +42,13 @@ flowchart LR
     APIM[APIM AI Gateway]
     Pol[Policies: routing, PII, JWT, quotas]
     Pool[(Foundry model pool)]
-    AI[Application Insights x3]
+    AI[Application Insights]
     APIM --- Pol
     APIM --> Pool
     APIM --> AI
   end
   subgraph SpokeA[Spoke: Team A Foundry project]
-    AgA[Hosted / Prompt agent] --> ConA[APIM connection]
+    AgA[Loop / Threadlight agent] --> ConA[APIM connection]
   end
   subgraph SpokeB[Spoke: Team B Foundry project]
     AgB[Hosted / Prompt agent] --> ConB[APIM connection]
@@ -48,7 +60,19 @@ flowchart LR
   Entra --> AgB
 ```
 
-The hub is **Layer 1** of the wider four‑layer Citadel platform:
+One governed door buys you the whole left column at once:
+
+- **One endpoint, many models** — swap or retire a model centrally; spokes never change code.
+- **Keyless identity** — spokes authenticate with a project managed identity; no long‑lived secrets.
+- **Quotas & cost attribution** — one Product per team means one throttle and one billing line per team.
+- **Policy at the edge** — PII redaction, JWT enforcement, and a **deprecated‑model block** applied to every call before it reaches a model.
+- **Telemetry for free** — every call lands in Application Insights, so cost and health are observable from day one.
+
+> Note: This is exactly what the [Threadlight case study](https://aiappsgbb.github.io/threadlight-skills/case-study.html) exercises: every model call in that live run was routed through a Citadel gateway, a banned `gpt-4`‑class model was refused with **403 at the door**, and the approved model returned **200**. The policy, not the agent, enforced the model allow‑list.
+
+### The four-layer Citadel platform
+
+The gateway is **Layer 1** of a wider, layered platform. You don't need all four to start — but knowing the shape tells you where today's work sits and what comes next.
 
 | Layer | Concern | Covered here |
 |---|---|---|
@@ -57,47 +81,36 @@ The hub is **Layer 1** of the wider four‑layer Citadel platform:
 | **L1.5** In‑process governance | Deterministic safety inside the agent runtime | Pair with `foundry-agt` |
 | **L2–L4** Control plane / Agent identity / Security fabric | Foundry lifecycle, Entra Agent ID, Defender + Purview | Platform roadmap |
 
-**Done means:**
+This playbook stands up **L1** end‑to‑end (infra + wiring) and points at **L1.5** for defense in depth. L2–L4 are the platform roadmap you grow into.
 
-- The hub is deployed and `GET /models` returns the configured model list through APIM.
-- A chat completion round‑trips through the gateway (api‑key header, ~1s warm).
-- One spoke project holds an Access Contract and calls a model **keyless** via a Foundry connection.
-- Gateway traffic, quotas, and cost are visible in Application Insights.
+> Important: **Done means** — the hub is deployed and returns the model list through APIM; a chat completion round‑trips through the gateway; one spoke calls a model **keyless** via a Foundry connection; and gateway traffic, quotas, and cost are visible in Application Insights.
 
-**Out of scope for the first deployment:**
+### When to reach for a hub
 
-- Provisioning access contracts at install time — the hub ships **zero** contracts; spokes are added after.
-- Handing spokes the APIM `master` subscription key (demo‑only; use per‑team contracts).
-- Mandating BYO‑VNet on the first run — start public, harden later with the VNet‑isolated profile.
+A shared, always‑on gateway is a real cost and a real commitment. Reach for it deliberately.
 
-### When NOT to deploy a hub
+> Warning: The hub is an always‑on cost (~$200–$2,500/mo depending on profile). Do **not** deploy one when a single team just needs model access — point them at a Foundry project directly. Reach for Citadel when **many** teams must share capacity under one governed, attributable endpoint.
 
-> Warning: The hub is a real, always‑on cost (~$200–$2,500/mo depending on profile). Do not deploy one when a single team just needs model access — point them at a Foundry project directly. Reach for Citadel when **many** teams must share capacity under one governed, attributable endpoint.
-
-Skip or defer the hub if: you have one consuming team, no cost‑attribution or multi‑tenant policy requirement, or you are still in throwaway‑PoC mode. Threadlight pilots (see the companion playbook) can run **standalone** and adopt a spoke later.
-
-### Prerequisites
-
-Deploy into a deliberately‑chosen tenant and subscription. The hub is too expensive to land in the wrong place.
-
-```pwsh
-az account show --query "{sub:name, id:id, tenant:tenantId}" -o table
-az version
-azd version
-bicep --version
-```
-
-> Important: Use per‑tenant isolation before `azd up`. Set `AZURE_CONFIG_DIR` + `AZD_CONFIG_DIR` per tenant and assert the active subscription — this is the `azure-tenant-isolation` pattern. A hub deployed to the wrong subscription is an expensive mistake to unwind.
-
-Required roles: `Owner` or `Contributor` + `User Access Administrator` on the target subscription (the deploy creates role assignments), and permission to register the resource providers APIM, Cognitive Services, and Insights use.
+Skip or defer the hub if you have one consuming team, no cost‑attribution or multi‑tenant policy requirement, or you're still in throwaway‑PoC mode. Threadlight pilots run **standalone** and adopt a spoke later — graduation, not prerequisite.
 
 ---
 
 ## Build the hub
 
+### Preflight
+
+Deploy into a deliberately‑chosen tenant and subscription — the hub is too expensive to land in the wrong place. Confirm where you are before you provision anything.
+
+```pwsh
+az account show --query "{sub:name, id:id, tenant:tenantId}" -o table
+az version ; azd version ; bicep --version
+```
+
+> Important: Use per‑tenant isolation before `azd up`. Set `AZURE_CONFIG_DIR` + `AZD_CONFIG_DIR` per tenant and assert the active subscription — the `azure-tenant-isolation` pattern. Required roles: `Owner` or `Contributor` + `User Access Administrator` on the target subscription (the deploy creates role assignments), plus permission to register the APIM, Cognitive Services, and Insights resource providers.
+
 ### Pick a deployment profile
 
-`citadel-hub-deploy` ships three paved `azd` profiles. Pick one before you deploy.
+This chapter wraps [`citadel-hub-deploy`](https://github.com/aiappsgbb/awesome-gbb/tree/main/skills/citadel-hub-deploy) — a GBB skill built on the `Azure-Samples/ai-hub-gateway-solution-accelerator` (`citadel-v1` branch). It ships three paved `azd` profiles. Pick one before you deploy.
 
 | Profile | Use it for | Networking | Rough cost/mo |
 |---|---|---|---|
@@ -107,9 +120,9 @@ Required roles: `Owner` or `Contributor` + `User Access Administrator` on the ta
 
 > Tip: Start with **pilot‑quickstart** even if you know you'll need VNet isolation. Prove the gateway works publicly first, then redeploy the isolated profile once the topology is understood. The profiles differ in parameters, not in the app you deploy.
 
-### Initialize and deploy
+### Deploy the hub
 
-Bring up the accelerator on the `citadel-v1` branch and deploy with your chosen profile.
+Deploying the hub is itself an **`azd` flow you can drive from Copilot** — the same muscle memory as any loop build, pointed at an accelerator instead of a generated app. Bring up the accelerator on the `citadel-v1` branch and deploy with your chosen profile.
 
 ```bash
 # 1. Scaffold the accelerator (citadel-v1 branch)
@@ -119,11 +132,11 @@ cd <env-folder>
 # 2. Select region + profile parameters (see the skill for the full env-var map)
 azd env set AZURE_LOCATION swedencentral
 
-# 3. Deploy the hub (APIM, Foundry pool, policies, 3x App Insights)
+# 3. Deploy the hub (APIM, Foundry pool, policies, App Insights)
 azd up
 ```
 
-`azd up` provisions APIM, the Foundry model pool, the policy fragments, and three Application Insights components (apim, foundry, func). Expect **30–45 minutes** — APIM creation dominates.
+`azd up` provisions APIM, the Foundry model pool, the policy fragments, and the Application Insights components. Expect **30–45 minutes** — APIM creation dominates.
 
 > Note: MCAPS pilot tagging (`SecurityControl: Ignore`) is already in the upstream `bicepparam`. Layer your own `AZURE_TAGS` for cost allocation per the `azd-patterns` skill.
 
@@ -132,7 +145,6 @@ azd up
 Prove the gateway routes before you onboard anyone. No Jupyter required — a curl round‑trip is enough.
 
 ```bash
-# Gateway URL
 GW=$(az apim show -g <rg> -n <apim> --query gatewayUrl -o tsv)
 
 # Master key — DEMO ONLY (create a per-team Access Contract for real spokes)
@@ -149,15 +161,21 @@ curl -s -X POST "$GW/openai/deployments/gpt-5.4-mini/chat/completions?api-versio
   -d '{"messages":[{"role":"user","content":"ping"}],"max_completion_tokens":10}'
 ```
 
-Expected warm latency from the skill's live audit (Sweden Central, gpt‑5.4‑mini): **~1s end‑to‑end** through APIM; `/models` discovery **~250ms**. For deeper coverage, the upstream ships eight validation notebooks under `validation/` — run the four baseline ones (LLM backend onboarding, universal‑LLM all‑models, access contracts, agent frameworks) on every new hub.
+Expected warm latency from the skill's live audit (Sweden Central, gpt‑5.4‑mini): **~1s end‑to‑end** through APIM; `/models` discovery **~250ms**. The upstream ships eight validation notebooks under `validation/` — run the four baseline ones (LLM backend onboarding, universal‑LLM all‑models, access contracts, agent frameworks) on every new hub.
 
 ---
 
 ## Onboard a spoke
 
+### A loop-built agent becomes a governed spoke
+
+This is where the two worlds meet. You built an agent with the [Agentic Loop](../getting-started/README.md) — or ran a [Threadlight](../threadlight-pipeline/README.md) pilot — and it currently calls models directly. **Onboarding turns it into a governed spoke:** the agent keeps its code and its identity, but its model calls now flow through the hub, keyless, under a quota and a policy.
+
+This chapter wraps [`citadel-spoke-onboarding`](https://github.com/aiappsgbb/awesome-gbb/tree/main/skills/citadel-spoke-onboarding) — the per‑team wiring that grants a project an **Access Contract**.
+
 ### Create an Access Contract
 
-A spoke is granted access via an **Access Contract**: an APIM Product + a scoped Subscription, optionally Key Vault secrets and a Foundry connection. Scaffold a contract folder from the accelerator.
+An **Access Contract** is an APIM Product + a scoped Subscription, optionally Key Vault secrets and a Foundry connection. Scaffold a contract folder from the accelerator.
 
 ```powershell
 # From the accelerator repo (citadel-v1)
@@ -168,7 +186,7 @@ cp ../../../main.bicepparam main.bicepparam
 cp ../../../policies/default-ai-product-policy.xml ai-product-policy.xml
 ```
 
-Naming follows `{serviceCode}-{businessUnit}-{useCase}-{environment}` — e.g. `LLM-Healthcare-PatientAssistant-DEV`. One Product per spoke, one Subscription per Product.
+Naming follows `{serviceCode}-{businessUnit}-{useCase}-{environment}` — e.g. `LLM-Healthcare-PatientAssistant-DEV`. One Product per spoke, one Subscription per Product — that's what makes cost attribution a single billing line per team.
 
 Edit `main.bicepparam` with the hub coordinates and your use case. For a **keyless** Foundry spoke, point it at the target project and let the contract create the connection:
 
@@ -206,7 +224,7 @@ az deployment sub create --name myteam-myagent-dev --location <REGION> `
 
 ### Consume the gateway — keyless (Option B)
 
-> Important: Threadlight pilots and any Foundry agent MUST use the keyless **Foundry Connection** path, not Key Vault. Pulling an APIM subscription key from KV means the agent holds a long‑lived secret at runtime, which violates the keyless‑by‑mandate posture. With Option B, APIM authorizes via the project managed‑identity token and the agent never sees a key.
+> Important: A loop‑built or Threadlight agent should use the **Foundry Connection** path (Option B), not Key Vault. With Option B the APIM subscription key is held by a **Foundry connection**, and the agent references that connection *by name* while authenticating to Foundry with its own **managed identity** — so no long‑lived secret ever lives in the agent runtime. That's what "keyless" means here. Pulling the key from Key Vault instead puts a long‑lived secret in the agent — avoid it.
 
 Set the model to `connectionName/modelName` — the connection name comes from the contract output (e.g. `Hub-MyTeam-MyAgent-DEV-LLM`).
 
@@ -248,21 +266,33 @@ When the hub is deployed with `entraAuth=true`, require a JWT on top of the API 
 
 The spoke acquires the token for the gateway app (`api://<GATEWAY-APP-ID>/.default`) using its **own** managed identity — recommended over a client secret on Azure.
 
+> Note: The `api-key` in the table above is the contract's APIM **subscription key** — in Option B it's delivered through the Foundry connection, so the agent still never handles it directly. JWT is an **additional** Entra layer on top of that credential, not a replacement for it. Keyless (agent holds no secret) and JWT (extra Entra enforcement) are complementary, not alternatives.
+
 ---
 
-## Scale
+## Scale & compose
 
 ### Add more spokes and go private
 
-Every new team repeats **Onboard a spoke** with its own contract — the hub does not change. When a customer needs private networking, redeploy the hub with the **vnet‑isolated‑spoke‑aware** profile and peer each spoke VNet to the hub. Pair with [`foundry-vnet-deploy`](https://github.com/aiappsgbb/awesome-gbb) for spoke‑side VNet bring‑up; `apim-dns-zone-link.bicep` links `privatelink.azure-api.net` into the spoke.
+Every new team repeats **Onboard a spoke** with its own contract — the hub does not change. When a customer needs private networking, redeploy the hub with the **vnet‑isolated‑spoke‑aware** profile and peer each spoke VNet to the hub. Pair with [`foundry-vnet-deploy`](https://github.com/aiappsgbb/awesome-gbb/tree/main/skills/foundry-vnet-deploy) for spoke‑side VNet bring‑up; `apim-dns-zone-link.bicep` links `privatelink.azure-api.net` into the spoke.
 
 ### Defense in depth
 
-> Tip: Gateway governance (L1) and in‑process governance (L1.5) catch different attacks. Layer [`foundry-agt`](https://github.com/aiappsgbb/awesome-gbb) inside each agent runtime — the skill's red‑team data shows deterministic in‑process checks driving attack success from 26.67% (prompt‑only) to 0.00%. Use both, not either.
+> Tip: Gateway governance (L1) and in‑process governance (L1.5) catch different attacks. Layer [`foundry-agt`](https://github.com/aiappsgbb/awesome-gbb/tree/main/skills/foundry-agt) inside each agent runtime — the skill's red‑team data shows deterministic in‑process checks driving attack success from 26.67% (prompt‑only) to 0.00%. Use both, not either. This is the platform half of the same defense‑in‑depth story the agent completes with its own evals and red‑team.
 
 ### Observe cost and health
 
-The hub deploys three Application Insights components. For spoke agent traces to land in the hub's central story, follow `foundry-observability`'s three‑layer pattern (Bicep + account‑level connection + `configure_azure_monitor()`). Use APIM's per‑subscription metrics for **cost attribution** — one Product per spoke means one billing line per team. When something breaks, drive the [`incident-postmortem`](../../../skills/agentic-loop/references/run-skills-catalog.md) run skill off the gateway + App Insights telemetry.
+The hub deploys Application Insights components. For spoke agent traces to land in the hub's central story, follow `foundry-observability`'s three‑layer pattern (Bicep + account‑level connection + `configure_azure_monitor()`). Use APIM's per‑subscription metrics for **cost attribution** — one Product per spoke means one billing line per team. When something breaks, drive the [`incident-postmortem`](../../skills/agentic-loop/references/run-skills-catalog.md) run skill off the gateway + App Insights telemetry.
+
+### How Citadel composes with the loop and Threadlight
+
+Bring the whole picture together. Three motions, one governed destination:
+
+- **The [Agentic Loop](../getting-started/README.md)** builds the agent from a prompt. Onboard it as a spoke and its model calls become governed and keyless.
+- **[Threadlight](../threadlight-pipeline/README.md)** is the advanced, opinionated pipeline. Its `production-ready` scorecard proves the *agent* (the right column); Citadel proves the *platform* (the left). Its case study routes every model call through a Citadel gateway — the two ship together.
+- **`foundry-*` building blocks** are the primitives — hosted agents, IQ, evals, observability, in‑process AGT — that both the loop and Threadlight compose, and that a spoke inherits.
+
+That's the point of a landing zone: whatever built the agent, it grows up in the same governed place.
 
 ### Clean up
 
@@ -278,4 +308,5 @@ azd down --purge
 
 - [`citadel-hub-deploy`](https://github.com/aiappsgbb/awesome-gbb/tree/main/skills/citadel-hub-deploy) — full profile + validation‑notebook reference.
 - [`citadel-spoke-onboarding`](https://github.com/aiappsgbb/awesome-gbb/tree/main/skills/citadel-spoke-onboarding) — access‑contract parameters, policy XML, connection fetch.
+- [Threadlight case study](https://aiappsgbb.github.io/threadlight-skills/case-study.html) — a live run where every model call flowed through a Citadel gateway.
 - [Citadel Platform overview](https://aka.ms/foundry-citadel) — the full four‑layer model.
