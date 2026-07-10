@@ -76,5 +76,31 @@
     "building_blocks": ["Observability"],
     "buildSkills": ["azure-ai-voicelive-py", "agent-framework-azure-ai-py", "azure-ai-projects-py", "containerization", "aigbb-azd-compliance", "aigbb-observability"],
     "runSkills": []
+  },
+  {
+    "slug": "citadel-governance-hub",
+    "name": "Citadel Governance Hub",
+    "icon": "Castle",
+    "level": "Advanced",
+    "summary": "Deploy a central APIM AI Gateway hub in front of Foundry, then onboard teams as keyless spokes.",
+    "use_when": "Multiple teams must share Foundry capacity behind one governed, observable, cost-attributed endpoint.",
+    "patterns": ["Governance"],
+    "capabilities": ["Frontier Models"],
+    "building_blocks": ["AI Gateway", "Identity & Access", "Observability"],
+    "buildSkills": ["citadel-hub-deploy", "citadel-spoke-onboarding", "azure-aigateway", "entra-agent-id", "azure-rbac", "appinsights-instrumentation"],
+    "runSkills": ["incident-postmortem"]
+  },
+  {
+    "slug": "threadlight-pipeline",
+    "name": "Threadlight Pipeline",
+    "icon": "Waypoints",
+    "level": "Advanced",
+    "summary": "An opinionated idea-to-production pipeline: one paragraph to a governed, production-ready Foundry agent in a single session.",
+    "use_when": "You want the fast, paved path from a customer brief to a governed pilot and accept strong opinionated defaults.",
+    "patterns": ["*"],
+    "capabilities": ["Frontier Models"],
+    "building_blocks": ["Observability", "AI Gateway", "Identity & Access"],
+    "buildSkills": ["threadlight-design", "threadlight-demo-data-factory", "threadlight-local-test", "threadlight-deploy", "threadlight-safe-check", "threadlight-evals", "threadlight-redteam", "threadlight-govern", "threadlight-consumption-iq", "threadlight-production-ready", "threadlight-cicd", "threadlight-customize", "threadlight-event-triggers", "threadlight-hitl-patterns", "threadlight-workspace-ui", "threadlight-router-bench", "threadlight-auto"],
+    "runSkills": []
   }
 ]
