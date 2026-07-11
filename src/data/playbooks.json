@@ -78,20 +78,6 @@
     "runSkills": []
   },
   {
-    "slug": "citadel-governance-hub",
-    "name": "Citadel Governance Hub",
-    "icon": "Castle",
-    "level": "Advanced",
-    "accelerator": true,
-    "summary": "The production landing zone for the Agentic Loop: a governed APIM AI Gateway that turns loop-built agents into keyless, attributed, policy-governed spokes.",
-    "use_when": "A use case must go to production and many teams need to share Foundry capacity behind one governed, observable, cost-attributed endpoint.",
-    "patterns": ["Governance"],
-    "capabilities": ["Frontier Models"],
-    "building_blocks": ["AI Gateway", "Identity & Access", "Observability"],
-    "buildSkills": ["citadel-hub-deploy", "citadel-spoke-onboarding", "azure-aigateway", "entra-agent-id", "azure-rbac", "appinsights-instrumentation"],
-    "runSkills": ["incident-postmortem"]
-  },
-  {
     "slug": "threadlight-pipeline",
     "name": "Idea to Production",
     "icon": "Waypoints",
@@ -104,5 +90,19 @@
     "building_blocks": ["Observability", "AI Gateway", "Identity & Access"],
     "buildSkills": ["threadlight-design", "threadlight-demo-data-factory", "threadlight-local-test", "threadlight-deploy", "threadlight-safe-check", "threadlight-evals", "threadlight-redteam", "threadlight-govern", "threadlight-consumption-iq", "threadlight-production-ready", "threadlight-cicd", "threadlight-customize", "threadlight-event-triggers", "threadlight-hitl-patterns", "threadlight-workspace-ui", "threadlight-router-bench", "threadlight-auto"],
     "runSkills": []
+  },
+  {
+    "slug": "citadel-governance-hub",
+    "name": "Citadel Governance Hub",
+    "icon": "Castle",
+    "level": "Advanced",
+    "accelerator": true,
+    "summary": "The production landing zone for the Agentic Loop: a governed APIM AI Gateway that turns loop-built agents into keyless, attributed, policy-governed spokes.",
+    "use_when": "A use case must go to production and many teams need to share Foundry capacity behind one governed, observable, cost-attributed endpoint.",
+    "patterns": ["Governance"],
+    "capabilities": ["Frontier Models"],
+    "building_blocks": ["AI Gateway", "Identity & Access", "Observability"],
+    "buildSkills": ["citadel-hub-deploy", "citadel-spoke-onboarding", "azure-aigateway", "entra-agent-id", "azure-rbac", "appinsights-instrumentation"],
+    "runSkills": ["incident-postmortem"]
   }
 ]
