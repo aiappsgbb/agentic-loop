@@ -126,13 +126,15 @@ function parsePlaybook(md: string, slug: string): Parsed {
 
 function CodeBlock({ className, children }: { className?: string; children?: React.ReactNode }) {
   const [copied, setCopied] = useState(false);
-  const text = String(children).replace(/\n$/, '');
+  const text = childrenToText(children).replace(/\n$/, '');
   const onCopy = async () => {
     try {
-      await navigator.clipboard.writeText(text);
+      await copyToClipboard(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch { /* ignore */ }
+    } catch (error) {
+      console.warn('Unable to copy code block', error);
+    }
   };
   return (
     <div className="md-code">
@@ -143,6 +145,28 @@ function CodeBlock({ className, children }: { className?: string; children?: Rea
       <pre><code className={className}>{children}</code></pre>
     </div>
   );
+}
+
+async function copyToClipboard(text: string) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.top = '-9999px';
+  document.body.appendChild(textarea);
+  textarea.select();
+
+  try {
+    const copied = document.execCommand('copy');
+    if (!copied) throw new Error('document.execCommand("copy") returned false');
+  } finally {
+    document.body.removeChild(textarea);
+  }
 }
 
 function calloutKind(text: string): 'note' | 'tip' | 'warning' | null {
