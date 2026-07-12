@@ -1,16 +1,16 @@
-# Continuous Evaluation Loop
+# Continuous Evaluation Loop: Retail Support Agent
 
 ## Intro
 
-### Move from offline scoring to production traces, regression sets, and automated improvement PRs.
+### Improve a fictional retail support agent from production evidence.
 
-Most teams start with a one-off eval spreadsheet and never close the loop. This playbook gives you a repeatable path for turning production traces into regression sets, scoring them automatically, catching regressions before users do, and letting the agent open **improvement pull requests** — all driven from a single prompt and the `agentic-loop` defaults.
+This playbook builds **ResolveRight**, a fictional customer-support agent for Contoso Outfitters. It answers questions about mock orders, returns, warranties, and damaged shipments, then turns representative production traces into regression cases and evidence-backed improvement pull requests.
 
 **Use when:** You need to catch regressions in production and close the improvement loop automatically.
 
-**Core tech stack:** Copilot SDK, Foundry Hosted Agents, Foundry Models, Foundry Evaluations, Application Insights
+**Core tech stack:** Copilot SDK, Foundry Hosted Agents, Foundry Skills API, Foundry Evaluations, Application Insights
 
-This playbook walks you through building a continuous-evaluation loop end-to-end with the Agentic Loop. You drive the build loop from a single prompt, and the [`agentic-loop`](../../skills/agentic-loop/SKILL.md) skill applies the proven recipe — Foundry hosted agents, Copilot SDK, keyless identity, observability, and `azd` — on top.
+The agent consumes a `support-resolution` skill containing issue classification, evidence requirements, response structure, escalation rules, and tool boundaries. Every evaluation result is tied to an immutable Foundry skill version so the team can promote, compare, or roll back the behavior that produced each score.
 
 The playbook is organized in three chapters:
 
@@ -22,11 +22,13 @@ The playbook is organized in three chapters:
 
 ### What we will build
 
-A chat-style app whose agent is continuously evaluated. The agent runs as a **Foundry Hosted Agent** backed by **Foundry Models**, uses the **GitHub Copilot SDK** as the harness, and emits **OpenTelemetry traces** to Application Insights. Traces are mined into a **regression dataset**, scored with **Foundry Evaluations** on a schedule, and when a regression or low score is detected, the loop opens an **improvement PR** with a proposed fix and fresh eval results.
+A retail support chat backed by synthetic orders, return policies, warranty rules, and resolved tickets. The Copilot SDK agent downloads the promoted `support-resolution` skill at runtime and emits OpenTelemetry traces containing its version. Traces are curated into a regression dataset, scored with Foundry Evaluations, and regressions open a human-reviewed PR with the proposed skill or agent change and before/after results.
 
 ```mermaid
 flowchart LR
   User[User turns] --> Agent[Foundry Hosted Agent]
+  Agent --> Skill[support-resolution skill]
+  Skill --> SkillsAPI[Foundry Skills API]
   Agent --> Model[Foundry Model]
   Agent --> Traces[OTel traces]
   Traces --> Insights[Application Insights]
@@ -45,6 +47,7 @@ flowchart LR
 | Frontend | React + Vite on Azure Container Apps | Surface to generate real turns and traces. |
 | Backend API | Python + FastAPI on Azure Container Apps | Hosts the agent session and trace export. |
 | Agent | Copilot SDK hosted in Microsoft Foundry | Governed runtime with per-turn tracing. |
+| Runtime skill | Foundry Skills API | Versions and distributes `support-resolution`; provides evaluation lineage. |
 | Model | Foundry Models | Keeps model usage and capacity on the Foundry platform. |
 | Evaluation | Foundry Evaluations (offline + scheduled) | Scores groundedness, quality, safety, and regressions. |
 | Trace store | OpenTelemetry → Application Insights | Source of truth for production behavior and regression mining. |
@@ -57,6 +60,7 @@ flowchart LR
 - Production turns emit traces that land in Application Insights.
 - Traces are curated into a regression dataset.
 - Scheduled scoring catches regressions against a baseline.
+- Every score and trace identifies the effective `support-resolution` version.
 - A regression opens an improvement PR with proposed changes and eval results.
 
 **Out of scope for the first build:**
@@ -139,10 +143,18 @@ https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cl
 Paste this starter prompt:
 
 ```text
-/spec2cloud Build an agent app with a continuous evaluation loop. The agent answers user questions in a chat interface and emits OpenTelemetry traces to Application Insights. Include an offline evaluation set scored with Foundry Evaluations that gates deploys. In production, mine traces into a regression dataset, score it on a schedule against a baseline, and when a regression or low score is detected, open an improvement pull request that proposes a fix and includes the fresh eval results for human review. Use randomly generated data where a real backing service is not required.
+/spec2cloud Build ResolveRight, a customer-support resolution agent for the fictional retailer Contoso Outfitters. Customers ask about synthetic orders, returns, warranties, and damaged shipments. The agent must classify the issue, gather the evidence required by mock policy, give the allowed next step, and escalate exceptions rather than inventing resolutions.
 
 Before planning or implementation, install and run the agentic-loop skill (`aiappsgbb/agentic-loop`, skill `agentic-loop`) to enhance the spec with its app, agent runtime, Azure infrastructure, identity, and telemetry defaults.
+
+Create a realistic mock corpus under data/contoso-support with order records, return and warranty policies, product facts, resolved-ticket examples, edge cases, and a labeled offline evaluation set. Author skills/support-resolution/SKILL.md with issue taxonomy, evidence checklist, response format, escalation rules, and tool boundaries.
+
+Create an immutable support-resolution version through the Foundry Skills API, evaluate that exact version, promote it to default_version only when gates pass, attach it to the versioned agent toolbox, and download it into a writable runtime directory before each Copilot SDK session. Configure skill_directories to the downloaded folder. Record skill name/version in traces, evaluation datasets, baselines, and improvement PRs so regressions can be attributed and rolled back.
+
+Emit OpenTelemetry traces to Application Insights. Include offline Foundry Evaluations that gate deploys, mine approved traces into a regression dataset, score it on a schedule against a committed baseline, and open a human-reviewed improvement PR when a regression is detected. The PR must contain affected cases, current and candidate skill versions, proposed changes, and fresh before/after results.
 ```
+
+> Foundry Skills are a preview capability. Opt in explicitly (for example, `allow_preview=True`) and fail visibly if publication, promotion, or runtime download does not succeed.
 
 > `/spec2cloud` runs the same five-stage loop as Getting Started. The prompt explicitly invokes `agentic-loop`; the remaining requirements define this playbook's datasets, scorecards, trace mining, regression gates, and improvement PRs.
 
@@ -165,9 +177,10 @@ Use these recommended answers if Copilot asks clarifying questions:
 | Regression source | Mine production traces from Application Insights. |
 | Scoring cadence | Scheduled scoring against a committed baseline. |
 | Improvement action | Open a human-reviewed PR with the proposed fix and eval results. |
+| Runtime skill | `support-resolution`, with score and trace lineage by Foundry skill version. |
 | Identity | Managed identity, keyless RBAC. |
 
-When the skill finishes, review `docs/spec.md` for these must-have requirements: offline eval gate, trace emission, regression dataset curation, scheduled scoring, baseline comparison, and automated improvement PRs.
+When the skill finishes, review `docs/spec.md` for these must-have requirements: mock retail support corpus, offline eval gate, Foundry skill versioning/promotion/download, runtime skill consumption, skill-version trace lineage, regression curation, scheduled scoring, baseline comparison, and automated improvement PRs.
 
 ---
 
@@ -183,11 +196,12 @@ The deployment plan should include:
 
 | Section | What good looks like |
 |---|---|
-| Resource graph | Foundry project, hosted agent, model deployment, Application Insights, managed identity, ACA apps, scheduled job/runner. |
+| Resource graph | Foundry project, hosted agent, model deployment, versioned toolbox, governed skill, Application Insights, managed identity, ACA apps, scheduled runner. |
 | RBAC | Least-privilege roles for Foundry, Application Insights read, and telemetry. |
 | Eval scorecard | Metrics, datasets, and pass thresholds for offline and scheduled runs. |
 | Regression pipeline | Trace query, curation, dataset storage, and baseline comparison. |
 | Improvement loop | PR creation trigger, contents, and human-review gate. |
+| Skill lifecycle | Author, create, evaluate, promote, attach, download, consume, trace, and roll back `support-resolution`. |
 | azd template | `minimal` / `azd init --minimal`. |
 
 Review `docs/plan.md` and `.azure/deployment-plan.md` before continuing.
@@ -213,6 +227,11 @@ Expected generated artifacts:
 │   ├── backend/                  # agent session + trace export
 │   └── agents/
 │       └── evaluated-agent/      # hosted-agent definition
+├── skills/
+│   └── support-resolution/
+│       └── SKILL.md
+├── data/
+│   └── contoso-support/          # mock orders, policies, tickets, labels
 ├── evals/
 │   ├── offline/                  # curated pre-deploy dataset + scorecard
 │   ├── regression/               # mined production dataset + baseline
@@ -222,11 +241,11 @@ Expected generated artifacts:
 
 The implementation should wire:
 
-1. **Tracing** — every turn emits OTel spans to Application Insights.
-2. **Offline evals** — a curated dataset is scored and gates deploy.
-3. **Trace mining** — production traces are curated into a regression dataset.
-4. **Scheduled scoring** — the regression set is scored against a committed baseline.
-5. **Improvement PRs** — a detected regression opens a PR with the fix and eval results.
+1. **Governed skill** — create and promote `support-resolution`, then download it into the Copilot SDK runtime skill directory.
+2. **Tracing** — every turn emits OTel spans with the effective skill version.
+3. **Offline evals** — score the exact agent and skill versions and gate deploy.
+4. **Trace mining** — curate approved support traces into a regression dataset.
+5. **Improvement PRs** — a regression opens a PR with the fix, skill lineage, and before/after results.
 
 Commit a checkpoint once the diff looks right:
 
@@ -249,6 +268,8 @@ Validate locally against real Azure dependencies.
 |---|---|---|
 | Trace emission | Send a few turns. | Spans land in Application Insights. |
 | Offline gate | Run offline evals. | Scores compute and the gate passes/fails correctly. |
+| Skill adherence | Run order, return, warranty, and escalation cases. | Responses follow the governed resolution flow. |
+| Version lineage | Compare two skill versions. | Traces and eval results identify the exact version used. |
 | Trace mining | Curate recent traces. | A regression dataset is produced. |
 | Baseline compare | Score against the baseline. | Regressions are detected relative to baseline. |
 | Improvement PR | Introduce a deliberate regression. | The loop opens a PR with the fix and eval results. |
@@ -268,6 +289,8 @@ Deployment readiness checklist:
 - [ ] Hosted agent has a valid `agent.yaml` and, where used, `code_configuration`.
 - [ ] Application Insights read access uses managed identity, not keys.
 - [ ] Offline eval gate is enforced before deploy.
+- [ ] `support-resolution` has an immutable version, promoted `default_version`, and rollback target.
+- [ ] Runtime downloads the governed skill to writable storage and configures `skill_directories`.
 - [ ] Regression baseline is committed to the repo.
 - [ ] Scheduled scoring job is provisioned.
 - [ ] Improvement PRs require human review before merge.
@@ -290,7 +313,7 @@ When the loop finishes, Copilot returns the deployed frontend URL and the Spec2C
 
 ### Run the evaluation loop
 
-Open the deployed app and generate representative turns, then run the scheduled scoring path. Confirm that traces become curated regression cases, scores compare against the committed baseline, and a deliberate regression produces an evidence-backed improvement PR.
+Open ResolveRight and exercise mock order, return, warranty, damaged-shipment, and escalation cases. Confirm that traces record the promoted `support-resolution` version, become curated regression cases, compare against the committed baseline, and produce an evidence-backed improvement PR after a deliberate skill regression.
 
 ---
 
@@ -324,6 +347,7 @@ Maintain both an offline scorecard and a scheduled regression scorecard.
 | Relevance/quality | Question, reference answer | Answer matches reference intent. |
 | Safety | Adversarial prompts | Unsafe content is blocked. |
 | Regression | Mined turns + baseline scores | No score drops below the baseline threshold. |
+| Skill adherence | Support case, expected classification and evidence | Agent follows the promoted resolution procedure. |
 | Latency | Representative turns | p95 latency stays within target. |
 
 Set gates before promoting: offline evals pass, no regression below baseline, and the scorecard covers the top production turn types.

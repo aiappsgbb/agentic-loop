@@ -1,16 +1,16 @@
-# Governance & Safety Baseline
+# Governance & Safety Baseline: Insurance Claims Assistant
 
 ## Intro
 
-### Wire content safety, policy guardrails, jailbreak detection, and red-team evals from day one.
+### Govern a fictional insurance claims assistant from day one.
 
-Shipping an agent into a regulated domain means safety cannot be bolted on later. This playbook gives you a repeatable path for standing up a **governed agent** where every model call and tool invocation passes through content safety, policy guardrails, and jailbreak detection — with red-team evaluations gating every change.
+This playbook builds **ClaimGuide**, a fictional auto-insurance claims assistant for Fabrikam Mutual. Customers submit synthetic incident details and ask about required evidence and next steps. The assistant may explain mock policy language, but it must never approve, deny, value, price, or settle a claim.
 
-**Use when:** You operate in a regulated domain or must enforce policy on every tool call.
+**Use when:** A regulated assistant handles sensitive data and must operate inside explicit policy boundaries.
 
-**Core tech stack:** Copilot SDK, Foundry Hosted Agents, Foundry Models, Azure AI Content Safety, AI Gateway
+**Core tech stack:** Copilot SDK, Foundry Hosted Agents, Foundry Skills API, Foundry Models, Azure AI Content Safety
 
-This playbook walks you through building a governance-and-safety baseline end-to-end with the Agentic Loop. You drive the build loop from a single prompt, and the [`agentic-loop`](../../skills/agentic-loop/SKILL.md) skill applies the proven recipe — Foundry hosted agents, Copilot SDK, keyless identity, observability, and `azd` — on top.
+The deployed agent consumes a `claims-compliance` runtime skill defining allowed guidance, prohibited decisions, escalation rules, PII minimization, and required disclaimers. The build publishes immutable versions through the Foundry Skills API, promotes the tested version, downloads it into a writable runtime directory, and records the effective version on every response trace.
 
 The playbook is organized in three chapters:
 
@@ -22,15 +22,17 @@ The playbook is organized in three chapters:
 
 ### What we will build
 
-A chat-style app where every user turn is screened on the way in and every agent response is screened on the way out. The agent runs as a **Foundry Hosted Agent** backed by **Foundry Models**, uses the **GitHub Copilot SDK** as the harness, and routes input/output through **Azure AI Content Safety** (harm categories, prompt-shield jailbreak detection) plus a **policy guardrail** layer that authorizes tool calls. Safety events are traced, and a red-team eval set gates promotion.
+A claims-intake chat experience backed by a mock Fabrikam policy corpus and synthetic claim files. Azure AI Content Safety, PII redaction, prompt-injection defense, and a default-deny tool policy protect each turn. The `claims-compliance` skill constrains the agent to intake and guidance, and a red-team suite proves that claim decisions and sensitive data cannot escape those boundaries.
 
 ```mermaid
 flowchart LR
-  User[User input] --> App[Web or API surface]
+  User[Claimant input] --> App[ClaimGuide app]
   App --> InGuard[Input guardrail:<br/>content safety + prompt shield]
-  InGuard -->|allowed| Agent[Foundry Hosted Agent]
+  InGuard -->|allowed| Agent[ClaimGuide hosted agent]
   InGuard -->|blocked| Refuse[Safe refusal]
   Agent --> Model[Foundry Model]
+  Agent --> Skill[claims-compliance skill]
+  Skill --> SkillsAPI[Foundry Skills API]
   Agent --> Policy[Tool-call policy check]
   Policy -->|allowed| Tools[MCP tools]
   Policy -->|denied| Refuse
@@ -49,6 +51,7 @@ flowchart LR
 | Frontend | React + Vite on Azure Container Apps | Surface to exercise blocked and allowed turns. |
 | Backend API | Python + FastAPI on Azure Container Apps | Hosts the guardrail pipeline and refusal handling. |
 | Agent | Copilot SDK hosted in Microsoft Foundry | Governed runtime with identity, audit, and telemetry. |
+| Runtime skill | Foundry Skills API | Versions and distributes the `claims-compliance` policy. |
 | Model | Foundry Models | Keeps model usage and capacity on the Foundry platform. |
 | Content safety | Azure AI Content Safety (harm categories + Prompt Shields) | Screens input and output; detects jailbreak/prompt-injection. |
 | Policy guardrail | Tool-call authorization layer | Enforces policy on every tool call, not just the final answer. |
@@ -59,10 +62,12 @@ flowchart LR
 
 - Harmful or jailbreak input is blocked before it reaches the model.
 - Every tool call is authorized against policy before it runs.
+- Claims guidance follows the promoted `claims-compliance` skill and never makes claim decisions.
 - Harmful or ungrounded output is blocked before it reaches the user.
 - Refusals are safe, consistent, and logged.
 - Every safety decision (allow/block/deny) is a span in Application Insights.
 - A red-team eval set runs and gates promotion.
+- The runtime trace records the effective skill version for rollback.
 
 **Out of scope for the first build:**
 
@@ -143,10 +148,18 @@ https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cl
 Paste this starter prompt:
 
 ```text
-/spec2cloud Build a governed agent app with a safety baseline. Every user turn passes through an input guardrail (Azure AI Content Safety harm categories and Prompt Shields for jailbreak/prompt-injection detection) before reaching the agent. Every tool call is authorized against a policy layer before it runs. Every agent response passes through an output guardrail for harmful content and groundedness before it reaches the user. Blocked turns produce a safe, consistent refusal, and every safety decision is traced. Include a red-team evaluation set that gates promotion. Use randomly generated data where a real backing service is not required.
+/spec2cloud Build ClaimGuide, a governed auto-insurance claims assistant for the fictional company Fabrikam Mutual. Customers submit synthetic incident details and ask what evidence is required, which mock policy section applies, and what happens next. The assistant may collect intake facts and explain policy language, but it must never approve, deny, value, price, or settle a claim; those requests must be escalated to a human adjuster.
 
 Before planning or implementation, install and run the agentic-loop skill (`aiappsgbb/agentic-loop`, skill `agentic-loop`) to enhance the spec with its app, agent runtime, Azure infrastructure, identity, and telemetry defaults.
+
+Create realistic mock inputs under data/fabrikam-claims: policy excerpts, coverage examples, synthetic claim forms, adjuster escalation rules, and adversarial prompts. Author skills/claims-compliance/SKILL.md with allowed guidance, prohibited decisions, required uncertainty language, PII minimization, evidence requirements, and escalation behavior.
+
+Use the Foundry Skills API to create an immutable claims-compliance version, run policy and red-team evaluations against that version, promote the passing version to default_version, attach the skill reference to the agent's versioned toolbox, and download the governed copy into a writable runtime directory before the Copilot SDK session starts. Configure skill_directories to that downloaded directory. Emit skill name and version on every response trace so a failed release can be rolled back.
+
+Every request must pass through Azure AI Content Safety, PII detection and redaction, and Prompt Shields before it reaches the hosted agent. Screen responses again before returning them, authorize every tool call with a default-deny policy, write append-only audit events, and include an operations view for blocked requests, escalations, policy outcomes, and skill versions.
 ```
+
+> Foundry Skills are a preview capability. Opt in explicitly (for example, `allow_preview=True`) and fail visibly if publication, promotion, or runtime download does not succeed.
 
 > `/spec2cloud` runs the same five-stage loop as Getting Started. The prompt explicitly invokes `agentic-loop`; the remaining requirements define this playbook's guardrails, policy enforcement, refusal behavior, and red-team gates.
 
@@ -169,9 +182,10 @@ Use these recommended answers if Copilot asks clarifying questions:
 | Tool authorization | Every tool call passes a policy check; default deny. |
 | Refusal behavior | Safe, consistent refusal message; never echo the blocked content. |
 | Evals | Red-team / adversarial set that gates promotion. |
+| Runtime skill | `claims-compliance`, governed by the Foundry Skills API. |
 | Identity | Managed identity, keyless RBAC. |
 
-When the skill finishes, review `docs/spec.md` for these must-have requirements: input guardrail, output guardrail, jailbreak detection, per-tool-call policy authorization, safe refusals, safety telemetry, and red-team eval gates.
+When the skill finishes, review `docs/spec.md` for these must-have requirements: fictional claims scenario, mock policy corpus, input/output guardrails, jailbreak detection, per-tool-call authorization, Foundry Skills API lifecycle, runtime skill consumption, safe refusals, skill-version telemetry, and red-team eval gates.
 
 ---
 
@@ -187,10 +201,11 @@ The deployment plan should include:
 
 | Section | What good looks like |
 |---|---|
-| Resource graph | Foundry project, hosted agent, model deployment, Content Safety resource, managed identity, Application Insights, ACA apps. |
+| Resource graph | Foundry project, hosted agent, model deployment, Content Safety, versioned toolbox, governed skill, managed identity, Application Insights, ACA apps. |
 | RBAC | Least-privilege roles for Foundry, Content Safety, and telemetry. |
 | Guardrail pipeline | Input screen, tool-call policy check, output screen, and refusal path. |
 | Policy | Tool-call authorization rules with a default-deny posture. |
+| Skill lifecycle | Author, version, evaluate, promote, attach, download, consume, trace, and roll back `claims-compliance`. |
 | Evals | Red-team categories, adversarial prompts, and pass/block thresholds. |
 | azd template | `minimal` / `azd init --minimal`. |
 
@@ -219,6 +234,11 @@ Expected generated artifacts:
 │   │   └── policy/               # tool-call authorization
 │   └── agents/
 │       └── governed-agent/       # hosted-agent definition
+├── skills/
+│   └── claims-compliance/
+│       └── SKILL.md
+├── data/
+│   └── fabrikam-claims/          # mock policies, claims, and attacks
 ├── evals/                        # red-team / adversarial set
 └── docs/
 ```
@@ -227,9 +247,9 @@ The implementation should wire:
 
 1. **Input guardrail** — content safety + Prompt Shields screen every user turn.
 2. **Policy** — each tool call is authorized (default deny) before it runs.
-3. **Output guardrail** — content safety + groundedness screen every response.
-4. **Refusals** — blocked turns yield a safe, consistent message without echoing content.
-5. **Telemetry** — every allow/block/deny decision emits a span to Application Insights.
+3. **Governed skill** — create and promote `claims-compliance`, then download it into the runtime skill directory before agent sessions.
+4. **Output guardrail** — content safety + groundedness screen every response.
+5. **Telemetry** — every allow/block/deny decision and effective skill version emits a span to Application Insights.
 
 Commit a checkpoint once the diff looks right:
 
@@ -255,6 +275,8 @@ Validate locally against real Azure dependencies.
 | Tool policy | Trigger a tool call the policy forbids. | Policy denies before the tool runs. |
 | Harmful output | Coax an unsafe response. | Output guardrail blocks it before the user sees it. |
 | Allowed turn | Send a benign, in-policy prompt. | Agent answers normally. |
+| Prohibited decision | Ask the agent to approve a mock claim. | Agent refuses the decision and escalates to an adjuster. |
+| Skill adherence | Ask what evidence is required. | Response follows the governed checklist and cites the effective skill version. |
 | Telemetry | Query Application Insights. | Allow/block/deny decisions appear as spans. |
 
 ---
@@ -273,6 +295,8 @@ Deployment readiness checklist:
 - [ ] Content Safety access uses managed identity, not keys.
 - [ ] Guardrails run on both input and output paths.
 - [ ] Tool-call policy defaults to deny.
+- [ ] `claims-compliance` has an immutable version, a promoted `default_version`, and a rollback target.
+- [ ] Runtime downloads the governed skill to writable storage and passes it through `skill_directories`.
 - [ ] Refusal messages never echo blocked content.
 - [ ] Red-team eval set passes the configured thresholds.
 - [ ] Application Insights receives safety-decision telemetry.
@@ -294,7 +318,7 @@ When the loop finishes, Copilot returns the deployed frontend URL and the Spec2C
 
 ### Run the governed agent
 
-Open the deployed app and exercise allowed, harmful, jailbreak, and forbidden-tool scenarios. Confirm that safe turns succeed, blocked turns return the fixed refusal, and no denied tool executes.
+Open ClaimGuide and exercise evidence, policy-explanation, claim-decision, PII, jailbreak, and forbidden-tool scenarios. Confirm that allowed guidance follows the promoted `claims-compliance` skill, decision requests escalate to an adjuster, blocked turns return the fixed refusal, and no denied tool executes.
 
 ---
 
@@ -309,6 +333,7 @@ Track:
 - Tool-call deny rate and which policies fire.
 - Refusal count and refusal consistency.
 - False-positive candidates (blocked benign turns).
+- Claim-decision escalations and effective `claims-compliance` version.
 
 Useful Application Insights questions:
 
@@ -328,6 +353,8 @@ Maintain a red-team evaluation set and run it before every promotion.
 | Harm categories | Adversarial prompts per category | Harmful content is blocked. |
 | Jailbreak resistance | Known injection/jailbreak prompts | Attempts are detected and blocked. |
 | Tool-policy enforcement | Prompts that induce forbidden tool calls | Calls are denied. |
+| Claims authority | Approval, denial, valuation, and settlement prompts | Agent escalates and makes no decision. |
+| Skill adherence | Evidence and next-step prompts | Agent follows the promoted checklist and disclaimer rules. |
 | Refusal quality | Blocked prompts | Refusals are safe, consistent, and non-revealing. |
 | False-positive rate | Benign but sensitive-sounding prompts | Benign turns are allowed. |
 

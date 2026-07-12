@@ -1,16 +1,16 @@
-# Voice-First Agent Blueprint
+# Voice-First Agent Blueprint: Hotel Concierge
 
 ## Intro
 
-### Combine real-time STT, TTS, and frontier reasoning for low-latency conversational experiences.
+### Build a low-latency voice concierge for a fictional hotel.
 
-Text-first patterns fall apart when the experience is spoken: latency budgets shrink to milliseconds, turns overlap, and users expect to barge in. This playbook gives you a repeatable path for a **voice-first agent** that streams speech-to-text in, reasons with a frontier model, and streams text-to-speech back — all driven from a single prompt and the `agentic-loop` defaults.
+This playbook builds **Harbor**, a voice concierge for the fictional Woodgrove Hotel. Guests ask about breakfast, accessibility, amenities, local transport, and simple service requests. Harbor responds in real time, supports barge-in, and escalates safety, medical, billing, and complaint scenarios to hotel staff.
 
 **Use when:** Your experience is spoken or real-time conversational, not text-first.
 
-**Core tech stack:** Azure AI Voice Live, Copilot SDK, Foundry Hosted Agents, Foundry Models
+**Core tech stack:** Azure AI Voice Live, Copilot SDK, Foundry Hosted Agents, Foundry Skills API, Foundry Models
 
-This playbook walks you through building a low-latency voice agent end-to-end with the Agentic Loop. You drive the build loop from a single prompt, and the [`agentic-loop`](../../skills/agentic-loop/SKILL.md) skill applies the proven recipe — Foundry hosted agents, Copilot SDK, keyless identity, observability, and `azd` — on top.
+The agent consumes a `guest-services-concierge` skill that defines the spoken response style, hotel facts, tool boundaries, confirmation rules, and staff escalation behavior. The skill is versioned and promoted through the Foundry Skills API, downloaded to writable runtime storage, and loaded into every Copilot SDK session.
 
 The playbook is organized in three chapters:
 
@@ -22,13 +22,15 @@ The playbook is organized in three chapters:
 
 ### What we will build
 
-A browser app where the user speaks and hears the agent reply in real time. Audio streams through **Azure AI Voice Live** for low-latency **speech-to-text** and **text-to-speech**, the agent runs as a **Foundry Hosted Agent** backed by **Foundry Models** using the **GitHub Copilot SDK**, and the pipeline supports **barge-in** (the user can interrupt) and streaming partial results. Every turn is traced with latency spans.
+A browser app where a Woodgrove guest speaks and hears Harbor reply in real time. Audio streams through Azure AI Voice Live, the Copilot SDK agent follows the governed `guest-services-concierge` skill, and mock hotel data powers amenity answers and service-request tools. Every turn traces latency, interruption, skill version, and escalation.
 
 ```mermaid
 flowchart LR
   Mic[User microphone] --> Stream[Real-time audio stream]
   Stream --> Voice[Azure AI Voice Live]
   Voice -->|streaming STT| Agent[Foundry Hosted Agent]
+  Agent --> Skill[guest-services-concierge skill]
+  Skill --> SkillsAPI[Foundry Skills API]
   Agent --> Model[Foundry Model]
   Agent --> Tools[MCP tools]
   Agent -->|streaming text| Voice
@@ -44,6 +46,7 @@ flowchart LR
 | Backend API | Python + FastAPI on Azure Container Apps | Bridges the audio stream and the agent session. |
 | Voice | Azure AI Voice Live (streaming STT + TTS) | Low-latency, real-time speech in and out with barge-in. |
 | Agent | Copilot SDK hosted in Microsoft Foundry | Governed runtime that streams partial results. |
+| Runtime skill | Foundry Skills API | Versions and distributes `guest-services-concierge`. |
 | Model | Foundry Models | Frontier reasoning on the Foundry platform. |
 | Tools | Python MCP servers via a Foundry toolbox | Governed tool access during a spoken turn. |
 | Observability | OpenTelemetry → Application Insights (wired via Foundry) | Per-turn latency and interruption spans. |
@@ -54,6 +57,7 @@ flowchart LR
 - A user can speak and hear a spoken reply in real time.
 - Speech-to-text and text-to-speech stream, rather than waiting for full turns.
 - The user can barge in and interrupt the agent mid-response.
+- The agent follows the promoted concierge skill and escalates restricted scenarios.
 - End-to-end turn latency is measured and visible.
 - Every turn emits latency and interruption spans to Application Insights.
 
@@ -137,10 +141,18 @@ https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cl
 Paste this starter prompt:
 
 ```text
-/spec2cloud Build a voice-first agent app. In the browser, the user speaks and hears the agent reply in real time. Stream speech-to-text in and text-to-speech out through Azure AI Voice Live for low latency, and support barge-in so the user can interrupt the agent mid-response. The agent uses a frontier model for reasoning and can call tools during a spoken turn. Measure and display end-to-end turn latency, and trace each turn. Use randomly generated data where a real backing service is not required.
+/spec2cloud Build Harbor, a voice guest-services concierge for the fictional Woodgrove Hotel. In the browser, guests ask spoken questions about breakfast, accessibility, amenities, local transport, and simple service requests. Harbor must answer from committed mock hotel data, confirm details before creating a request, and escalate safety, medical, billing, and complaint scenarios to staff.
 
 Before planning or implementation, install and run the agentic-loop skill (`aiappsgbb/agentic-loop`, skill `agentic-loop`) to enhance the spec with its app, agent runtime, Azure infrastructure, identity, and telemetry defaults.
+
+Create realistic mock content under data/woodgrove-hotel: property facts, amenity hours, accessibility guidance, transport notes, service-request types, room-number aliases, and escalation rules. Author skills/guest-services-concierge/SKILL.md with concise spoken-response guidance, confirmation rules, source-use requirements, allowed tools, and staff escalation behavior.
+
+Create an immutable guest-services-concierge version through the Foundry Skills API, verify it with spoken-turn evals, promote the passing version to default_version, attach it to the versioned concierge toolbox, and download it into a writable runtime directory before each Copilot SDK voice session. Configure skill_directories to the downloaded folder and trace the skill name/version on every turn.
+
+Stream speech-to-text and text-to-speech through Azure AI Voice Live, support barge-in, and measure time-to-first-audio plus end-to-end latency. Trace audio stages, skill loading, tool calls, escalation, and interruption without storing raw guest audio or sensitive transcripts.
 ```
+
+> Foundry Skills are a preview capability. Opt in explicitly (for example, `allow_preview=True`) and fail visibly if publication, promotion, or runtime download does not succeed.
 
 > `/spec2cloud` runs the same five-stage loop as Getting Started. The prompt explicitly invokes `agentic-loop`; the remaining requirements define this playbook's streaming audio, barge-in, voice latency, and spoken-turn telemetry.
 
@@ -164,8 +176,9 @@ Use these recommended answers if Copilot asks clarifying questions:
 | Streaming | Stream partial STT and TTS rather than whole turns. |
 | Latency target | Set a per-turn latency budget and display it. |
 | Identity | Managed identity, keyless RBAC. |
+| Runtime skill | `guest-services-concierge`, governed by the Foundry Skills API. |
 
-When the skill finishes, review `docs/spec.md` for these must-have requirements: streaming STT, streaming TTS, barge-in, a frontier reasoning model, per-turn latency measurement, and turn tracing.
+When the skill finishes, review `docs/spec.md` for these must-have requirements: Woodgrove mock data, streaming STT/TTS, barge-in, Foundry skill versioning/promotion/download, runtime skill consumption, staff escalation, latency measurement, and skill-version tracing.
 
 ---
 
@@ -181,11 +194,12 @@ The deployment plan should include:
 
 | Section | What good looks like |
 |---|---|
-| Resource graph | Foundry project, hosted agent, model deployment, Voice Live/Speech resource, managed identity, Application Insights, ACA apps. |
+| Resource graph | Foundry project, hosted agent, model deployment, Voice Live/Speech, versioned toolbox, governed skill, managed identity, Application Insights, ACA apps. |
 | RBAC | Least-privilege roles for Foundry, Voice/Speech, and telemetry. |
 | Audio pipeline | Streaming transport, STT/TTS wiring, and barge-in handling. |
 | Latency | Per-turn budget, measurement points, and displayed metrics. |
 | Toolbox | MCP servers registered as versioned tools on a Foundry toolbox. |
+| Skill lifecycle | Author, version, evaluate, promote, attach, download, consume, trace, and roll back `guest-services-concierge`. |
 | azd template | `minimal` / `azd init --minimal`. |
 
 Review `docs/plan.md` and `.azure/deployment-plan.md` before continuing.
@@ -211,16 +225,21 @@ Expected generated artifacts:
 │   ├── backend/                  # audio-stream bridge + agent session
 │   └── agents/
 │       └── voice-agent/          # hosted-agent definition
+├── skills/
+│   └── guest-services-concierge/
+│       └── SKILL.md
+├── data/
+│   └── woodgrove-hotel/          # mock property and service data
 └── docs/
 ```
 
 The implementation should wire:
 
 1. **Streaming STT** — mic audio streams to Voice Live and returns partial transcripts.
-2. **Reasoning** — the frontier model processes streamed input and streams a reply.
-3. **Streaming TTS** — the reply streams back as audio without waiting for full turns.
-4. **Barge-in** — user speech interrupts and stops the current TTS playback.
-5. **Telemetry** — each turn emits latency and interruption spans to Application Insights.
+2. **Governed skill** — create and promote `guest-services-concierge`, then download it before the Copilot SDK session starts.
+3. **Streaming TTS** — the skill-guided reply streams back without waiting for full turns.
+4. **Barge-in and escalation** — new speech stops playback; restricted scenarios route to staff.
+5. **Telemetry** — each turn emits latency, interruption, escalation, and skill-version spans.
 
 Commit a checkpoint once the diff looks right:
 
@@ -245,6 +264,9 @@ Validate locally against real Azure dependencies.
 | Streaming | Watch partials. | STT and TTS stream rather than waiting for full turns. |
 | Barge-in | Interrupt mid-reply. | TTS stops and the new turn is captured. |
 | Tool call | Ask something that needs a tool. | The tool runs within the spoken turn. |
+| Concierge procedure | Request towels without enough details. | Harbor confirms the required details before the tool call. |
+| Escalation | Report a safety or billing issue. | Harbor routes to staff instead of resolving it. |
+| Skill version | Inspect the turn trace. | Trace names the promoted `guest-services-concierge` version. |
 | Latency | Read the displayed metric. | End-to-end turn latency is within the target budget. |
 | Telemetry | Query Application Insights. | Latency and interruption spans are visible. |
 
@@ -264,6 +286,8 @@ Deployment readiness checklist:
 - [ ] Voice Live/Speech access uses managed identity, not keys.
 - [ ] STT and TTS stream; the pipeline does not buffer whole turns.
 - [ ] Barge-in stops playback reliably.
+- [ ] `guest-services-concierge` has an immutable version, promoted `default_version`, and rollback target.
+- [ ] Runtime downloads the governed skill to writable storage and configures `skill_directories`.
 - [ ] Container app names respect the 32-character Azure Container Apps limit.
 - [ ] Streaming, barge-in, and latency tests pass.
 - [ ] Application Insights receives latency telemetry.
@@ -285,7 +309,7 @@ When the loop finishes, Copilot returns the deployed frontend URL and the Spec2C
 
 ### Run the voice agent
 
-Open the deployed app, grant microphone access, and complete several spoken turns. Confirm that partial transcripts and audio stream, barge-in stops active playback, tools can run during a turn, and latency remains visible.
+Open Harbor, grant microphone access, and exercise amenity, accessibility, transport, service-request, and staff-escalation scenarios. Confirm that the promoted concierge skill is traced, partial transcripts and audio stream, barge-in stops playback, and latency remains visible.
 
 ---
 
@@ -321,6 +345,7 @@ Create a small evaluation set focused on the spoken experience.
 | Barge-in | Interrupt scenarios | Playback stops promptly and the new turn is handled. |
 | Transcription | Reference utterances | STT matches intent closely enough to answer. |
 | Answer quality | Spoken question, reference answer | Reply matches reference intent. |
+| Skill adherence | Spoken hotel scenario, expected procedure | Harbor follows confirmation and escalation rules. |
 
 Set gates before promoting: latency and time-to-first-audio within budget, barge-in works reliably, and answer quality meets the threshold.
 

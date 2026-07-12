@@ -1,16 +1,16 @@
-# Bring your own SKILLs
+# Bring Your Own Skills: Field Service Assistant
 
 ## Intro
 
-### Graduate a local SKILL into a governed agent
+### Graduate a local equipment-troubleshooting skill into a governed agent.
 
-Turn a working local `SKILL.md` prototype into a governed enterprise application others can use.
+This playbook builds **FixForward**, a fictional field-service troubleshooting assistant for Fabrikam Industrial. A technician selects a mock conveyor model, enters symptoms and diagnostic readings, and receives a safe, evidence-backed troubleshooting sequence or an escalation to engineering.
 
-**Use when:** A team has useful SKILLs working in Claude Code, GitHub Copilot CLI, or a cowork-style copilot and now needs production readiness: identity, tool governance, Foundry Hosted Agents, Foundry Models, observability, evals, and repeatable deployment.
+**Use when:** A proven local `SKILL.md` needs enterprise identity, governance, runtime distribution, observability, evals, and repeatable deployment.
 
 **Core tech stack:** GitHub Copilot SDK, Foundry Hosted Agents, Foundry Models, Foundry Skills API, Azure API Center
 
-This playbook walks you through the graduation path from "my SKILL works on my machine" to a shared, governed enterprise agentic app. You drive the build loop from a single prompt, and the [`agentic-loop`](../../skills/agentic-loop/SKILL.md) skill applies the proven Foundry, hosted-agent, keyless-identity, observability, evaluation, and `azd` defaults.
+The starting asset is `prototype-skills/equipment-troubleshooting/SKILL.md`, a mock but realistic technician-authored procedure. The build preserves it, creates immutable versions through the Foundry Skills API, promotes the tested version to `default_version`, and downloads the governed copy into the Copilot SDK runtime.
 
 The playbook is organized in three chapters:
 
@@ -20,7 +20,7 @@ The playbook is organized in three chapters:
 
 ---
 
-Personal agent surfaces are excellent for proving that a scenario-specific `SKILL.md` can make an AI assistant materially better. The enterprise question comes next: how do you let other users rely on that skill without turning a personal prototype into unmanaged production software?
+Personal agent surfaces are excellent for proving a troubleshooting procedure. The enterprise question is how Fabrikam can let every technician rely on the same approved procedure without turning a local prototype into unmanaged production software.
 
 The answer is an agentic backbone:
 
@@ -28,23 +28,23 @@ The answer is an agentic backbone:
 2. Validate and classify it as an enterprise asset.
 3. Package it into immutable **Foundry Skills** versions.
 4. Register and govern it through **Azure API Center** where discovery and assessment are needed.
-5. Download approved skill versions from the **Foundry Skills API** into the agent project's `skills/<skill-name>/SKILL.md` folders.
+5. Download the approved `equipment-troubleshooting` version from the **Foundry Skills API** into writable runtime storage.
 6. Add Entra identity, allowed-tool policy, telemetry, evals, version promotion, and rollback.
 
 ### What we will build
 
-You will create a target solution that starts from one or more existing `SKILL.md` folders and produces a shared enterprise frontend. The agent surface is fixed: use the agentic-loop backbone with GitHub Copilot SDK, Foundry Hosted Agents, and Foundry Models. The solution inventories the incoming SKILLs, validates their front matter and resources, packages approved content as Foundry skill versions, downloads selected skill content from the Foundry Skills API into the agent project's `skills/` directory, and registers governance metadata in API Center.
+You will create FixForward from the local `equipment-troubleshooting` prototype and a committed mock equipment corpus. The web app uses the agentic-loop backbone with GitHub Copilot SDK, Foundry Hosted Agents, and Foundry Models. It validates the incoming skill, packages approved content as immutable Foundry skill versions, promotes a tested default, downloads that version into the runtime `skills/` directory, and records governance metadata in API Center.
 
 ```mermaid
 flowchart LR
-  Proto[Prototype repo with SKILL.md folders] --> Intake[Inventory, validate, classify]
+  Proto[equipment-troubleshooting SKILL.md] --> Intake[Inventory, validate, classify]
   Intake --> Package[Package immutable skill versions]
   Package --> Skills[Foundry Skills API]
   Skills --> Download[Download selected skill versions]
   Download --> SkillDir[Agent project skills/<name>/SKILL.md]
   Intake --> APIC[Azure API Center skill inventory]
   APIC --> Gov[Assessment, lifecycle, allowed tools]
-  User[Enterprise user] --> Frontend[Chosen frontend]
+  User[Field technician] --> Frontend[FixForward web app]
   Frontend --> App[Application backend or session API]
   App --> SDK[GitHub Copilot SDK agentic loop]
   SDK --> Agent[Foundry Hosted Agent]
@@ -63,13 +63,13 @@ flowchart LR
 
 | Layer | Choice | Why |
 |---|---|---|
-| Prototype input | One or more folders containing `SKILL.md` | Preserves the working local specialization instead of rewriting it. |
+| Prototype input | `prototype-skills/equipment-troubleshooting/SKILL.md` | Preserves the technician-authored troubleshooting procedure. |
 | Skill lifecycle | Foundry Skills API | Gives versioned, immutable skill snapshots and `default_version` promotion. |
-| Skill injection | Foundry Skills API download into `skills/<skill-name>/SKILL.md` | Matches the Foundry hosted-agent direct-injection path and avoids runtime ambiguity. |
+| Skill injection | Foundry Skills API download into writable runtime storage | Lets Copilot SDK load the governed copy through `skill_directories`. |
 | Agentic loop | GitHub Copilot SDK | Default harness for long-running app loops, streaming, tools, and session integration. |
 | Runtime | Foundry Hosted Agents using Responses by default | Moves the app to a governed runtime with identity, sessions, scaling, and observability. |
 | Model backend | Foundry Models | Keeps model consumption measurable on the Foundry platform. |
-| Frontend | User-selected in `/spec2cloud` | The agent surface is fixed; the frontend is the only scenario-specific surface choice. |
+| Frontend | React + Vite technician workspace | Captures model, symptoms, readings, troubleshooting steps, and feedback. |
 | Identity | Entra ID + managed identities + `DefaultAzureCredential` | Enables keyless workload access and enterprise authorization. |
 | Observability | OpenTelemetry -> Application Insights + Foundry monitoring | Makes runtime health, SKILL usage, tool calls, and eval outcomes visible. |
 | Infra | `azd init --minimal` + Bicep | No catalog template maps cleanly to Skills API import/download + API Center + custom frontend. |
@@ -80,6 +80,7 @@ flowchart LR
 - Approved SKILLs are packaged as Foundry skill versions with owner, source, lifecycle, compatibility, and allowed-tool metadata.
 - Selected skill versions are downloaded from Foundry into the agent project's `skills/` directory before the agent starts a session.
 - The agent runs on Foundry Hosted Agents and uses Foundry Models.
+- FixForward cites mock manuals and stops at defined safety and escalation boundaries.
 - Skill usage, selected version, tool calls, errors, latency, token usage, and eval results are observable.
 - A tested skill version can be promoted, pinned, or rolled back without rewriting the agent.
 
@@ -132,22 +133,22 @@ bicep --version       # or confirm Azure CLI bundled Bicep works with az bicep v
 
 ### Create a new project
 
-Create a clean workspace for the generated solution. Keep this playbook repo separate from the implementation repo that will import your prototype SKILLs.
+Create a clean workspace for the generated FixForward solution.
 
 ```pwsh
-gh repo create bring-your-own-skills --private --clone
-cd bring-your-own-skills
+gh repo create fixforward-field-service --private --clone
+cd fixforward-field-service
 ```
 
 Prefer local only? This is fine for the first run:
 
 ```pwsh
-mkdir bring-your-own-skills
-cd bring-your-own-skills
+mkdir fixforward-field-service
+cd fixforward-field-service
 git init
 ```
 
-Copy or reference your prototype skill folders from a local path or GitHub repo. Do not invent sample skills if real project SKILLs already exist.
+Create the fictional starting prototype at `prototype-skills/equipment-troubleshooting/SKILL.md`. Cover the mock CX-100 and CX-200 conveyor models, evidence collection, ordered diagnostics, lockout/tagout warnings, stop conditions, manual citations, and engineering escalation. Keep manuals, diagnostic tables, service bulletins, and synthetic work orders under `data/fabrikam-equipment/`.
 
 ---
 
@@ -163,7 +164,7 @@ This playbook uses the **GitHub Copilot App**, but the same prompt works in Copi
 https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cloud
 ```
 
-**2. Add your project.** Choose **+ -> Add project from -> Local folder or repository**, then select `bring-your-own-skills`.
+**2. Add your project.** Choose **+ -> Add project from -> Local folder or repository**, then select `fixforward-field-service`.
 
 **3. Choose a model and mode.**
 
@@ -179,20 +180,14 @@ https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cl
 
 Take the new workspace through **Specify -> Plan -> Implement -> Verify -> Deploy** with one prompt.
 
-Start by turning the actual application scenario into an implementation-ready spec. This playbook is not asking you to build a generic "Bring your own SKILLs app." It is asking you to build **your application** by bringing your existing SKILLs into the enterprise backbone.
-
-Replace the placeholders before you run the prompt:
-
-- `[APPLICATION XYZ]` - the app you are actually building.
-- `[BUSINESS OUTCOME]` - what users should accomplish with the app.
-- `[TARGET USERS]` - who will use it.
-- `[SKILL_PATHS_OR_REPOS]` - local folders or GitHub repos containing the existing `SKILL.md` files.
-- `[FRONTEND]` - the user-facing frontend to build, such as web app, Teams app, Copilot extension, internal portal, or API-only test harness.
-
 ```text
-/spec2cloud Build [APPLICATION XYZ], an enterprise application that helps [TARGET USERS] accomplish [BUSINESS OUTCOME]. We already have one or more SKILL.md folders at [SKILL_PATHS_OR_REPOS] that work well in personal agent surfaces such as Claude Code, GitHub Copilot CLI, or cowork-style copilots. Build the frontend as [FRONTEND].
+/spec2cloud Build FixForward, a field-service troubleshooting assistant for the fictional company Fabrikam Industrial. A technician selects a mock CX-100 or CX-200 conveyor, enters symptoms and diagnostic readings, and receives an ordered troubleshooting procedure with manual citations. The assistant must show lockout/tagout warnings before hazardous steps, stop at skill-defined safety boundaries, never invent readings, and escalate unresolved or unsafe cases to engineering.
 
-Before planning or implementation, install and run the agentic-loop skill (`aiappsgbb/agentic-loop`, skill `agentic-loop`) to enhance the spec with its app, agent runtime, Azure infrastructure, identity, and telemetry defaults. Use its Foundry Skills API direct-injection pattern: validate and create Foundry skill versions from those SKILLs, download the selected versions into the agent project's skills/<skill-name>/SKILL.md folders, and reuse the existing agentic-loop backbone rather than designing a new agent scaffold.
+Before planning or implementation, install and run the agentic-loop skill (`aiappsgbb/agentic-loop`, skill `agentic-loop`) to enhance the spec with its app, agent runtime, Azure infrastructure, identity, and telemetry defaults.
+
+Start from prototype-skills/equipment-troubleshooting/SKILL.md and data/fabrikam-equipment. Validate and package the skill, create an immutable version through the Foundry Skills API, run routing, instruction-adherence, citation, tool-boundary, and safety evaluations against that exact version, then promote the passing version to default_version. Attach the skill reference to the versioned agent toolbox. Before each Copilot SDK session, download the governed version into writable runtime storage and configure skill_directories to that folder.
+
+Build a React technician workspace and a Foundry Hosted Agent using the GitHub Copilot SDK and Foundry Models. Use managed identity and DefaultAzureCredential. Trace skill name/version, manual citations, diagnostic steps, tool calls, stop conditions, escalations, latency, and evaluation lineage. Support pinning and rollback without rebuilding the agent image.
 ```
 
 > `/spec2cloud` runs the same five-stage loop as Getting Started. The prompt explicitly invokes `agentic-loop`; the remaining requirements define this playbook's skill import, governance, versioning, injection, and promotion flow.
@@ -211,25 +206,26 @@ Use these recommended answers if Copilot asks clarifying questions:
 
 | Question area | Recommended answer |
 |---|---|
-| Application scenario | Use the user's real app name, users, workflow, and business outcome; do not name the generated app "Bring your own SKILLs" unless that is truly the product name. |
-| Prototype input | One or more existing `SKILL.md` folders from a local or GitHub-hosted prototype repo. |
-| Frontend | The only open surface choice. Pick the frontend users need: web app, Teams app, Copilot extension, internal portal, or API-only test harness. |
+| Application scenario | FixForward for Fabrikam Industrial field technicians. |
+| Prototype input | `prototype-skills/equipment-troubleshooting/SKILL.md`. |
+| Frontend | React technician workspace with equipment, symptoms, readings, steps, and escalation. |
 | Runtime | Foundry Hosted Agents using the Responses protocol by default. Add Invocations only for custom payloads or protocol bridging. |
 | Harness | GitHub Copilot SDK by default. Use Microsoft Agent Framework only if orchestration or framework-specific skill providers are required. |
 | Skill consumption | Use Foundry Skills API download/direct injection into the agent project's `skills/` directory. |
 | Governance | Register governed skills in Azure API Center with AI asset assessment where enterprise discovery is required. |
 | Authentication | Entra-backed users, managed identities, `DefaultAzureCredential`, and no shared secrets. |
 | Networking | Public endpoints are acceptable for the first pilot; private networking is production hardening. |
-| Sample data | Do not synthesize skills; use the real prototype SKILLs. |
+| Sample data | Committed mock CX-100/CX-200 manuals, bulletins, diagnostic tables, and work orders. |
 
 When the skill finishes, review `docs/spec.md` for these must-have requirements:
 
 - Foundry Skills version creation, download, `default_version` promotion, pinning, and rollback.
-- Foundry Skills API download into `skills/<skill-name>/SKILL.md` for hosted-agent direct injection.
+- Foundry Skills API download into writable runtime storage and Copilot SDK `skill_directories` configuration.
 - Azure API Center fields: title, identifier, summary, source URL, compatibility, allowed tools, license, contact, lifecycle stage, and assessment.
 - Entra identity, managed identity, RBAC, and no shared secrets.
 - Tool-boundary policy per skill.
 - Application Insights, Foundry monitoring, and eval gates.
+- Skill name/version, citations, stop conditions, and escalation telemetry.
 
 Checkpoint before planning:
 
@@ -252,7 +248,7 @@ For this playbook, choose:
 Use minimal: azd init --minimal
 ```
 
-Why minimal? This pattern combines GitHub Copilot SDK, Foundry Hosted Agents, Foundry Skills API import/download, API Center governance, custom SKILL ingestion, a user-selected frontend, and deploy-readiness checks. No single catalog template maps cleanly to that architecture, so the implementation should generate only the required resources.
+Why minimal? This pattern combines GitHub Copilot SDK, Foundry Hosted Agents, Foundry Skills API import/download, API Center governance, custom SKILL ingestion, the FixForward web app, and deploy-readiness checks. No single catalog template maps cleanly to that architecture, so the implementation should generate only the required resources.
 
 Use a convention-based environment name unless you have a customer naming standard:
 
@@ -269,10 +265,10 @@ The deployment plan should include:
 
 | Section | What good looks like |
 |---|---|
-| Resource graph | Foundry project, Foundry Hosted Agents, Foundry Models, Foundry Skills API, Azure API Center, Application Insights, managed identity, selected frontend host, and ACR if containers are used. |
+| Resource graph | Foundry project, hosted agent, Foundry Models, Foundry Skills API, API Center, Application Insights, managed identity, technician web app, and ACR if needed. |
 | RBAC | Least-privilege roles for Foundry, API Center, telemetry, container registry, optional Key Vault, and approved tools. |
 | Skill lifecycle | Validation, packaging, immutable versions, default promotion, production pinning, and rollback. |
-| Consumption | Foundry Skills API download into `skills/<skill-name>/SKILL.md` before hosted-agent sessions start. |
+| Consumption | Foundry Skills API download into writable runtime storage before Copilot SDK sessions start. |
 | Evals | Routing, instruction adherence, allowed-tool boundaries, safety, regression, and user acceptance. |
 | azd template | `minimal` / `azd init --minimal`. |
 
@@ -309,13 +305,18 @@ Expected generated artifacts:
 │   ├── main.parameters.json
 │   └── modules/
 ├── src/
-│   ├── frontend/                              # selected frontend from /spec2cloud
+│   ├── frontend/                              # FixForward technician workspace
 │   ├── backend/                               # API/session adapter
 │   ├── agent/                                 # existing agentic-loop scaffold; do not redesign
 │   ├── skills-importer/                       # inventory, validation, packaging
 │   └── skills/                                # downloaded Foundry skill versions
-│       └── <skill-name>/
+│       └── equipment-troubleshooting/
 │           └── SKILL.md
+├── prototype-skills/
+│   └── equipment-troubleshooting/
+│       └── SKILL.md
+├── data/
+│   └── fabrikam-equipment/                    # mock manuals and work orders
 ├── .agentignore
 ├── src/**/.dockerignore
 └── docs/
@@ -327,9 +328,9 @@ Expected generated artifacts:
 The implementation should wire:
 
 1. **Skill inventory** - discovers `SKILL.md` folders, validates front matter/body/resources, and captures source metadata.
-2. **Governance metadata** - records owner, lifecycle, compatibility, allowed tools, data sensitivity, eval coverage, and readiness.
+2. **Governance metadata** - records the equipment-skill owner, lifecycle, compatibility, allowed tools, data sensitivity, eval coverage, and readiness.
 3. **Foundry skill lifecycle** - creates immutable Foundry skill versions from inline content or ZIP packages.
-4. **Skill injection** - downloads selected skill versions from the Foundry Skills API into `skills/<skill-name>/SKILL.md`.
+4. **Skill injection** - downloads `equipment-troubleshooting` to writable runtime storage and configures Copilot SDK `skill_directories`.
 5. **Agentic app** - uses the existing agentic-loop scaffold with GitHub Copilot SDK, Foundry Hosted Agents, and Foundry Models.
 6. **Tool policy** - maps each skill to only the APIs, MCP servers, or connectors it is allowed to use.
 7. **Telemetry** - emits app, agent, skill-loading, tool-call, error, latency, token, and eval signals.
@@ -359,8 +360,11 @@ Use Foundry Skills as the production packaging boundary:
 4. Treat each skill version as immutable.
 5. Run evals against the exact version.
 6. Promote the tested version to `default_version` for dev/test consumers.
-7. Pin production apps to a known-good skill version when stability matters more than automatic default updates.
-8. Roll back by repointing `default_version` or reverting the app's pinned version.
+7. Attach the promoted skill reference to the versioned agent toolbox.
+8. Pin production apps to a known-good skill version when stability matters more than automatic default updates.
+9. Roll back by repointing `default_version` or reverting the app's pinned version.
+
+Foundry Skills are in preview. Opt in explicitly with `allow_preview=True`, and fail deployment rather than silently bypassing skill publication or download.
 
 #### Deterministic skill injection
 
@@ -369,8 +373,9 @@ Use the Foundry Skills hosted-agent direct-injection pattern:
 1. Create or update Foundry skill versions from each approved `SKILL.md`.
 2. Select the version to use: follow `default_version` in dev/test or pin a specific version in production.
 3. Download the selected skill content from the Foundry Skills API.
-4. Extract the downloaded package into the existing agent project's `skills/<skill-name>/SKILL.md` folder.
-5. Start the hosted-agent session from the existing agentic-loop scaffold so the agent reads the local `SKILL.md` files as extra session instructions.
+4. Extract it into a writable temporary runtime directory such as `<temp>/skills/equipment-troubleshooting/`; do not assume the hosted-agent image is writable.
+5. Start the Copilot SDK session with that directory in `skill_directories`.
+6. Emit the selected skill name, version, and content hash on the session trace.
 
 Do not design a second skill-discovery surface for this playbook. Use the Foundry Skills API as the system of record, and use download/injection as the deterministic runtime path.
 
@@ -391,7 +396,7 @@ git commit -m "feat: scaffold bring your own skills app"
 
 ### Verify locally
 
-Validate locally against real Azure dependencies and real prototype SKILLs.
+Validate locally against real Azure dependencies and the mock technician prototype.
 
 ```text
 /verify
@@ -420,11 +425,13 @@ Skill validation and runtime verification:
 
 | Test | Action | Expected result |
 |---|---|---|
-| Valid SKILL import | Import a valid `SKILL.md` folder. | Foundry skill version is created with correct name, description, body, and content hash. |
+| Valid SKILL import | Import `prototype-skills/equipment-troubleshooting`. | Foundry skill version is created with correct name, description, body, and content hash. |
 | Invalid front matter | Remove required front matter or use an invalid name. | Import fails with actionable feedback. |
 | API Center registration | Register the imported skill. | Entry includes title, identifier, summary, source URL, compatibility, allowed tools, license, contact, lifecycle, and assessment. |
-| Foundry download | Download the selected skill version from the Foundry Skills API. | The package extracts into `skills/<skill-name>/SKILL.md`. |
-| Hosted-agent injection | Start a session using the existing agentic-loop scaffold. | Agent follows the downloaded SKILL content without requiring a new agent scaffold. |
+| Foundry download | Download the selected skill version from the Foundry Skills API. | The package extracts into a writable temporary skill directory. |
+| Hosted-agent injection | Start a Copilot SDK session with `skill_directories`. | FixForward follows the downloaded troubleshooting procedure. |
+| Safety stop | Request a hazardous diagnostic without lockout/tagout. | Agent warns, stops, and escalates as defined by the skill. |
+| Manual citation | Diagnose a mock CX-200 belt fault. | Steps cite the relevant mock manual or service bulletin. |
 | Tool boundary | Ask the skill to use an unapproved tool. | Agent refuses or selects an approved alternative. |
 | Regression eval | Run evals against a new version. | Version is not promoted until gates pass. |
 | Telemetry | Query Application Insights / Foundry monitoring. | Skill name/version, tool calls, latency, errors, tokens, and eval outcomes are visible. |
@@ -451,7 +458,8 @@ Deployment readiness checklist:
 - [ ] `azd` and the Foundry agent extension are current enough for hosted-agent deployment.
 - [ ] Skill front matter validation passes for all imported skills.
 - [ ] Foundry skill versions can be created, listed, downloaded, and promoted.
-- [ ] Downloaded skills land under the existing agent project's `skills/<skill-name>/SKILL.md` folders.
+- [ ] Runtime downloads the governed skill to writable temporary storage and configures `skill_directories`.
+- [ ] `equipment-troubleshooting` has a promoted `default_version`, toolbox reference, and rollback target.
 - [ ] API Center skill records include required governance fields.
 - [ ] Skill routing, allowed-tool, safety, and regression evals pass before `default_version` promotion.
 - [ ] Application Insights receives app, agent, skill-loading, tool-call, and error telemetry.
@@ -481,7 +489,7 @@ git --no-pager status --short
 
 ### Run the skill-backed app
 
-Open the deployed frontend and exercise representative tasks that should and should not select each imported skill. Confirm that the expected governed version loads, only approved tools run, and the agent follows the skill instructions.
+Open FixForward and exercise CX-100/CX-200 fault, missing-reading, hazardous-step, and unresolved-fault scenarios. Confirm that the promoted `equipment-troubleshooting` version loads, manual citations appear, only approved tools run, and unsafe or unresolved cases escalate.
 
 ---
 
@@ -518,11 +526,12 @@ Create a small evaluation suite before broad rollout. Run it for every candidate
 
 | Eval | Dataset shape | Pass condition |
 |---|---|---|
-| Skill routing | User task, expected skill or no-skill decision | Correct skill is selected or no skill is selected. |
+| Skill routing | Conveyor task, expected skill or no-skill decision | `equipment-troubleshooting` is selected only for supported equipment. |
 | Instruction adherence | Prompt, selected skill, expected constraints | Agent follows the SKILL instructions and preserves constraints. |
 | Tool-boundary compliance | Prompt, selected skill, allowed tools | Agent uses only approved tools or refuses. |
 | Safety / red-team | Prompt-injection and unsafe-action attempts | Tool policy and system constraints are not bypassed. |
-| Groundedness, when grounding is used | Question, cited evidence, expected answer | Claims are supported by authorized evidence. |
+| Manual grounding | Fault, mock manual evidence, expected steps | Diagnostic claims cite authorized equipment evidence. |
+| Safety boundary | Hazardous or unsupported task | Agent stops and escalates according to the skill. |
 | Regression | Critical user journeys across old/new versions | New version does not regress required behavior. |
 | User acceptance | Representative end-user tasks | Users can complete the target workflow with acceptable quality. |
 
@@ -540,7 +549,7 @@ Safe iteration loop:
 
 1. Create a new skill version; do not edit an existing immutable version.
 2. Run validation and evals against the new version.
-3. Download the selected version into `skills/<skill-name>/SKILL.md`.
+3. Download the selected version into writable runtime storage and configure `skill_directories`.
 4. Compare telemetry and eval outcomes to the previous version.
 5. Promote to `default_version` or update production pins only after gates pass.
 6. Keep rollback instructions with the release evidence.
@@ -583,8 +592,8 @@ Private networking is a production hardening path, not the first pilot default. 
 Use separate azd environments:
 
 ```pwsh
-azd env new bring-your-own-skills-test-eus2
-azd env new bring-your-own-skills-prod-eus2
+azd env new fixforward-test-eus2
+azd env new fixforward-prod-eus2
 ```
 
 Promotion checklist:

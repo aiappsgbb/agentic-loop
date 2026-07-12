@@ -1,59 +1,65 @@
-# Multi-Agent Orchestration
+# Multi-Agent Orchestration: Product Launch Command Center
 
 ## Intro
 
-### Design a planner-executor topology with hand-offs, shared memory, and budget controls.
+### Product launch command center playbook
 
-A single monolithic agent breaks down once a task needs several distinct skills, tools, or reasoning styles. This playbook gives you a repeatable path for composing **specialized agents** that collaborate through explicit hand-offs, share state, and stay inside a cost budget — all driven from a single prompt and the `agentic-loop` defaults.
+This playbook builds a **Product Launch Command Center** for a fictional bicycle company, Northstar Bikes. A product manager submits a launch brief for a new e-bike, and a Microsoft Agent Framework workflow coordinates specialist agents that research the market, model pricing, review launch risks, and assemble an executive recommendation.
 
-**Use when:** Your task needs several specialized agents collaborating, not one monolith.
+**Use when:** A business workflow needs specialized agents built with different frameworks to collaborate through governed contracts.
 
-**Core tech stack:** Copilot SDK, Microsoft Agent Framework, Foundry Hosted Agents, Foundry Models, MCP tools
+**Core tech stack:** Microsoft Agent Framework, GitHub Copilot SDK, Foundry Hosted Agents, Foundry Skills API, A2A, Foundry Models
 
-This playbook walks you through building a **planner-executor** multi-agent solution end-to-end with the Agentic Loop. You drive the build loop from a single prompt, and the [`agentic-loop`](../../skills/agentic-loop/SKILL.md) skill applies the proven recipe — Foundry hosted agents, Copilot SDK, keyless identity, observability, and `azd` — on top.
+The **MAF launch orchestrator** owns the graph and fan-out/fan-in workflow. It calls a **Copilot SDK market-research agent** over Foundry A2A and two MAF specialists: a pricing analyst and a launch-risk reviewer. The Copilot SDK specialist must use the `launch-research-synthesizer` skill, which is authored locally, versioned through the Foundry Skills API, promoted to `default_version`, and downloaded into its runtime skill directory.
 
 The playbook is organized in three chapters:
 
-- **Build** — go from a prompt to a working planner-executor prototype.
-- **Run** — operate the deployed topology with per-agent telemetry and budget controls.
-- **Scale** — add specialists, harden hand-offs, and push changes through the loop.
+- **Build** — generate the mock launch packet, heterogeneous agents, orchestration graph, and governed skill.
+- **Run** — submit launch decisions and inspect per-agent, A2A, skill, and budget telemetry.
+- **Scale** — add specialists, stronger hand-off contracts, and production data sources.
 
 ---
 
 ### What we will build
 
-A chat-style app where a user's request is decomposed by a **planner** agent, dispatched to one or more **executor** (specialist) agents, and recombined into a single answer. Each agent runs as a **Foundry Hosted Agent** backed by **Foundry Models**, uses the **GitHub Copilot SDK** as the execution harness, and calls **MCP tools** published through a governed Foundry toolbox. Shared memory carries context between hand-offs, and a budget guard caps tokens and tool calls per turn.
+A chat-style launch workspace where a product manager submits the Northstar **Aurora e-bike** launch packet. A MAF orchestrator fans out work to three hosted specialists, then combines their structured outputs into a recommendation with positioning, price range, risks, evidence, and unresolved decisions.
 
 ```mermaid
 flowchart LR
-  User[User request] --> App[Web or API surface]
-  App --> Planner[Planner agent]
+  User[Product manager] --> App[Launch workspace]
+  App --> Planner[MAF launch orchestrator]
   Planner --> Budget[Budget and turn guard]
-  Planner -->|hand-off| Exec1[Executor: research]
-  Planner -->|hand-off| Exec2[Executor: analysis]
-  Planner -->|hand-off| Exec3[Executor: drafting]
-  Exec1 --> Tools[MCP toolbox]
-  Exec2 --> Tools
-  Exec3 --> Tools
-  Exec1 --> Memory[(Shared memory / state)]
-  Exec2 --> Memory
-  Exec3 --> Memory
+  Planner -->|A2A| Research[Copilot SDK market-research agent]
+  Planner --> Pricing[MAF pricing analyst]
+  Planner --> Risk[MAF launch-risk reviewer]
+  Research --> Skill[launch-research-synthesizer skill]
+  Skill --> SkillsAPI[Foundry Skills API]
+  Research --> Toolbox[Foundry toolbox]
+  Pricing --> MockData[(Mock pricing assumptions)]
+  Risk --> MockData
+  Research --> Memory[(Structured launch state)]
+  Pricing --> Memory
+  Risk --> Memory
   Memory --> Planner
-  Planner --> Aggregate[Aggregated answer]
+  Planner --> Aggregate[Executive launch recommendation]
   Aggregate --> App
   App --> Insights[Application Insights + OTel]
   Planner --> Insights
-  Exec1 --> Insights
+  Research --> Insights
+  Pricing --> Insights
+  Risk --> Insights
 ```
 
 | Layer | Choice (from `agentic-loop` defaults) | Why |
 |---|---|---|
 | Frontend | React + Vite on Azure Container Apps | Simple surface to submit tasks and watch hand-offs. |
 | Backend API | Python + FastAPI on Azure Container Apps | Hosts the orchestration entrypoint and session state. |
-| Orchestrator | Planner agent (Copilot SDK or Microsoft Agent Framework) | Plans, routes, and aggregates; use MAF when the topology needs graph/workflow sequencing. |
-| Executors | Foundry Hosted Agents | Specialists run as governed, independently observable agents. |
+| Orchestrator | Microsoft Agent Framework workflow | Owns the graph, fan-out/fan-in, budgets, and structured aggregation. |
+| Market research | GitHub Copilot SDK hosted agent over A2A | Uses the governed `launch-research-synthesizer` skill for evidence synthesis. |
+| Pricing and risk | Microsoft Agent Framework hosted agents | Produce typed pricing and risk outputs from the mock launch packet. |
 | Model | Foundry Models | Keeps model usage and capacity on the Foundry platform. |
-| Tools | Python MCP servers via a Foundry toolbox | Versioned, governed tool access shared across agents. |
+| Skill lifecycle | Foundry Skills API + toolbox | Versions, promotes, and distributes the research skill without baking it into the image. |
+| Agent composition | Foundry A2A | Lets the MAF orchestrator call the Copilot SDK specialist as a governed remote agent. |
 | Shared memory | Session/state store passed across hand-offs | Carries context so executors don't re-derive it. |
 | Observability | OpenTelemetry → Application Insights (wired via Foundry) | Per-agent traces, token usage, and hand-off spans. |
 | Infra | `azd` + Bicep (Azure Verified Modules) | Reproducible provisioning of the whole topology. |
@@ -61,14 +67,17 @@ flowchart LR
 **Done means:**
 
 - A single user request is decomposed by the planner and routed to the right executor(s).
+- The MAF orchestrator coordinates at least two MAF specialists and one Copilot SDK specialist.
 - Hand-offs pass structured context, not raw chat history dumps.
 - Shared memory lets an executor build on another's output.
 - Each turn stays within its token and tool-call budget.
+- The Copilot SDK specialist downloads and follows the promoted `launch-research-synthesizer` skill version.
 - Every agent, hand-off, and tool call is visible as a span in Application Insights.
 
 **Out of scope for the first build:**
 
-- More than a handful of specialists — start small and add roles later.
+- Live market, CRM, or finance data — the first build uses a committed mock launch packet.
+- More than three specialists — add roles only after the hand-off contracts are stable.
 - Private networking — a production hardening step, not the first run.
 - Long-lived durable workflows — add durable orchestration once the topology is stable.
 
@@ -102,7 +111,7 @@ copilot plugin list             # expect to see lean@Spec2Cloud
 
 ### Create a new project
 
-Take an empty workspace through the **Specify → Plan → Implement → Verify → Deploy** loop and produce a running planner-executor topology.
+Take an empty workspace through the **Specify → Plan → Implement → Verify → Deploy** loop and produce the Northstar launch command center.
 
 ```bash
 mkdir multi-agent-orchestration
@@ -145,12 +154,20 @@ https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cl
 Paste this starter prompt:
 
 ```text
-/spec2cloud Build a multi-agent orchestration app. A user submits a task in a chat interface. A planner agent decomposes the task, routes sub-tasks to specialized executor agents (research, analysis, drafting), and aggregates their results into one answer. Agents hand off structured context through shared memory, call tools via MCP servers, and each turn is capped by a token and tool-call budget. Include a trace view that shows each agent, hand-off, and tool call. Data can be randomly generated where a real backing service is not required.
+/spec2cloud Build a Product Launch Command Center for the fictional company Northstar Bikes. A product manager submits the launch packet for the Aurora e-bike and receives an executive recommendation covering target segments, positioning, evidence, price range, launch risks, mitigations, and unresolved decisions.
 
 Before planning or implementation, install and run the agentic-loop skill (`aiappsgbb/agentic-loop`, skill `agentic-loop`) to enhance the spec with its app, agent runtime, Azure infrastructure, identity, and telemetry defaults.
+
+Implement the orchestration as a Microsoft Agent Framework graph with a MAF launch orchestrator that fans out to three hosted specialists and aggregates typed results. The pricing analyst and launch-risk reviewer must also be MAF agents. The market-research specialist must be a separate GitHub Copilot SDK hosted agent exposed to the orchestrator through Foundry A2A. Do not combine MAF and Copilot SDK inside one agent.
+
+Create a realistic mock launch packet under data/northstar-aurora-launch with product specifications, customer interview excerpts, competitor snapshots, pricing assumptions, channel constraints, and a seed risk register. Author skills/launch-research-synthesizer/SKILL.md to instruct the Copilot SDK specialist how to rank evidence, separate facts from assumptions, cite mock source files, and produce the typed research hand-off. Create an immutable version through the Foundry Skills API, promote it to default_version, attach it to the research toolbox, and download the governed copy into the Copilot SDK agent's writable runtime skill directory before each session. Include evals that prove the skill was loaded and followed.
+
+Cap tokens, tool calls, and A2A calls per launch run. Include a trace view for the MAF workflow, every specialist, A2A hand-offs, skill name/version, toolbox calls, and final aggregation.
 ```
 
-> `/spec2cloud` runs the same five-stage loop as Getting Started. The prompt explicitly invokes `agentic-loop`; the remaining requirements define this playbook's planner-executor topology, hand-offs, shared memory, and budget controls.
+> Foundry Skills and A2A are preview capabilities. Opt in explicitly (for example, `allow_preview=True`) and fail visibly if publication, promotion, download, or A2A registration does not succeed.
+
+> `/spec2cloud` runs the same five-stage loop as Getting Started. The prompt explicitly invokes `agentic-loop`; the remaining requirements define the MAF graph, heterogeneous specialists, governed skill, A2A hand-off, shared state, and budget controls.
 
 > Prefer to run one stage at a time? Use the same prompt with `/specify` first, then advance through each stage:
 >
@@ -167,13 +184,16 @@ Use these recommended answers if Copilot asks clarifying questions:
 | Question area | Recommended answer |
 |---|---|
 | Topology | Planner-executor with explicit hand-offs. |
-| Agent harness | GitHub Copilot SDK by default; Microsoft Agent Framework when the topology needs graph/workflow sequencing. |
-| Number of executors | Start with two or three specialists. |
+| Orchestrator | MAF graph workflow with fan-out/fan-in and typed state. |
+| Specialists | Copilot SDK market research; MAF pricing; MAF launch risk. |
+| Cross-framework call | Foundry A2A from the MAF orchestrator to the Copilot SDK agent. |
+| Runtime skill | `launch-research-synthesizer`, consumed only by the Copilot SDK specialist. |
+| Mock data | Committed Northstar Aurora launch packet; no external market API. |
 | Shared state | Session-scoped shared memory passed across hand-offs. |
 | Budget control | Per-turn token and tool-call caps with a guard that stops runaway loops. |
 | Tools | MCP servers published through a Foundry toolbox. |
 
-When the skill finishes, review `docs/spec.md` for these must-have requirements: a planner agent, specialist executors, structured hand-offs, shared memory, per-turn budget guard, MCP toolbox, and Application Insights tracing.
+When the skill finishes, review `docs/spec.md` for these must-have requirements: MAF orchestration graph, two MAF specialists, one Copilot SDK A2A specialist, typed hand-offs, mock launch packet, per-run budget guard, Foundry Skills API lifecycle, runtime skill download, and end-to-end tracing.
 
 ---
 
@@ -189,11 +209,11 @@ The deployment plan should include:
 
 | Section | What good looks like |
 |---|---|
-| Resource graph | Foundry project, one hosted agent per role, model deployment(s), MCP tool endpoints, shared-state store, managed identity, Application Insights, ACA apps. |
+| Resource graph | Foundry project, MAF orchestrator, two MAF specialists, Copilot SDK specialist, A2A endpoint, toolbox, skill version, models, identity, Application Insights, ACA apps. |
 | RBAC | Least-privilege roles for Foundry, telemetry, and any state store. |
-| Orchestration | Planner routing rules, hand-off contract, and aggregation strategy. |
+| Orchestration | MAF fan-out/fan-in graph, A2A call, typed state, hand-off schemas, and aggregation strategy. |
 | Budget | Token and tool-call caps per turn, plus the guard's stop behavior. |
-| Toolbox | MCP servers registered as versioned tools on a shared Foundry toolbox. |
+| Skill lifecycle | Author, version, evaluate, promote, attach, download, trace, and roll back `launch-research-synthesizer`. |
 | azd template | `minimal` / `azd init --minimal`. |
 
 Review `docs/plan.md` and `.azure/deployment-plan.md` before continuing.
@@ -218,20 +238,25 @@ Expected generated artifacts:
 │   ├── frontend/                 # chat UI with hand-off trace view
 │   ├── backend/                  # orchestration entrypoint + session state
 │   └── agents/
-│       ├── planner/              # decomposition + routing + aggregation
-│       ├── executor-research/    # specialist hosted agent
-│       ├── executor-analysis/    # specialist hosted agent
-│       └── executor-drafting/    # specialist hosted agent
+│       ├── launch-orchestrator/  # MAF workflow + aggregation
+│       ├── market-research/      # Copilot SDK + A2A + governed skill
+│       ├── pricing-analyst/      # MAF specialist
+│       └── launch-risk/          # MAF specialist
+├── skills/
+│   └── launch-research-synthesizer/
+│       └── SKILL.md
+├── data/
+│   └── northstar-aurora-launch/  # mock launch packet
 └── docs/
 ```
 
 The implementation should wire:
 
-1. **Planning** — the planner decomposes the request and selects executors.
-2. **Hand-off** — structured context (not raw history) is passed to each executor.
-3. **Shared memory** — executors read and write a session-scoped state store.
-4. **Budget** — a guard caps tokens and tool calls and stops runaway loops.
-5. **Telemetry** — each agent, hand-off, and tool call emits a span to Application Insights.
+1. **MAF workflow** — the orchestrator fans out to pricing, risk, and market research, then aggregates typed results.
+2. **Heterogeneous agents** — pricing and risk use MAF; market research uses Copilot SDK and is called over A2A.
+3. **Governed skill** — create and promote `launch-research-synthesizer` through the Foundry Skills API, attach it to the toolbox, and download it before the Copilot session starts.
+4. **Hand-offs and state** — pass typed launch evidence, pricing, and risk objects rather than raw chat history.
+5. **Budget and telemetry** — cap tokens/tool/A2A calls and trace every agent, skill version, hand-off, and aggregation.
 
 Commit a checkpoint once the diff looks right:
 
@@ -252,7 +277,10 @@ Validate locally against real Azure dependencies.
 
 | Test | Action | Expected result |
 |---|---|---|
-| Decomposition | Submit a task that needs two skills. | Planner splits it and routes to the right executors. |
+| Decomposition | Submit the Aurora launch packet. | MAF orchestrator fans out to all three specialists. |
+| Cross-framework | Inspect the market-research call. | MAF invokes the Copilot SDK agent through A2A. |
+| Skill use | Ask for evidence-backed positioning. | Trace shows the promoted `launch-research-synthesizer` version and cited mock files. |
+| MAF specialists | Inspect pricing and risk outputs. | Both are typed results from MAF agents. |
 | Hand-off | Inspect the payload passed to an executor. | Structured context, not a raw chat dump. |
 | Shared memory | Have one executor consume another's output. | Second executor builds on the first without re-deriving it. |
 | Budget cap | Submit a task that would loop. | The guard stops the turn at the configured cap. |
@@ -272,7 +300,10 @@ Deploy after local verification passes.
 Deployment readiness checklist:
 
 - [ ] Each hosted agent has a valid `agent.yaml` and, where used, `code_configuration`.
-- [ ] MCP tools are registered as versioned tools on the shared Foundry toolbox.
+- [ ] MAF orchestrator calls the Copilot SDK specialist through a verified A2A endpoint.
+- [ ] Pricing and risk specialists are MAF agents with typed contracts.
+- [ ] `launch-research-synthesizer` has an immutable Foundry skill version, promoted `default_version`, and rollback target.
+- [ ] Copilot SDK startup downloads the governed skill into a writable runtime directory and configures `skill_directories`.
 - [ ] Budget guard limits are set from configuration, not hardcoded.
 - [ ] `.agentignore` and per-service `.dockerignore` exclude local build artifacts.
 - [ ] Container app names respect the 32-character Azure Container Apps limit.
@@ -296,7 +327,7 @@ When the loop finishes, Copilot returns the deployed frontend URL and the Spec2C
 
 ### Run the orchestration
 
-Open the deployed app and submit tasks that require two or more specialists. Confirm that the planner selects the right executors, hand-offs contain structured context, shared state is reused, and the final answer is coherent and stays within budget.
+Open the deployed app and submit the Northstar Aurora launch packet. Confirm that the MAF workflow invokes the pricing and risk MAF agents plus the Copilot SDK research agent, the research trace names the governed skill version, and the final launch recommendation stays within budget.
 
 ---
 
@@ -327,7 +358,9 @@ Create a small evaluation set before broad rollout.
 
 | Eval | Dataset shape | Pass condition |
 |---|---|---|
-| Routing accuracy | Task, expected executor(s) | Planner selects the correct specialist(s). |
+| Routing accuracy | Launch request, expected specialists | MAF orchestrator selects the correct specialists. |
+| Framework boundary | Launch request, expected runtime | Research uses Copilot SDK; pricing and risk use MAF. |
+| Skill adherence | Research task, mock evidence, expected citations | Copilot specialist follows the governed skill and cites source files. |
 | Hand-off fidelity | Task, expected context fields | Executor receives the required structured context. |
 | Answer quality | Task, reference answer | Aggregated answer matches the reference intent. |
 | Budget adherence | Task designed to loop | Turn stops within the configured cap. |
