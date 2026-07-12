@@ -40,11 +40,22 @@ Describe the target solution in a sentence or two.
 What the reader needs before starting:
 
 - Azure subscription with Contributor permissions, plus a GitHub Copilot plan.
-- Required CLIs installed and authenticated.
+- GitHub Copilot installed and logged in through the Copilot App, Copilot CLI, or VS Code.
+- GitHub CLI (`gh`) installed and authenticated.
+- Azure CLI (`az`) and Azure Developer CLI (`azd`) installed and authenticated.
+- The `lean-spec2cloud` Copilot plugin installed and updated.
+
+```bash
+copilot plugin marketplace add Azure-Samples/Spec2Cloud
+copilot plugin install lean@Spec2Cloud
+```
+
+List every additional service permission, CLI, SDK, preview feature, device, or local dependency required by this playbook. Do not send readers to another playbook or to `playbooks/README.md` for prerequisite steps.
 
 ```bash
 az account show                 # confirm the correct tenant and subscription
 azd auth login --check-status   # confirm you are signed in to azd
+copilot plugin list             # expect lean@Spec2Cloud
 ```
 
 > **Heads up on cost.** This playbook provisions billable Azure resources.
@@ -52,23 +63,41 @@ azd auth login --check-status   # confirm you are signed in to azd
 
 ## Build
 
-### First build step
+### Create a new project
 
-Describe the first action. Each `###` is a slide, so keep one idea per section.
+Create or clone the workspace that will hold the generated solution.
 
 ```bash
-# example command
+mkdir example-agent
 ```
-
-> Tip: callouts render as styled notes — use them for asides and warnings.
 
 ---
 
-### Second build step
+### Open GitHub Copilot
 
-Continue the build. Reference images with `./images/<file>`.
+Open the project in the GitHub Copilot App, Copilot CLI, or VS Code. In the app, open the Spec2Cloud Cockpit and choose a run mode.
 
-![Step screenshot](./images/run.png)
+---
+
+### Run the build loop
+
+Use `/spec2cloud` for the golden end-to-end path. The command invokes Specify, Plan, Implement, Verify, and Deploy. Invoke `agentic-loop` naturally in the prompt; installation and repository details belong in setup instructions, not in the application prompt.
+
+```text
+/spec2cloud <complete application prompt>
+
+Use the `agentic-loop` skill.
+```
+
+> To run one stage at a time, start with `/specify`, then use `/plan`, `/implement`, `/verify`, and `/deploy`.
+
+---
+
+### Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Example failure | Explain the probable cause | Give a concrete recovery step |
 
 ## Run
 
