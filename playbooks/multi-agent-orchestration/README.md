@@ -116,9 +116,17 @@ cd multi-agent-orchestration
 
 ---
 
-### Specify
+### Open GitHub Copilot
 
-Turn the scenario into an implementation-ready spec. This playbook uses the **GitHub Copilot App**, but the same prompts work in the Copilot CLI and in VS Code.
+Use the **GitHub Copilot App** (recommended), Copilot CLI, or VS Code. In the app, add the project folder, open the **Spec2Cloud Cockpit** canvas, and choose **Autopilot** to run end to end or **Plan** to review the plan before execution.
+
+> **Using the CLI instead?** Run `copilot --allow-all` only in a sandbox workspace, or omit the flag to approve each action.
+
+---
+
+### Run the build loop
+
+Paste this starter prompt:
 
 Paste the starter prompt:
 
@@ -128,7 +136,7 @@ Paste the starter prompt:
 
 > `/spec2cloud` runs the whole loop with the opinionated `agentic-loop` defaults baked in — Foundry hosted agents, Copilot SDK, Container Apps, keyless identity, and telemetry — so the prompt never has to name them.
 
-> Prefer to run one stage at a time? Use the same prompt with `/specify` first, then advance through `/plan`, `/implement`, `/verify`, and `/deploy`, reviewing each artifact before moving on.
+> Prefer to run one stage at a time? Use the same prompt with `/specify` first, then advance through `/plan`, `/implement`, `/verify`, and `/deploy`, reviewing each artifact before moving on. The remaining Build slides explain what to review at each stage; do not rerun them after a successful `/spec2cloud` execution.
 
 Use these recommended answers if Copilot asks clarifying questions:
 
@@ -145,7 +153,7 @@ When the skill finishes, review `docs/spec.md` for these must-have requirements:
 
 ---
 
-### Plan
+### Review the plan
 
 Turn the spec into a reviewable implementation and deployment plan.
 
@@ -168,7 +176,7 @@ Review `docs/plan.md` and `.azure/deployment-plan.md` before continuing.
 
 ---
 
-### Implement
+### Review the implementation
 
 Generate the source and infrastructure from the plan.
 
@@ -210,7 +218,7 @@ git commit -m "feat: scaffold multi-agent orchestration"
 
 ---
 
-### Verify
+### Review verification
 
 Validate locally against real Azure dependencies.
 
@@ -229,7 +237,7 @@ Validate locally against real Azure dependencies.
 
 ---
 
-### Deploy
+### Review deployment
 
 Deploy after local verification passes.
 
@@ -248,6 +256,17 @@ Deployment readiness checklist:
 - [ ] Application Insights receives per-agent telemetry.
 
 When the loop finishes, Copilot returns the deployed frontend URL and the Spec2Cloud canvas auto-previews it. Click the **Foundry** icon to see every agent, model, tool, and toolbox that was deployed.
+
+---
+
+### Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Planner never delegates | Roles or routing criteria are vague | Make each executor's responsibility and hand-off contract explicit in the spec. |
+| Agents repeat work | Shared state is missing or unstructured | Pass typed hand-off fields and persist session-scoped state. |
+| A turn exceeds budget | Guard limits are not enforced centrally | Enforce token and tool-call caps before each hand-off and tool call. |
+| Traces stop at the planner | Context is not propagated | Carry the trace context through every hosted-agent and MCP invocation. |
 
 ## Run
 

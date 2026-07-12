@@ -52,23 +52,39 @@ azd auth login --check-status   # confirm you are signed in to azd
 
 ## Build
 
-### First build step
+### Create a new project
 
-Describe the first action. Each `###` is a slide, so keep one idea per section.
+Create or clone the workspace that will hold the generated solution.
 
 ```bash
-# example command
+mkdir example-agent
 ```
-
-> Tip: callouts render as styled notes — use them for asides and warnings.
 
 ---
 
-### Second build step
+### Open GitHub Copilot
 
-Continue the build. Reference images with `./images/<file>`.
+Open the project in the GitHub Copilot App, Copilot CLI, or VS Code. In the app, open the Spec2Cloud Cockpit and choose a run mode.
 
-![Step screenshot](./images/run.png)
+---
+
+### Run the build loop
+
+Use `/spec2cloud` for the golden end-to-end path. The command invokes Specify, Plan, Implement, Verify, and Deploy with the `agentic-loop` defaults.
+
+```text
+/spec2cloud <complete application prompt>
+```
+
+> To run one stage at a time, start with `/specify`, then use `/plan`, `/implement`, `/verify`, and `/deploy`.
+
+---
+
+### Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Example failure | Explain the probable cause | Give a concrete recovery step |
 
 ## Run
 

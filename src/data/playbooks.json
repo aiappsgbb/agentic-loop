@@ -22,8 +22,8 @@
     "patterns": ["Knowledge Grounding", "Employee Onboarding"],
     "capabilities": ["Knowledge", "Agentic Retrieval"],
     "building_blocks": ["Storage", "Identity & Access"],
-    "buildSkills": ["azure-ai-projects-py", "agent-framework-azure-ai-py", "azure-storage-blob-py", "azure-identity-py", "bicep-azd-patterns", "aigbb-azure-security", "aigbb-observability"],
-    "runSkills": ["roundup", "tldr-prompt", "md-to-docx"]
+    "buildSkills": ["microsoft-foundry", "copilot-sdk", "azure-ai", "azure-storage", "entra-app-registration", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
+    "runSkills": []
   },
   {
     "slug": "multi-agent-orchestration",
@@ -35,8 +35,8 @@
     "patterns": ["Workflow Automation", "Domain-Specific Agents"],
     "capabilities": ["Frontier Models"],
     "building_blocks": ["Integration", "Observability"],
-    "buildSkills": ["copilot-sdk", "agent-framework-azure-ai-py", "mcp-builder", "pydantic-models-py", "aigbb-azd-compliance", "bicep-azd-patterns", "containerization", "aigbb-observability"],
-    "runSkills": ["finalize-agent-prompt", "roundup"]
+    "buildSkills": ["microsoft-foundry", "microsoft-agent-framework", "copilot-sdk", "python-mcp-server-generator", "azure-aigateway", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
+    "runSkills": []
   },
   {
     "slug": "governance-safety-baseline",
@@ -48,8 +48,8 @@
     "patterns": ["Governance"],
     "capabilities": ["Frontier Models"],
     "building_blocks": ["Identity & Access", "AI Gateway", "Observability"],
-    "buildSkills": ["azure-ai-projects-py", "aigbb-azure-security", "pydantic-models-py", "aigbb-observability", "bicep-azd-patterns", "aigbb-azd-compliance"],
-    "runSkills": ["incident-postmortem"]
+    "buildSkills": ["microsoft-foundry", "copilot-sdk", "azure-aigateway", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
+    "runSkills": []
   },
   {
     "slug": "continuous-evaluation-loop",
@@ -61,8 +61,8 @@
     "patterns": ["Continuous Evaluation"],
     "capabilities": ["Predictive Analytics"],
     "building_blocks": ["Observability"],
-    "buildSkills": ["azure-ai-projects-py", "pydantic-models-py", "copilot-sdk", "aigbb-observability", "aigbb-azd-compliance", "bicep-azd-patterns"],
-    "runSkills": ["eyeball", "tldr-prompt"]
+    "buildSkills": ["microsoft-foundry", "copilot-sdk", "azure-kusto", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
+    "runSkills": []
   },
   {
     "slug": "voice-first-agent-blueprint",
@@ -74,7 +74,20 @@
     "patterns": ["Voice-First"],
     "capabilities": ["Speech to Text", "Text to Speech", "Real-Time Conversations", "Frontier Models"],
     "building_blocks": ["Observability"],
-    "buildSkills": ["azure-ai-voicelive-py", "agent-framework-azure-ai-py", "azure-ai-projects-py", "containerization", "aigbb-azd-compliance", "aigbb-observability"],
+    "buildSkills": ["microsoft-foundry", "copilot-sdk", "azure-ai", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
+    "runSkills": []
+  },
+  {
+    "slug": "bring-your-own-skills",
+    "name": "Bring Your Own Skills",
+    "icon": "Wrench",
+    "level": "Advanced",
+    "summary": "Graduate working SKILL.md prototypes into governed, versioned Foundry agent assets.",
+    "use_when": "A proven local skill needs enterprise identity, governance, observability, evals, and repeatable deployment.",
+    "patterns": ["Domain-Specific Agents"],
+    "capabilities": ["Frontier Models"],
+    "building_blocks": ["Identity & Access", "Integration", "Observability"],
+    "buildSkills": ["microsoft-foundry", "copilot-sdk", "azure-aigateway", "entra-agent-id", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
     "runSkills": []
   }
 ]
