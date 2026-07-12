@@ -9,7 +9,7 @@
     "patterns": ["*"],
     "capabilities": ["Frontier Models"],
     "building_blocks": ["Observability"],
-    "buildSkills": ["microsoft-foundry", "copilot-sdk", "python-mcp-server-generator", "appinsights-instrumentation"],
+    "buildSkills": ["agentic-loop", "microsoft-foundry", "copilot-sdk", "python-mcp-server-generator", "appinsights-instrumentation"],
     "runSkills": []
   },
   {

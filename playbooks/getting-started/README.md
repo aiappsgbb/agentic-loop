@@ -49,6 +49,7 @@ You will need:
 - GitHub Copilot installed and logged in — use the [Copilot App](http://gh.io/app) (recommended), the [Copilot CLI](https://github.com/features/copilot/cli/), or [Visual Studio Code](https://code.visualstudio.com/download).
 - [GitHub CLI (`gh`)](https://cli.github.com/) installed and logged in.
 - [Azure CLI (`az`)](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) and [Azure Developer CLI (`azd`)](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/install-azd) installed and authenticated to your Azure subscription.
+- GitHub CLI `v2.90.0+` with the agent skills preview available (`gh skill --help`).
 - The `lean-spec2cloud` Copilot plugin installed and updated. Click [here](https://github.com/copilot/app/launch?open=ghapp%3A%2F%2Fplugins%2Fmarketplace%2Fadd%3Fsource%3DAzure-Samples%2FSpec2Cloud)
 to add the marketplace and [here](https://github.com/copilot/app/launch?open=ghapp%3A%2F%2Fplugins%2Finstall%3Fsource%3Dlean%2540Spec2Cloud) to install the plugin. Or install in the CLI with:
 
@@ -76,13 +77,22 @@ Create an empty folder to host the solution. A local folder gives the loop's art
 
 ```bash
 mkdir weather-agent
+cd weather-agent
 ```
 
 > Want version control from minute one? Create a private GitHub repo
 > instead:
 > ```bash
 > gh repo create weather-agent --private --clone
+cd weather-agent
 > ```
+
+Install the Agentic Loop skill into the project before opening Copilot. Project scope keeps the policy version explicit and prevents execution from depending on the nested copy inside `specify`.
+
+```bash
+gh skill install aiappsgbb/agentic-loop agentic-loop --agent github-copilot --scope project
+gh skill list   # expect agentic-loop
+```
 
 ---
 
@@ -122,6 +132,8 @@ Paste the following starter prompt:
 
 ```text
 /spec2cloud A polished, modern weather app that provides weather information and forecasts through two interfaces: a visual SVG map of Europe or a chat interface. The app retrieves data from a custom MCP server, processes it through an integrated agent skill for specialized forecasting, and offers multiple forecasting styles—optimistic, pessimistic, and others—that users can select based on their preference. All features are fully functional except for the weather data, which is randomly generated for demonstration. The app includes a trace toggle that displays agent event information, such as the tools (input/output) and skills (skill.md content) used during forecasting.
+
+Invoke the installed agentic-loop skill as the mandatory policy layer for every stage, including immediately after Specify and before Plan.
 ```
 
 ![Run](./images/run.png)
@@ -155,6 +167,7 @@ On the canvas, click the **Azure** icon to see the deployed resources, and the *
 | Symptom | Likely cause | Fix |
 |---------|--------------|-----|
 | `copilot plugin list` doesn't show `lean@Spec2Cloud` | Plugin not installed | Re-run the marketplace install command in [Setup](#build-setup) |
+| `gh skill list` doesn't show `agentic-loop` | Required project skill not installed | Run the project-scoped install command in [Create a new project](#build-create-a-new-project) |
 | The **Spec2Cloud** tab never appears | Canvas extension not imported | Re-import via **Discover more → Import canvas from gist/URL → User scope** with the URL above |
 | `azd` fails with an auth or subscription error | Wrong tenant or subscription selected | Run `azd auth login`, then `az account set --subscription <id>` |
 | Deploy fails on quota or region | Model capacity unavailable in the chosen region | Pick a region with capacity (or lower the requested capacity) and re-run `/deploy` |
@@ -217,6 +230,5 @@ azd down --purge --force
 ```
 
 `--purge` also removes soft-deleted resources (such as the Foundry/AI Services account and Key Vault) so their names are immediately reusable.
-
 
 

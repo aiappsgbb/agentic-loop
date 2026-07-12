@@ -1,9 +1,10 @@
 # Skill catalog
 
-Match the current `./docs/spec.md` against this catalog and suggest installing every skill whose trigger appears in the spec. A spec that includes Foundry hosted agents implies the `microsoft-foundry` skill and, by default, the `copilot-sdk` skill. Use the GitHub Copilot SDK + Foundry Skills API + toolbox MCP endpoint unless the user explicitly requests MAF or the spec is clearly graph/workflow orchestration; suggest `microsoft-agent-framework` only for that MAF path.
+Install `agentic-loop` as a project-scoped prerequisite before any playbook or `/spec2cloud` execution. Then match the current `./docs/spec.md` against this catalog and suggest installing every skill whose trigger appears in the spec. A spec that includes Foundry hosted agents implies the `microsoft-foundry` skill and, by default, the `copilot-sdk` skill. Use the GitHub Copilot SDK + Foundry Skills API + toolbox MCP endpoint unless the user explicitly requests MAF or the spec is clearly graph/workflow orchestration; suggest `microsoft-agent-framework` only for that MAF path.
 
 | Repository                | Skill                          | Suggest when the spec includes |
 | ------------------------- | ------------------------------ | ------------------------------ |
+| `aiappsgbb/agentic-loop`   | `agentic-loop`                 | Always - required project-scoped prerequisite for every playbook execution |
 | `microsoft/azure-skills`  | `microsoft-foundry`            | Microsoft Foundry (always - default for every agentic-loop spec) |
 | `microsoft/azure-skills`  | `azure-ai`                     | AI Search, vector/hybrid search, semantic search, Document Intelligence/OCR, Speech/STT/TTS |
 | `microsoft/azure-skills`  | `azure-aigateway`              | AI Gateway, API Management for model/tool/agent routing, semantic caching, content safety, token limits, MCP governance |

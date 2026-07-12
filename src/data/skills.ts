@@ -3,6 +3,7 @@ import {
   KeyRound, ShieldCheck, FileCheck2, Rocket, Plug,
   Code as Github,
   Wand2, Briefcase, TrendingUp, AlertTriangle, Share2, FileText, Newspaper, ScrollText,
+  RefreshCw,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -24,6 +25,14 @@ export interface BuildSkill {
  * Source: agentic-loop/skills/agentic-loop/references/build-skills-catalog.md
  */
 export const BUILD_SKILLS: BuildSkill[] = [
+  {
+    id: 'agentic-loop',
+    name: 'Agentic Loop',
+    repo: 'aiappsgbb/agentic-loop',
+    description: 'Required policy layer for every playbook execution. Applies the Agentic Loop defaults across Specify, Plan, Implement, Verify, and Deploy.',
+    category: 'Orchestration',
+    icon: RefreshCw,
+  },
   {
     id: 'microsoft-foundry',
     name: 'Microsoft Foundry',
@@ -170,7 +179,7 @@ export function skillRawUrl(skill: BuildSkill | RunSkill): string {
 
 /** GitHub CLI command to install the skill. */
 export function skillInstallCommand(skill: BuildSkill | RunSkill): string {
-  return `gh skill install ${skill.repo} ${skill.id}`;
+  return `gh skill install ${skill.repo} ${skill.id} --agent github-copilot --scope project`;
 }
 
 export interface RunSkill {

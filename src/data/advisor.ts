@@ -270,6 +270,7 @@ export function buildAdvisorPackage(args: {
   const requirements = requirementsByIds(args.requirementIds);
   const selectedPlaybooks = selectPlaybooks(requirements, args.scenario);
   const buildSkills = unique([
+    'agentic-loop',
     'copilot-sdk',
     ...requirements.flatMap(r => r.buildSkills),
     ...selectedPlaybooks.flatMap(p => p.buildSkills ?? []),
@@ -304,7 +305,7 @@ export function buildAdvisorPackage(args: {
     deploymentCommand: 'azd up',
     copilotPrompt:
       `/spec2cloud ${args.intent.trim()}\n\n` +
-      `Respect the existing repository. Use the Agentic Loop playbook approach and produce an azd-deployable package.\n\n` +
+      `Respect the existing repository. Invoke the installed agentic-loop skill as the mandatory policy layer for every stage, including immediately after Specify and before Plan. Produce an azd-deployable package.\n\n` +
       `Path: ${args.path === 'scenario' ? 'Scenario Advisor' : 'Production Launchpad'}\n` +
       (args.scenario ? `Scenario: ${args.scenario.name} (${args.scenario.industry})\n` : '') +
       `\nRequirements:\n${requirementList || '- Production-ready defaults'}\n\n` +
