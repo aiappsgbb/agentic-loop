@@ -145,7 +145,7 @@ Paste this starter prompt:
 
 Ground all enterprise answers through Foundry IQ agentic retrieval. Do not let the app bypass Foundry IQ with direct ad hoc search calls. Create a realistic mock HR corpus in data/hr-onboarding-corpus with at least eight Markdown documents, including handbook, benefits, PTO and leave, remote work, equipment and access, security training, travel expenses, and manager onboarding guidance. Include metadata for title, owner, effective date, classification, source URI, allowed Entra groups or personas, and citation anchors.
 
-Implement a repeatable ingestion flow that uploads the mock corpus, injects it into the Foundry IQ knowledge base, maps ACL metadata, and verifies cited evidence comes back from Foundry IQ. The agent must apply caller-aware ACL filtering, include citations for grounded answers, and refuse with "I cannot answer from authorized HR sources" when no authorized source supports the response. Make the refusal **deterministic** — gate it on a Foundry IQ reranker relevance floor (`reranker_threshold`), not on matching the model's decline wording. Ensure the hosted agent's own retrieval identity has Search data-plane read access via a reproducible postdeploy step, so the deployed agent grounds instead of silently refusing. Create seed evals in data/evals for known answers, citation correctness, ACL allow, ACL deny, freshness, no-authorized-source behavior, and retrieval telemetry.
+Implement a repeatable ingestion flow that uploads the mock corpus, injects it into the Foundry IQ knowledge base, maps ACL metadata, and verifies cited evidence comes back from Foundry IQ. The agent must apply caller-aware ACL filtering, include citations for grounded answers, and refuse with "I cannot answer from authorized HR sources" when no authorized source supports the response. Create seed evals in data/evals for known answers, citation correctness, ACL allow, ACL deny, freshness, no-authorized-source behavior, and retrieval telemetry.
 ```
 
 > `/spec2cloud` runs the same five-stage loop as the Getting Started playbook. The prompt explicitly tells Spec2Cloud to install and run `agentic-loop` because that skill supplies the Foundry hosted-agent runtime, model, Azure deployment, identity, and telemetry defaults. Everything else in the starter prompt is unique to this playbook: **Foundry IQ agentic retrieval**, mock HR data injection, ACL-aware citations, refusal behavior, and eval coverage.
@@ -175,8 +175,6 @@ Before implementation, confirm the generated plan keeps Foundry IQ as the ground
 | Retrieval | Hosted agent uses Foundry IQ agentic retrieval; the app does not bypass Foundry IQ with direct search calls. |
 | ACLs | Documents carry allowed personas or Entra group metadata, and query-time retrieval filters by caller context. |
 | Citations | Answers include source document, section, and anchor or chunk identifiers. |
-| Refusal | The no-authorized-source refusal is **deterministic** — driven by a reranker relevance floor / empty-citations signal, not by string-matching the model's decline phrasing. |
-| Grounding identity | The hosted agent's **runtime instance identity** (or the app identity, for in-process retrieval) is granted **Search Index Data Reader** via a reproducible `postdeploy` hook — not just the shared project/agent identity. |
 | Evals | Known-answer, citation, ACL allow/deny, no-answer, freshness, and telemetry checks are generated. |
 | Observability | App, agent, ingestion, and Foundry IQ retrieval traces flow to Application Insights. |
 
@@ -222,8 +220,6 @@ Deployment readiness checklist:
 - [ ] Azure AI Search is treated as the backing index, not as an app-level bypass.
 - [ ] Mock corpus upload and Foundry IQ ingestion are repeatable from a script or command.
 - [ ] Managed identities and RBAC are used instead of committed secrets.
-- [ ] The **hosted-agent runtime identity** has Search data-plane read (granted by a reproducible `postdeploy` hook that re-reads the identity, since it is re-minted on publish).
-- [ ] The **deployed** agent is actively invoked with a known-answer question and returns `retrieved_count > 0` with a citation — a `retrieved_count=0` refusal can mask a `403`/auth failure, so check agent logs (`azd ai agent monitor`) when retrieval is unexpectedly empty.
 - [ ] Citation, ACL-deny, no-authorized-source, and freshness tests pass.
 - [ ] Application Insights receives traces for app turns, ingestion, retrieval, and agent runs.
 

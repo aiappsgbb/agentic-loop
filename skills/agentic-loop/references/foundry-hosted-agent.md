@@ -12,24 +12,13 @@ When post-processing the spec, declare the hosted agent's Python dependencies so
 | **Always** (local config) | `python-dotenv` | Load `.env` in local dev (`load_dotenv`) |
 | **Hosted agent runtime** | `azure-ai-agentserver-invocations` | Serve the **invocations** protocol (`InvocationAgentServerHost`) the Foundry platform calls |
 | **GitHub Copilot SDK** | `github-copilot-sdk` | `CopilotClient`, skills, integrated agent loop, BYOK provider |
-| **MAF agent** | pinned `agent-framework-*` sub-packages | Microsoft Agent Framework runtime (use instead of `github-copilot-sdk` when the agent is MAF) — see the pitfall below |
+| **MAF agent** | `agent-framework` | Microsoft Agent Framework runtime (use instead of `github-copilot-sdk` when the agent is MAF) |
 | **Toolbox over MCP** | `httpx` | Streamable-HTTP MCP bridge to the Foundry toolbox endpoint |
 | **Skill download from Foundry** | `azure-ai-projects` | `AIProjectClient` to create/version skills and download their content |
 | **Observability (ON by default)** | `azure-monitor-opentelemetry-exporter`, `opentelemetry-sdk`, `opentelemetry-api` | Export traces/metrics/logs straight to Application Insights, no collector |
 | **Observability — model-call tracing** | `opentelemetry-instrumentation-openai-v2` | Instrument in-process OpenAI/Foundry model calls |
 
 Drop the toolbox/skill rows when the agent uses neither; drop the model-tracing row only if no in-process model calls are made. Keep the observability core rows because telemetry is **ON by default**.
-
-> **MAF meta-package pitfall.** Do **not** ship the `agent-framework` meta-package — it pulls broken/unused extras that fail remote dependency resolution on the hosted-agent build. Pin only the specific sub-packages the agent imports (e.g. `agent-framework-core`, `agent-framework-foundry`, `agent-framework-foundry-hosting`) plus undeclared transitive imports (e.g. `mcp`), and validate with a **clean install** before deploy.
-
-## Packaging shared code
-
-The hosted-agent payload is deployed in isolation — any local module the agent imports (shared retrieval/ACL/config/telemetry helpers, e.g. a `hr_common` package) **must be present inside the payload**, or the agent crashes at import on first invocation. Two options:
-
-- **Package it** (preferred): make the shared code an installable dependency (path/editable install in `pyproject.toml`, or a built wheel) so one source of truth ships with the agent. No drift.
-- **Vendor it**: copy the shared modules under the agent directory. If you vendor, treat the copy as **build output, not a second source** — re-sync it from the canonical package **before every `azd deploy`** (script it; a hand copy drifts silently and ships stale grounding logic). A vendored copy that lags the canonical module is a classic "fixed locally, still broken in the deployed agent" trap.
-
-Scope the payload with `.agentignore` so only the agent code + its shared package ship (not the whole repo). Combined with the read-only filesystem rule above, verify a clean packaged install imports and runs before deploying.
 
 ## Read-only container filesystem
 
