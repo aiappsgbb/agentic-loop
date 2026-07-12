@@ -84,7 +84,7 @@ cd weather-agent
 > instead:
 > ```bash
 > gh repo create weather-agent --private --clone
-cd weather-agent
+> cd weather-agent
 > ```
 
 Install the Agentic Loop skill into the project before opening Copilot. Project scope keeps the policy version explicit and prevents execution from depending on the nested copy inside `specify`.
@@ -230,5 +230,4 @@ azd down --purge --force
 ```
 
 `--purge` also removes soft-deleted resources (such as the Foundry/AI Services account and Key Vault) so their names are immediately reusable.
-
 
