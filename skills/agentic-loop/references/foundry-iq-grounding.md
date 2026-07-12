@@ -6,7 +6,7 @@ Reference for the `agentic-loop` skill: how a GitHub Copilot SDK **hosted agent*
 
 Default agentic-loop grounding uses:
 
-1. **GitHub Copilot SDK hosted agent** running on Foundry hosted agents through the invocations protocol.
+1. **GitHub Copilot SDK hosted agent** running on Foundry hosted agents and exposing the Responses API by default.
 2. **Foundry Skills API** for behavioral instructions; the agent downloads governed skill versions into a writable temp directory at runtime.
 3. **Foundry IQ knowledge base** exposed through a Foundry toolbox connection/tool, typically a `CognitiveSearch` or Foundry IQ grounding connection backed by Azure AI Search.
 4. **Foundry toolbox MCP endpoint** as the only runtime tool and grounding surface the agent calls.
@@ -68,4 +68,4 @@ Common direct-retrieval APIs include `KnowledgeAgentRetrievalClient` and `Search
 
 - [Use skills with Microsoft Foundry agents (preview) - azd](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/skills?pivots=azd#manage-skills-with-the-rest-api)
 - [Curate intent-based toolbox in Foundry (preview)](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/toolbox)
-- [Copilot SDK hosted-agent sample](https://github.com/microsoft-foundry/foundry-samples/tree/main/samples/python/hosted-agents/bring-your-own/invocations/github-copilot)
+- [Foundry hosted agents](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/concepts/hosted-agents?view=foundry)
