@@ -16,7 +16,7 @@ When post-processing the spec, declare the hosted agent's Python dependencies so
 | --- | --- | --- |
 | **Always** (keyless auth) | `azure-identity` | `DefaultAzureCredential` for managed-identity / `az login` tokens |
 | **Always** (local config) | `python-dotenv` | Load `.env` in local dev (`load_dotenv`) |
-| **Hosted agent runtime** | Responses protocol host/runtime package from the selected Foundry SDK/runtime | Serve the **Responses API** endpoint the Foundry platform calls |
+| **Hosted agent runtime** | `azure-ai-agentserver-responses` | Serve the **Responses API** endpoint the Foundry platform calls |
 | **Hosted agent runtime - invocations fallback** | `azure-ai-agentserver-invocations` | Include only when invocations is explicitly selected for compatibility (`InvocationAgentServerHost`) |
 | **GitHub Copilot SDK** | `github-copilot-sdk` | Default hosted-agent framework: `CopilotClient`, Foundry Skills API downloads, toolbox MCP bridge, integrated agent loop, BYOK provider |
 | **MAF agent** | `agent-framework` | Microsoft Agent Framework runtime (include only when explicitly requested or clearly needed for graph/workflow orchestration) |
