@@ -82,12 +82,12 @@
     "name": "Bring Your Own Skills",
     "icon": "Wrench",
     "level": "Advanced",
-    "summary": "Graduate a field-service troubleshooting SKILL.md into a governed, versioned Foundry agent asset.",
-    "use_when": "A proven local procedure needs enterprise identity, governed distribution, evals, and rollback.",
+    "summary": "Bring existing agent skills into a project and graduate them into governed, versioned Foundry assets.",
+    "use_when": "Proven local or GitHub-hosted skills need enterprise identity, governed distribution, evals, and rollback.",
     "patterns": ["Domain-Specific Agents"],
     "capabilities": ["Frontier Models", "Domain-Specific Agents"],
     "building_blocks": ["Identity & Access", "Integration", "Observability"],
     "buildSkills": ["microsoft-foundry", "copilot-sdk", "azure-aigateway", "entra-agent-id", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
-    "runSkills": ["equipment-troubleshooting"]
+    "runSkills": []
   }
 ]
