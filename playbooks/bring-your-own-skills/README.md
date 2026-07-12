@@ -115,9 +115,22 @@ Start by treating every personal SKILL prototype as unreviewed input. A valid en
 
 ### Setup
 
-Finish the shared setup in [playbooks/README.md](../README.md) first.
+You will need:
 
-Minimum checks before starting:
+- An Azure subscription with Contributor permissions and permission to create role assignments.
+- A GitHub Copilot plan, with GitHub Copilot installed and signed in through the [Copilot App](http://gh.io/app) (recommended), [Copilot CLI](https://github.com/features/copilot/cli/), or [Visual Studio Code](https://code.visualstudio.com/download).
+- [GitHub CLI (`gh`)](https://cli.github.com/) installed and authenticated with access to the repositories that contain your skills.
+- A GitHub CLI version that includes the preview `gh skill` commands.
+- [Azure CLI (`az`)](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) and [Azure Developer CLI (`azd`)](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/install-azd) installed and authenticated.
+- Bicep available through Azure CLI or the standalone [Bicep CLI](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install).
+- The `lean-spec2cloud` Copilot plugin installed and updated. Install it from the CLI with:
+
+```pwsh
+copilot plugin marketplace add Azure-Samples/Spec2Cloud
+copilot plugin install lean@Spec2Cloud
+```
+
+Sanity check before you go further:
 
 ```pwsh
 copilot --version
@@ -125,11 +138,14 @@ copilot plugin list   # expect lean@Spec2Cloud
 gh --version
 gh skill --help
 az account show
+azd auth login --check-status
 azd version
-bicep --version       # or confirm Azure CLI bundled Bicep works with az bicep version
+az bicep version
 ```
 
 > Tooling note: `copilot plugin install lean@Spec2Cloud` installs the Spec2Cloud plugin. `gh skill install ...` installs agent skills. At project scope, the CLI currently defaults to `.agents/skills`; the commands below use `--dir .github/skills` intentionally.
+
+> **Heads up on cost.** This playbook provisions billable Azure resources, including Container Apps, Foundry/AI Services, Application Insights, and optionally API Center and Container Registry. See [Clean up](#clean-up) to remove everything when you are done.
 
 ## Build
 
