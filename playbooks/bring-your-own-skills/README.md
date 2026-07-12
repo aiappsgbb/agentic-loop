@@ -234,12 +234,12 @@ https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cl
 
 Take the new workspace through **Specify -> Plan -> Implement -> Verify -> Deploy** with one prompt.
 
-> **Required build skill:** Run the installed `agentic-loop` skill before specification or implementation. It creates the production backbone; the other installed project skills are the runtime domain skills deployed through the Foundry Skills API.
+> **Required build skill:** The starter prompt invokes the installed `agentic-loop` skill to create the production backbone. The other installed project skills are the runtime domain skills deployed through the Foundry Skills API.
 
 ```text
 /spec2cloud Build [describe the application, target users, and business outcome]. Use the user-provided project skills installed under .agents/skills as the application's runtime domain instructions. Ask me to confirm which installed skills the deployed agent should use, the frontend, and any required APIs or MCP tools before finalizing the specification.
 
-Before planning or implementation, run the installed agentic-loop skill (`aiappsgbb/agentic-loop`, skill `agentic-loop`) to enhance the spec with its app, agent runtime, Azure infrastructure, identity, and telemetry defaults.
+Use the `agentic-loop` skill.
 
 Publish the selected installed user skills directly through the Foundry Skills API; do not build a separate skill-importer service. Create immutable versions, run routing, instruction-adherence, tool-boundary, safety, and scenario-specific evaluations against those exact versions, then promote passing versions to default_version. Before each Copilot SDK session, download the governed versions into writable runtime storage and configure skill_directories to those folders.
 

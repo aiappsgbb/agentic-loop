@@ -143,7 +143,7 @@ Paste this starter prompt:
 ```text
 /spec2cloud Build Harbor, a voice guest-services concierge for the fictional Woodgrove Hotel. In the browser, guests ask spoken questions about breakfast, accessibility, amenities, local transport, and simple service requests. Harbor must answer from committed mock hotel data, confirm details before creating a request, and escalate safety, medical, billing, and complaint scenarios to staff.
 
-Before planning or implementation, install and run the agentic-loop skill (`aiappsgbb/agentic-loop`, skill `agentic-loop`) to enhance the spec with its app, agent runtime, Azure infrastructure, identity, and telemetry defaults.
+Use the `agentic-loop` skill.
 
 Create realistic mock content under data/woodgrove-hotel: property facts, amenity hours, accessibility guidance, transport notes, service-request types, room-number aliases, and escalation rules. Author skills/guest-services-concierge/SKILL.md with concise spoken-response guidance, confirmation rules, source-use requirements, allowed tools, and staff escalation behavior.
 

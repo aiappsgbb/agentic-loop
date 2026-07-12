@@ -150,7 +150,7 @@ Paste this starter prompt:
 ```text
 /spec2cloud Build ClaimGuide, a governed auto-insurance claims assistant for the fictional company Fabrikam Mutual. Customers submit synthetic incident details and ask what evidence is required, which mock policy section applies, and what happens next. The assistant may collect intake facts and explain policy language, but it must never approve, deny, value, price, or settle a claim; those requests must be escalated to a human adjuster.
 
-Before planning or implementation, install and run the agentic-loop skill (`aiappsgbb/agentic-loop`, skill `agentic-loop`) to enhance the spec with its app, agent runtime, Azure infrastructure, identity, and telemetry defaults.
+Use the `agentic-loop` skill.
 
 Create realistic mock inputs under data/fabrikam-claims: policy excerpts, coverage examples, synthetic claim forms, adjuster escalation rules, and adversarial prompts. Author skills/claims-compliance/SKILL.md with allowed guidance, prohibited decisions, required uncertainty language, PII minimization, evidence requirements, and escalation behavior.
 
