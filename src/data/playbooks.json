@@ -22,7 +22,7 @@
     "patterns": ["Knowledge Grounding", "Employee Onboarding"],
     "capabilities": ["Knowledge", "Agentic Retrieval"],
     "building_blocks": ["Storage", "Identity & Access"],
-    "buildSkills": ["microsoft-foundry", "copilot-sdk", "azure-ai", "azure-storage", "entra-app-registration", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
+    "buildSkills": ["agentic-loop", "microsoft-foundry", "copilot-sdk", "azure-ai", "azure-storage", "entra-app-registration", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
     "runSkills": []
   },
   {
@@ -35,7 +35,7 @@
     "patterns": ["Workflow Automation", "Domain-Specific Agents"],
     "capabilities": ["Frontier Models", "Multi-Agent Orchestration", "Agent-to-Agent"],
     "building_blocks": ["Integration", "Observability"],
-    "buildSkills": ["microsoft-foundry", "microsoft-agent-framework", "copilot-sdk", "python-mcp-server-generator", "azure-aigateway", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
+    "buildSkills": ["agentic-loop", "microsoft-foundry", "microsoft-agent-framework", "copilot-sdk", "python-mcp-server-generator", "azure-aigateway", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
     "runSkills": ["launch-research-synthesizer"]
   },
   {
@@ -48,7 +48,7 @@
     "patterns": ["Governance"],
     "capabilities": ["Frontier Models", "Content Safety", "Policy Enforcement"],
     "building_blocks": ["Identity & Access", "AI Gateway", "Observability"],
-    "buildSkills": ["microsoft-foundry", "copilot-sdk", "azure-aigateway", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
+    "buildSkills": ["agentic-loop", "microsoft-foundry", "copilot-sdk", "azure-aigateway", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
     "runSkills": ["claims-compliance"]
   },
   {
@@ -61,7 +61,7 @@
     "patterns": ["Continuous Evaluation"],
     "capabilities": ["Predictive Analytics", "Continuous Evaluation"],
     "building_blocks": ["Observability"],
-    "buildSkills": ["microsoft-foundry", "copilot-sdk", "azure-kusto", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
+    "buildSkills": ["agentic-loop", "microsoft-foundry", "copilot-sdk", "azure-kusto", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
     "runSkills": ["support-resolution"]
   },
   {
@@ -74,7 +74,7 @@
     "patterns": ["Voice-First"],
     "capabilities": ["Speech to Text", "Text to Speech", "Real-Time Conversations", "Frontier Models"],
     "building_blocks": ["Observability"],
-    "buildSkills": ["microsoft-foundry", "copilot-sdk", "azure-ai", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
+    "buildSkills": ["agentic-loop", "microsoft-foundry", "copilot-sdk", "azure-ai", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
     "runSkills": ["guest-services-concierge"]
   },
   {
@@ -87,7 +87,7 @@
     "patterns": ["Domain-Specific Agents"],
     "capabilities": ["Frontier Models", "Domain-Specific Agents"],
     "building_blocks": ["Identity & Access", "Integration", "Observability"],
-    "buildSkills": ["microsoft-foundry", "copilot-sdk", "azure-aigateway", "entra-agent-id", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
+    "buildSkills": ["agentic-loop", "microsoft-foundry", "copilot-sdk", "azure-aigateway", "entra-agent-id", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
     "runSkills": []
   }
 ]

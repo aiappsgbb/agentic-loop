@@ -69,6 +69,9 @@ Create or clone the workspace that will hold the generated solution.
 
 ```bash
 mkdir example-agent
+cd example-agent
+gh skill install aiappsgbb/agentic-loop agentic-loop --agent github-copilot --scope project
+gh skill list   # expect agentic-loop
 ```
 
 ---
