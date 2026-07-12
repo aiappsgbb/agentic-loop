@@ -70,10 +70,12 @@ Open the project in the GitHub Copilot App, Copilot CLI, or VS Code. In the app,
 
 ### Run the build loop
 
-Use `/spec2cloud` for the golden end-to-end path. The command invokes Specify, Plan, Implement, Verify, and Deploy with the `agentic-loop` defaults.
+Use `/spec2cloud` for the golden end-to-end path. The command invokes Specify, Plan, Implement, Verify, and Deploy. Follow the Enterprise Knowledge Grounding pattern by explicitly telling Spec2Cloud to install and run `agentic-loop`.
 
 ```text
 /spec2cloud <complete application prompt>
+
+Before planning or implementation, install and run the agentic-loop skill (`aiappsgbb/agentic-loop`, skill `agentic-loop`) to enhance the spec with its app, agent runtime, Azure infrastructure, identity, and telemetry defaults.
 ```
 
 > To run one stage at a time, start with `/specify`, then use `/plan`, `/implement`, `/verify`, and `/deploy`.

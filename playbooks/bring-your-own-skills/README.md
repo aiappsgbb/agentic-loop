@@ -153,9 +153,25 @@ Copy or reference your prototype skill folders from a local path or GitHub repo.
 
 ### Open GitHub Copilot
 
-Use the **GitHub Copilot App** (recommended), Copilot CLI, or VS Code. In the app, add the project folder, open the **Spec2Cloud Cockpit** canvas, and choose **Autopilot** to run end to end or **Plan** to review the plan before execution.
+This playbook uses the **GitHub Copilot App**, but the same prompt works in Copilot CLI and VS Code.
 
 > **Using the CLI instead?** Run `copilot --allow-all` only in a sandbox workspace, or omit the flag to approve each action.
+
+**1. Open the Spec2Cloud canvas.** In the review panel, click **+**, then choose **Spec2Cloud Cockpit**. If it is not installed, import:
+
+```text
+https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cloud
+```
+
+**2. Add your project.** Choose **+ -> Add project from -> Local folder or repository**, then select `bring-your-own-skills`.
+
+**3. Choose a model and mode.**
+
+| Mode | Behavior |
+|---|---|
+| Interactive | Step-by-step collaboration; you confirm each stage |
+| Plan | Plans first, executes once you approve |
+| Autopilot *(recommended)* | Runs the full loop end to end |
 
 ---
 
@@ -174,10 +190,22 @@ Replace the placeholders before you run the prompt:
 - `[FRONTEND]` - the user-facing frontend to build, such as web app, Teams app, Copilot extension, internal portal, or API-only test harness.
 
 ```text
-/spec2cloud Build [APPLICATION XYZ], an enterprise application that helps [TARGET USERS] accomplish [BUSINESS OUTCOME]. We already have one or more SKILL.md folders at [SKILL_PATHS_OR_REPOS] that work well in personal agent surfaces such as Claude Code, GitHub Copilot CLI, or cowork-style copilots. Build the frontend as [FRONTEND]. Use the agentic-loop skill and the Foundry Skills API direct-injection pattern: validate and create Foundry skill versions from those SKILLs, download the selected versions into the agent project's skills/<skill-name>/SKILL.md folders, and use our existing agentic-loop backbone rather than designing a new agent scaffold.
+/spec2cloud Build [APPLICATION XYZ], an enterprise application that helps [TARGET USERS] accomplish [BUSINESS OUTCOME]. We already have one or more SKILL.md folders at [SKILL_PATHS_OR_REPOS] that work well in personal agent surfaces such as Claude Code, GitHub Copilot CLI, or cowork-style copilots. Build the frontend as [FRONTEND].
+
+Before planning or implementation, install and run the agentic-loop skill (`aiappsgbb/agentic-loop`, skill `agentic-loop`) to enhance the spec with its app, agent runtime, Azure infrastructure, identity, and telemetry defaults. Use its Foundry Skills API direct-injection pattern: validate and create Foundry skill versions from those SKILLs, download the selected versions into the agent project's skills/<skill-name>/SKILL.md folders, and reuse the existing agentic-loop backbone rather than designing a new agent scaffold.
 ```
 
-> `/spec2cloud` invokes the full loop with the `agentic-loop` skill defaults. To work stage by stage instead, start with `/specify` and then use `/plan`, `/implement`, `/verify`, and `/deploy`. The remaining Build slides are review guidance; do not rerun them after a successful `/spec2cloud` execution.
+> `/spec2cloud` runs the same five-stage loop as Getting Started. The prompt explicitly invokes `agentic-loop`; the remaining requirements define this playbook's skill import, governance, versioning, injection, and promotion flow.
+
+> Prefer to run one stage at a time? Use the same prompt with `/specify` first, then advance through each stage:
+>
+> | Command | Produces | Review in |
+> |---|---|---|
+> | `/specify <prompt>` | Specification | `docs/spec.md` |
+> | `/plan` | Implementation and Azure plan | `docs/plan.md`, `.azure/deployment-plan.md` |
+> | `/implement` | App, importer, infrastructure, and skill assets | `src/`, `infra/`, `azure.yaml` |
+> | `/verify` | Import, injection, policy, and regression tests | `docs/verify.md` |
+> | `/deploy` | Deployed skill-backed solution | `docs/deploy.md` |
 
 Use these recommended answers if Copilot asks clarifying questions:
 
@@ -210,7 +238,7 @@ git --no-pager status --short
 git --no-pager diff -- docs\spec.md
 ```
 
-### Review the plan
+### Review the generated plan
 
 Turn the spec into a reviewable implementation and deployment plan.
 
@@ -361,7 +389,7 @@ git add .
 git commit -m "feat: scaffold bring your own skills app"
 ```
 
-### Review verification
+### Verify locally
 
 Validate locally against real Azure dependencies and real prototype SKILLs.
 
@@ -401,7 +429,7 @@ Skill validation and runtime verification:
 | Regression eval | Run evals against a new version. | Version is not promoted until gates pass. |
 | Telemetry | Query Application Insights / Foundry monitoring. | Skill name/version, tool calls, latency, errors, tokens, and eval outcomes are visible. |
 
-### Review deployment
+### Deploy
 
 Deploy after local verification passes.
 
@@ -450,6 +478,12 @@ git --no-pager status --short
 ---
 
 ## Run
+
+### Run the skill-backed app
+
+Open the deployed frontend and exercise representative tasks that should and should not select each imported skill. Confirm that the expected governed version loads, only approved tools run, and the agent follows the skill instructions.
+
+---
 
 ### Observe
 

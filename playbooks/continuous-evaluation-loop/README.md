@@ -112,9 +112,25 @@ cd continuous-evaluation-loop
 
 ### Open GitHub Copilot
 
-Use the **GitHub Copilot App** (recommended), Copilot CLI, or VS Code. In the app, add the project folder, open the **Spec2Cloud Cockpit** canvas, and choose **Autopilot** to run end to end or **Plan** to review the plan before execution.
+This playbook uses the **GitHub Copilot App**, but the same prompt works in Copilot CLI and VS Code.
 
 > **Using the CLI instead?** Run `copilot --allow-all` only in a sandbox workspace, or omit the flag to approve each action.
+
+**1. Open the Spec2Cloud canvas.** In the review panel, click **+**, then choose **Spec2Cloud Cockpit**. If it is not installed, import:
+
+```text
+https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cloud
+```
+
+**2. Add your project.** Choose **+ -> Add project from -> Local folder or repository**, then select `continuous-evaluation-loop`.
+
+**3. Choose a model and mode.**
+
+| Mode | Behavior |
+|---|---|
+| Interactive | Step-by-step collaboration; you confirm each stage |
+| Plan | Plans first, executes once you approve |
+| Autopilot *(recommended)* | Runs the full loop end to end |
 
 ---
 
@@ -124,11 +140,21 @@ Paste this starter prompt:
 
 ```text
 /spec2cloud Build an agent app with a continuous evaluation loop. The agent answers user questions in a chat interface and emits OpenTelemetry traces to Application Insights. Include an offline evaluation set scored with Foundry Evaluations that gates deploys. In production, mine traces into a regression dataset, score it on a schedule against a baseline, and when a regression or low score is detected, open an improvement pull request that proposes a fix and includes the fresh eval results for human review. Use randomly generated data where a real backing service is not required.
+
+Before planning or implementation, install and run the agentic-loop skill (`aiappsgbb/agentic-loop`, skill `agentic-loop`) to enhance the spec with its app, agent runtime, Azure infrastructure, identity, and telemetry defaults.
 ```
 
-> `/spec2cloud` runs the whole loop with the opinionated `agentic-loop` defaults baked in — Foundry hosted agents, Copilot SDK, Container Apps, keyless identity, and telemetry — so the prompt never has to name them.
+> `/spec2cloud` runs the same five-stage loop as Getting Started. The prompt explicitly invokes `agentic-loop`; the remaining requirements define this playbook's datasets, scorecards, trace mining, regression gates, and improvement PRs.
 
-> Prefer to run one stage at a time? Use the same prompt with `/specify` first, then advance through `/plan`, `/implement`, `/verify`, and `/deploy`, reviewing each artifact before moving on. The remaining Build slides explain what to review at each stage; do not rerun them after a successful `/spec2cloud` execution.
+> Prefer to run one stage at a time? Use the same prompt with `/specify` first, then advance through each stage:
+>
+> | Command | Produces | Review in |
+> |---|---|---|
+> | `/specify <prompt>` | Specification | `docs/spec.md` |
+> | `/plan` | Implementation and Azure plan | `docs/plan.md`, `.azure/deployment-plan.md` |
+> | `/implement` | Source, infrastructure, evals, and baselines | `src/`, `infra/`, `evals/` |
+> | `/verify` | Eval results and regression smoke tests | `docs/verify.md` |
+> | `/deploy` | Deployed solution and scheduled scoring | `docs/deploy.md` |
 
 Use these recommended answers if Copilot asks clarifying questions:
 
@@ -145,7 +171,7 @@ When the skill finishes, review `docs/spec.md` for these must-have requirements:
 
 ---
 
-### Review the plan
+### Review the generated plan
 
 Turn the spec into a reviewable implementation and deployment plan.
 
@@ -211,7 +237,7 @@ git commit -m "feat: scaffold continuous evaluation loop"
 
 ---
 
-### Review verification
+### Verify locally
 
 Validate locally against real Azure dependencies.
 
@@ -229,7 +255,7 @@ Validate locally against real Azure dependencies.
 
 ---
 
-### Review deployment
+### Deploy
 
 Deploy after local verification passes.
 
@@ -261,6 +287,12 @@ When the loop finishes, Copilot returns the deployed frontend URL and the Spec2C
 | Production traces are absent | Telemetry is incomplete | Verify the backend and hosted agent export to the same Application Insights resource. |
 
 ## Run
+
+### Run the evaluation loop
+
+Open the deployed app and generate representative turns, then run the scheduled scoring path. Confirm that traces become curated regression cases, scores compare against the committed baseline, and a deliberate regression produces an evidence-backed improvement PR.
+
+---
 
 ### Observe
 

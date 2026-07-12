@@ -116,9 +116,25 @@ cd governance-safety-baseline
 
 ### Open GitHub Copilot
 
-Use the **GitHub Copilot App** (recommended), Copilot CLI, or VS Code. In the app, add the project folder, open the **Spec2Cloud Cockpit** canvas, and choose **Autopilot** to run end to end or **Plan** to review the plan before execution.
+This playbook uses the **GitHub Copilot App**, but the same prompt works in Copilot CLI and VS Code.
 
 > **Using the CLI instead?** Run `copilot --allow-all` only in a sandbox workspace, or omit the flag to approve each action.
+
+**1. Open the Spec2Cloud canvas.** In the review panel, click **+**, then choose **Spec2Cloud Cockpit**. If it is not installed, import:
+
+```text
+https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cloud
+```
+
+**2. Add your project.** Choose **+ -> Add project from -> Local folder or repository**, then select `governance-safety-baseline`.
+
+**3. Choose a model and mode.**
+
+| Mode | Behavior |
+|---|---|
+| Interactive | Step-by-step collaboration; you confirm each stage |
+| Plan | Plans first, executes once you approve |
+| Autopilot *(recommended)* | Runs the full loop end to end |
 
 ---
 
@@ -126,15 +142,23 @@ Use the **GitHub Copilot App** (recommended), Copilot CLI, or VS Code. In the ap
 
 Paste this starter prompt:
 
-Paste the starter prompt:
-
 ```text
 /spec2cloud Build a governed agent app with a safety baseline. Every user turn passes through an input guardrail (Azure AI Content Safety harm categories and Prompt Shields for jailbreak/prompt-injection detection) before reaching the agent. Every tool call is authorized against a policy layer before it runs. Every agent response passes through an output guardrail for harmful content and groundedness before it reaches the user. Blocked turns produce a safe, consistent refusal, and every safety decision is traced. Include a red-team evaluation set that gates promotion. Use randomly generated data where a real backing service is not required.
+
+Before planning or implementation, install and run the agentic-loop skill (`aiappsgbb/agentic-loop`, skill `agentic-loop`) to enhance the spec with its app, agent runtime, Azure infrastructure, identity, and telemetry defaults.
 ```
 
-> `/spec2cloud` runs the whole loop with the opinionated `agentic-loop` defaults baked in — Foundry hosted agents, Copilot SDK, Container Apps, keyless identity, and telemetry — so the prompt never has to name them.
+> `/spec2cloud` runs the same five-stage loop as Getting Started. The prompt explicitly invokes `agentic-loop`; the remaining requirements define this playbook's guardrails, policy enforcement, refusal behavior, and red-team gates.
 
-> Prefer to run one stage at a time? Use the same prompt with `/specify` first, then advance through `/plan`, `/implement`, `/verify`, and `/deploy`, reviewing each artifact before moving on. The remaining Build slides explain what to review at each stage; do not rerun them after a successful `/spec2cloud` execution.
+> Prefer to run one stage at a time? Use the same prompt with `/specify` first, then advance through each stage:
+>
+> | Command | Produces | Review in |
+> |---|---|---|
+> | `/specify <prompt>` | Specification | `docs/spec.md` |
+> | `/plan` | Implementation and Azure plan | `docs/plan.md`, `.azure/deployment-plan.md` |
+> | `/implement` | Source, infrastructure, guardrails, and evals | `src/`, `infra/`, `evals/` |
+> | `/verify` | Provisioned dependencies and safety tests | `docs/verify.md` |
+> | `/deploy` | Deployed solution | `docs/deploy.md` |
 
 Use these recommended answers if Copilot asks clarifying questions:
 
@@ -151,7 +175,7 @@ When the skill finishes, review `docs/spec.md` for these must-have requirements:
 
 ---
 
-### Review the plan
+### Review the generated plan
 
 Turn the spec into a reviewable implementation and deployment plan.
 
@@ -216,7 +240,7 @@ git commit -m "feat: scaffold governance and safety baseline"
 
 ---
 
-### Review verification
+### Verify locally
 
 Validate locally against real Azure dependencies.
 
@@ -235,7 +259,7 @@ Validate locally against real Azure dependencies.
 
 ---
 
-### Review deployment
+### Deploy
 
 Deploy after local verification passes.
 
@@ -267,6 +291,12 @@ When the loop finishes, Copilot returns the deployed frontend URL and the Spec2C
 | Safety spans are missing | Guardrail code is outside trace scope | Emit allow, block, and deny decisions inside the request trace. |
 
 ## Run
+
+### Run the governed agent
+
+Open the deployed app and exercise allowed, harmful, jailbreak, and forbidden-tool scenarios. Confirm that safe turns succeed, blocked turns return the fixed refusal, and no denied tool executes.
+
+---
 
 ### Observe
 

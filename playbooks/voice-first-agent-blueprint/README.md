@@ -110,9 +110,25 @@ cd voice-first-agent
 
 ### Open GitHub Copilot
 
-Use the **GitHub Copilot App** (recommended), Copilot CLI, or VS Code. In the app, add the project folder, open the **Spec2Cloud Cockpit** canvas, and choose **Autopilot** to run end to end or **Plan** to review the plan before execution.
+This playbook uses the **GitHub Copilot App**, but the same prompt works in Copilot CLI and VS Code.
 
 > **Using the CLI instead?** Run `copilot --allow-all` only in a sandbox workspace, or omit the flag to approve each action.
+
+**1. Open the Spec2Cloud canvas.** In the review panel, click **+**, then choose **Spec2Cloud Cockpit**. If it is not installed, import:
+
+```text
+https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cloud
+```
+
+**2. Add your project.** Choose **+ -> Add project from -> Local folder or repository**, then select `voice-first-agent`.
+
+**3. Choose a model and mode.**
+
+| Mode | Behavior |
+|---|---|
+| Interactive | Step-by-step collaboration; you confirm each stage |
+| Plan | Plans first, executes once you approve |
+| Autopilot *(recommended)* | Runs the full loop end to end |
 
 ---
 
@@ -122,11 +138,21 @@ Paste this starter prompt:
 
 ```text
 /spec2cloud Build a voice-first agent app. In the browser, the user speaks and hears the agent reply in real time. Stream speech-to-text in and text-to-speech out through Azure AI Voice Live for low latency, and support barge-in so the user can interrupt the agent mid-response. The agent uses a frontier model for reasoning and can call tools during a spoken turn. Measure and display end-to-end turn latency, and trace each turn. Use randomly generated data where a real backing service is not required.
+
+Before planning or implementation, install and run the agentic-loop skill (`aiappsgbb/agentic-loop`, skill `agentic-loop`) to enhance the spec with its app, agent runtime, Azure infrastructure, identity, and telemetry defaults.
 ```
 
-> `/spec2cloud` runs the whole loop with the opinionated `agentic-loop` defaults baked in — Foundry hosted agents, Copilot SDK, Container Apps, keyless identity, and telemetry — so the prompt never has to name them.
+> `/spec2cloud` runs the same five-stage loop as Getting Started. The prompt explicitly invokes `agentic-loop`; the remaining requirements define this playbook's streaming audio, barge-in, voice latency, and spoken-turn telemetry.
 
-> Prefer to run one stage at a time? Use the same prompt with `/specify` first, then advance through `/plan`, `/implement`, `/verify`, and `/deploy`, reviewing each artifact before moving on. The remaining Build slides explain what to review at each stage; do not rerun them after a successful `/spec2cloud` execution.
+> Prefer to run one stage at a time? Use the same prompt with `/specify` first, then advance through each stage:
+>
+> | Command | Produces | Review in |
+> |---|---|---|
+> | `/specify <prompt>` | Specification | `docs/spec.md` |
+> | `/plan` | Implementation and Azure plan | `docs/plan.md`, `.azure/deployment-plan.md` |
+> | `/implement` | Source, infrastructure, and audio pipeline | `src/`, `infra/`, `azure.yaml` |
+> | `/verify` | Streaming, barge-in, and latency tests | `docs/verify.md` |
+> | `/deploy` | Deployed solution | `docs/deploy.md` |
 
 Use these recommended answers if Copilot asks clarifying questions:
 
@@ -143,7 +169,7 @@ When the skill finishes, review `docs/spec.md` for these must-have requirements:
 
 ---
 
-### Review the plan
+### Review the generated plan
 
 Turn the spec into a reviewable implementation and deployment plan.
 
@@ -205,7 +231,7 @@ git commit -m "feat: scaffold voice-first agent"
 
 ---
 
-### Review verification
+### Verify locally
 
 Validate locally against real Azure dependencies.
 
@@ -224,7 +250,7 @@ Validate locally against real Azure dependencies.
 
 ---
 
-### Review deployment
+### Deploy
 
 Deploy after local verification passes.
 
@@ -256,6 +282,12 @@ When the loop finishes, Copilot returns the deployed frontend URL and the Spec2C
 | Voice spans are disconnected | Trace context is lost in the stream bridge | Propagate context across the audio, agent, and TTS pipeline. |
 
 ## Run
+
+### Run the voice agent
+
+Open the deployed app, grant microphone access, and complete several spoken turns. Confirm that partial transcripts and audio stream, barge-in stops active playback, tools can run during a turn, and latency remains visible.
+
+---
 
 ### Observe
 
