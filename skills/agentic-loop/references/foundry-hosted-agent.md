@@ -11,14 +11,14 @@ When post-processing the spec, declare the hosted agent's Python dependencies so
 | **Always** (keyless auth) | `azure-identity` | `DefaultAzureCredential` for managed-identity / `az login` tokens |
 | **Always** (local config) | `python-dotenv` | Load `.env` in local dev (`load_dotenv`) |
 | **Hosted agent runtime** | `azure-ai-agentserver-invocations` | Serve the **invocations** protocol (`InvocationAgentServerHost`) the Foundry platform calls |
-| **GitHub Copilot SDK** | `github-copilot-sdk` | `CopilotClient`, skills, integrated agent loop, BYOK provider |
-| **MAF agent** | `agent-framework` | Microsoft Agent Framework runtime (use instead of `github-copilot-sdk` when the agent is MAF) |
+| **GitHub Copilot SDK** | `github-copilot-sdk` | Default hosted-agent framework: `CopilotClient`, Foundry Skills API downloads, toolbox MCP bridge, integrated agent loop, BYOK provider |
+| **MAF agent** | `agent-framework` | Microsoft Agent Framework runtime (include only when explicitly requested or clearly needed for graph/workflow orchestration) |
 | **Toolbox over MCP** | `httpx` | Streamable-HTTP MCP bridge to the Foundry toolbox endpoint |
 | **Skill download from Foundry** | `azure-ai-projects` | `AIProjectClient` to create/version skills and download their content |
 | **Observability (ON by default)** | `azure-monitor-opentelemetry-exporter`, `opentelemetry-sdk`, `opentelemetry-api` | Export traces/metrics/logs straight to Application Insights, no collector |
 | **Observability — model-call tracing** | `opentelemetry-instrumentation-openai-v2` | Instrument in-process OpenAI/Foundry model calls |
 
-Drop the toolbox/skill rows when the agent uses neither; drop the model-tracing row only if no in-process model calls are made. Keep the observability core rows because telemetry is **ON by default**.
+Keep the Copilot SDK, toolbox, and skill-download rows for the default agentic-loop hosted agent. Drop them only for an explicit MAF/non-toolbox variant. Do **not** add `azure-search-documents` to the default runtime dependency set; Foundry IQ grounding is consumed through the toolbox MCP endpoint. Add Search SDK dependencies only for the direct-retrieval escape hatch in [`foundry-iq-grounding.md`](foundry-iq-grounding.md#escape-hatch-direct-in-code-retrieval). Drop the model-tracing row only if no in-process model calls are made. Keep the observability core rows because telemetry is **ON by default**.
 
 ## Read-only container filesystem
 
