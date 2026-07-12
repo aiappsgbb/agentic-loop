@@ -2,7 +2,7 @@
 
 Reusable **run-phase** agent skills. Unlike the [build skills catalog](build-skills-catalog.md) (skills you install to help *build* the app), these are skills the **agent itself runs** at execution time.
 
-**Reuse, don't regenerate.** When the prompt **explicitly names** one of these skills, reuse the existing skill instead of authoring a new `./skills/<skill-name>/SKILL.md` from scratch: install/download it into `./skills/<skill-name>/` as the repo authoring artifact, then **create the versioned skill on the Foundry project** and attach it to the agent's toolbox. At runtime, the hosted agent downloads the governed skill version into temp through the same Copilot SDK skills default flow described in [`foundry-toolbox.md`](foundry-toolbox.md). Only author a brand-new skill when the named skill is **not** in this catalog.
+**Reuse, don't regenerate.** When the prompt **explicitly names** one of these skills, reuse the existing skill instead of authoring a new `./skills/<skill-name>/SKILL.md` from scratch: install/download it into `./skills/<skill-name>/` as the repo authoring artifact, then **create or update the versioned skill on the Foundry project with `azd ai skill`** and attach it to the agent's toolbox. At runtime, the hosted agent downloads the governed skill version into temp through the same Copilot SDK skills default flow described in [`foundry-toolbox.md`](foundry-toolbox.md). Only author a brand-new skill when the named skill is **not** in this catalog.
 
 This is a starter set of examples, not an exhaustive list.
 

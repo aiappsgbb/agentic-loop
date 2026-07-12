@@ -66,6 +66,6 @@ Common direct-retrieval APIs include `KnowledgeAgentRetrievalClient` and `Search
 
 ## Source
 
-- [Use skills with Microsoft Foundry agents (preview)](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/skills?pivots=python)
+- [Use skills with Microsoft Foundry agents (preview) - azd](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/skills?pivots=azd#manage-skills-with-the-rest-api)
 - [Curate intent-based toolbox in Foundry (preview)](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/toolbox)
 - [Copilot SDK hosted-agent sample](https://github.com/microsoft-foundry/foundry-samples/tree/main/samples/python/hosted-agents/bring-your-own/invocations/github-copilot)

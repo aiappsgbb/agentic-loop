@@ -14,7 +14,7 @@ When post-processing the spec, declare the hosted agent's Python dependencies so
 | **GitHub Copilot SDK** | `github-copilot-sdk` | Default hosted-agent framework: `CopilotClient`, Foundry Skills API downloads, toolbox MCP bridge, integrated agent loop, BYOK provider |
 | **MAF agent** | `agent-framework` | Microsoft Agent Framework runtime (include only when explicitly requested or clearly needed for graph/workflow orchestration) |
 | **Toolbox over MCP** | `httpx` | Streamable-HTTP MCP bridge to the Foundry toolbox endpoint |
-| **Skill download from Foundry** | `azure-ai-projects` | `AIProjectClient` to create/version skills and download their content |
+| **Runtime skill download from Foundry** | `azure-ai-projects` | `AIProjectClient` to download governed skill content at hosted-agent startup; create/update/list/show/download management operations should prefer `azd ai skill` outside the runtime |
 | **Observability (ON by default)** | `azure-monitor-opentelemetry-exporter`, `opentelemetry-sdk`, `opentelemetry-api` | Export traces/metrics/logs straight to Application Insights, no collector |
 | **Observability — model-call tracing** | `opentelemetry-instrumentation-openai-v2` | Instrument in-process OpenAI/Foundry model calls |
 
