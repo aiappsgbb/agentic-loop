@@ -106,8 +106,9 @@ Useful flags: `--from-file <path>` (required), `--output table|json`, `-e/--envi
 By default the agent **consumes the toolbox over MCP**: it bridges the toolbox's runtime MCP endpoint and exposes every toolbox tool (MCP servers, Foundry IQ grounding, `web_search`, `file_search`, ...) to the Copilot SDK session, and it **downloads the toolbox's skills** into a writable temp directory so the SDK loads each `SKILL.md` as instructions. The agent source ships **without** a `skills/` folder — it's generated at runtime under `tempfile.gettempdir()` because hosted-agent container filesystems are read-only except `/tmp` (override with `SKILLS_DIR`). See [`copilot-sdk-with-toolbox.py`](copilot-sdk-with-toolbox.py).
 
 ```bash
-# Scaffold from the sample manifest, set the PAT (omit for BYOK Managed-Identity inference)
-azd ai agent init -m https://github.com/microsoft-foundry/foundry-samples/blob/main/samples/python/hosted-agents/bring-your-own/invocations/github-copilot/agent.manifest.yaml
+# Scaffold from a Responses-protocol hosted-agent manifest/template, set the PAT (omit for BYOK Managed-Identity inference).
+# Do not start from an invocations sample unless invocations is explicitly required.
+azd ai agent init
 azd env set GITHUB_TOKEN="github_pat_..."
 # Point the agent at the toolbox (TOOLBOX_<NAME>_MCP_ENDPOINT is emitted by `azd ai toolbox create`)
 azd env set TOOLBOX_NAME "research"
@@ -201,5 +202,5 @@ This keeps **skills, MCP tools, and Foundry IQ grounding** versioned, auditable,
 
 - [Use skills with Microsoft Foundry agents (preview) - azd](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/skills?pivots=azd#manage-skills-with-the-rest-api)
 - [Curate intent-based toolbox in Foundry (preview)](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/toolbox)
-- [Copilot SDK hosted-agent sample](https://github.com/microsoft-foundry/foundry-samples/tree/main/samples/python/hosted-agents/bring-your-own/invocations/github-copilot)
+- [Foundry hosted agents](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/concepts/hosted-agents?view=foundry)
 - [Send telemetry via the OpenTelemetry Collector](https://learn.microsoft.com/en-us/azure/azure-monitor/app/opentelemetry-add-modify?tabs=python#send-telemetry-using-the-opentelemetry-collector) · [Azure Monitor OpenTelemetry distro](https://learn.microsoft.com/en-us/azure/azure-monitor/app/opentelemetry-enable?tabs=python)
