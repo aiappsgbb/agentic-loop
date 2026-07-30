@@ -1,40 +1,51 @@
-# Threadlight Pipeline
+# Idea to Production
 
-## Idea to production
+## The agentic loop, carried all the way to production
 
-### The loop gets you a demo. Threadlight gets you production.
+> **Powered by the [Threadlight](https://github.com/aiappsgbb/threadlight-skills) accelerator.**
 
-The [Agentic Loop](../getting-started/README.md) is brilliant at one thing: getting you to a *working agent*. A paragraph in, a Foundry hosted agent answering questions minutes later. That is a proof of concept — and a PoC is not something a review board signs, an SRE carries a pager for, or a regulator accepts.
+The [Agentic Loop](../getting-started/README.md) gets you to a *working agent* fast: a paragraph in, a Foundry-hosted agent answering questions minutes later. This playbook takes that **same "describe it, let the agent build it" motion** and carries it the whole way to a **governed, evaluated, red-teamed, cost-modelled agent running in your own Azure tenant** — with the compliance file and the customer hand-off pack already written.
 
-**Threadlight is everything past the PoC.** Same "describe it, let the agent build it" motion — carried all the way to a governed, evaluated, red-teamed, cost-modelled agent running in *your* Azure tenant, with the compliance file and the customer hand-off pack already written.
+It is the **full end-to-end production environment**: the same loop, plus every governance, security, evaluation and infrastructure component a review board, an SRE and a regulator expect. You still start with one paragraph — the point is everything that comes out the other end.
 
-You still start with one paragraph. The paragraph is only the *input*. The point is what comes out the other end:
+> **Idea → production, in one continuous run.** Driven from GitHub Copilot; govern, evals, red-team, scorecard and hand-off all handled in the same motion.
 
-> **Idea → production, in one continuous run.** Driven from GitHub Copilot; everything past the PoC handled — govern, evals, red-team, scorecard, hand-off.
+### What you'll walk away with
 
-### Where the loop stops, and Threadlight keeps going
+Run the pipeline end-to-end and you have, in your own tenant:
 
-The loop hands you a demo. Every column on the right is what a demo is missing — and what Threadlight adds, in the same run:
+**Production capabilities**
 
-| The Agentic Loop gives you | Threadlight adds on top |
-| --- | --- |
-| A **working agent** from a paragraph | A **governed** one — policy enforced at the container boundary |
-| Answers in the playground | **Evals + red-team** gates, streaming to App Insights |
-| Something to show | A **defensible cost model** and an **EU AI Act evidence pack** |
-| A prototype | A **13-pillar scorecard** and a **customer hand-off** an ARB signs |
+- 🛡️ **Agent governance** — deny-by-default policy enforced at the container boundary, every decision audited.
+- 🧪 **Evals + red-team** — offline scenarios, continuous evaluation, and an adversarial PyRIT scan, streaming to App Insights.
+- 🔒 **Responsible AI** — content filtering, prompt-shield and PII blocking, aligned to OWASP ASI 2026.
+- 💰 **Cost control** — every resource priced against Azure Retail Prices, phased pilot → scale → production.
+- 📊 **Production scorecard** — 13 pillars scored, the readiness number an ARB signs off.
+- 📋 **EU AI Act evidence pack** — technical file and article map, built artefact-by-artefact.
+- 🤝 **Customer hand-off** — talk-deck plus seller prep-guide, so the pilot walks into the next engagement.
 
-It is one opinionated pipeline — each stage produces a checkable artefact, and each stage gates the next:
+**Architecture building blocks** — provisioned and wired by `azd up`
+
+- 🌐 **APIM AI Gateway** — production LLM traffic routed through the [Citadel](../citadel-governance-hub/README.md) gateway, onboarded as a spoke.
+- 🧠 **Foundry hosted-agent container** — the agent running in your tenant, usable in a workspace or Teams.
+- 🗄️ **Cosmos DB + App Insights** — state and end-to-end tracing.
+- 🪪 **Entra managed identity + OIDC** — keyless, federated auth; no long-lived secrets in the pipeline.
+- 🔗 **Private networking** — private endpoints and private DNS, least-privilege RBAC scoped to the spoke resource group.
+- ⚙️ **CI/CD pipeline** — GitHub Actions or Azure DevOps, secret-free by construction.
+
+### One opinionated pipeline
+
+Each stage produces a checkable artefact, and each stage gates the next:
 
 ```mermaid
 flowchart LR
-  A["Agentic Loop<br/>describe it → working agent"]:::loop --> D["a demo<br/>ungoverned PoC"]:::loop
-  D --> S1["spec"]:::tl --> S2["scaffold"]:::tl --> S3["local-test"]:::tl --> S4["deploy"]:::tl --> S5["govern · evals<br/>red-team"]:::tl --> S6["score"]:::tl --> S7["hand-off"]:::tl --> P["production<br/>governed · costed · signed"]:::prod
+  A["Agentic Loop<br/>describe it → working agent"]:::loop --> S1["spec"]:::tl --> S2["scaffold"]:::tl --> S3["local-test"]:::tl --> S4["deploy"]:::tl --> S5["govern · evals<br/>red-team"]:::tl --> S6["score"]:::tl --> S7["hand-off"]:::tl --> P["production<br/>governed · costed · signed"]:::prod
   classDef loop fill:#e6f0ff,stroke:#4a7fd6,color:#0b2545;
   classDef tl fill:#fff4e6,stroke:#e08a2b,color:#5a3210;
   classDef prod fill:#e8f7ee,stroke:#2fa15a,color:#0d3d22;
 ```
 
-> Tip: One sentence captures the stack. **Build with the loop. Govern with [Citadel](../citadel-governance-hub/README.md). Productionize with Threadlight.** Threadlight's deploy routes its LLM traffic through Citadel's gateway and onboards the agent as a Citadel spoke — the three are designed to compose.
+> Tip: One sentence captures the stack. **Build with the loop. Govern with [Citadel](../citadel-governance-hub/README.md). Productionize with this pipeline.** Its deploy routes LLM traffic through Citadel's gateway and onboards the agent as a Citadel spoke — the three are designed to compose.
 
 ---
 

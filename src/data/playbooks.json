@@ -78,6 +78,20 @@
     "runSkills": []
   },
   {
+    "slug": "threadlight-pipeline",
+    "name": "Idea to Production",
+    "icon": "Waypoints",
+    "level": "Advanced",
+    "accelerator": true,
+    "summary": "You describe it, Copilot builds it, Foundry runs and governs it — the advanced, opinionated expression of the Agentic Loop, carrying one paragraph to a red-teamed, evaluated, production-scored agent.",
+    "use_when": "You want the fast, paved path from a customer brief to a governed pilot and accept strong opinionated defaults in exchange for speed.",
+    "patterns": ["*"],
+    "capabilities": ["Frontier Models"],
+    "building_blocks": ["Observability", "AI Gateway", "Identity & Access"],
+    "buildSkills": ["threadlight-design", "threadlight-demo-data-factory", "threadlight-local-test", "threadlight-deploy", "threadlight-safe-check", "threadlight-evals", "threadlight-redteam", "threadlight-govern", "threadlight-consumption-iq", "threadlight-production-ready", "threadlight-cicd", "threadlight-customize", "threadlight-event-triggers", "threadlight-hitl-patterns", "threadlight-workspace-ui", "threadlight-router-bench", "threadlight-auto"],
+    "runSkills": []
+  },
+  {
     "slug": "citadel-governance-hub",
     "name": "Citadel Governance Hub",
     "icon": "Castle",
@@ -90,19 +104,5 @@
     "building_blocks": ["AI Gateway", "Identity & Access", "Observability"],
     "buildSkills": ["citadel-hub-deploy", "citadel-spoke-onboarding", "azure-aigateway", "entra-agent-id", "azure-rbac", "appinsights-instrumentation"],
     "runSkills": ["incident-postmortem"]
-  },
-  {
-    "slug": "threadlight-pipeline",
-    "name": "Threadlight Pipeline",
-    "icon": "Waypoints",
-    "level": "Advanced",
-    "accelerator": true,
-    "summary": "You describe it, Copilot builds it, Foundry runs and governs it — the advanced, opinionated expression of the Agentic Loop, carrying one paragraph to a red-teamed, evaluated, production-scored agent.",
-    "use_when": "You want the fast, paved path from a customer brief to a governed pilot and accept strong opinionated defaults in exchange for speed.",
-    "patterns": ["*"],
-    "capabilities": ["Frontier Models"],
-    "building_blocks": ["Observability", "AI Gateway", "Identity & Access"],
-    "buildSkills": ["threadlight-design", "threadlight-demo-data-factory", "threadlight-local-test", "threadlight-deploy", "threadlight-safe-check", "threadlight-evals", "threadlight-redteam", "threadlight-govern", "threadlight-consumption-iq", "threadlight-production-ready", "threadlight-cicd", "threadlight-customize", "threadlight-event-triggers", "threadlight-hitl-patterns", "threadlight-workspace-ui", "threadlight-router-bench", "threadlight-auto"],
-    "runSkills": []
   }
 ]
