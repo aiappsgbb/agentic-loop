@@ -43,7 +43,8 @@ createRoot(document.getElementById('root')!).render(
             <Route path="playbooks/:slug" element={lazyRoute(<PlaybookPage />)} />
             <Route path="skills" element={lazyRoute(<SkillsCatalog />)} />
             <Route path="skills/:name" element={lazyRoute(<SkillDetail />)} />
-            <Route path="kratos" element={lazyRoute(<Kratos />)} />
+            <Route path="reference/kratos" element={lazyRoute(<Kratos />)} />
+            <Route path="kratos" element={<Navigate to="/reference/kratos" replace />} />
             <Route path="concepts">
               <Route index element={<Navigate to="agentic-loop" replace />} />
               <Route path="agentic-loop" element={lazyRoute(<AgenticLoopConcept />)} />
