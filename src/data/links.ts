@@ -22,6 +22,7 @@ export interface Playbook {
   name: string;
   icon: string;
   level: string;
+  accelerator?: boolean;
   summary: string;
   use_when: string;
   patterns: string[];

@@ -40,6 +40,19 @@ function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
+/**
+ * Map a relative cross-playbook markdown link (`../<slug>/README.md`, optionally
+ * with an `#anchor`) to its in-app route `/playbooks/<slug>`, so authored links
+ * that stay valid on GitHub also navigate correctly on the site. Returns null
+ * for anything that isn't a sibling-playbook README link.
+ */
+function internalPlaybookRoute(href: string): string | null {
+  if (!/^\.\.?\//.test(href)) return null;
+  const m = href.match(/(?:^|\/)([a-z0-9-]+)\/README\.md(#[\w-]+)?$/i);
+  if (!m) return null;
+  return `/playbooks/${m[1]}${m[2] ?? ''}`;
+}
+
 /** Accent color per chapter/stage, cycled by chapter index. */
 const STAGE_ACCENTS = ['#8b6dff', '#06b6d4', '#22c55e', '#f59e0b', '#ec4899', '#ef4444'];
 
@@ -388,6 +401,10 @@ export default function PlaybookPage() {
                 );
               },
               a: ({ href, children, ...rest }) => {
+                const internal = href ? internalPlaybookRoute(href) : null;
+                if (internal) {
+                  return <Link to={internal} {...rest}>{children}</Link>;
+                }
                 const isExternal = !!href && /^https?:/.test(href);
                 return (
                   <a href={href} {...rest} {...(isExternal ? { target: '_blank', rel: 'noreferrer' } : {})}>
