@@ -2,14 +2,14 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   BookOpen, Rocket, ShieldCheck, GitBranch, Database, Eye, ArrowRight, Layers, Wrench, CloudSun,
-  Search, X, Brain, Workflow, Tag, Mic,
+  Search, X, Brain, Workflow, Tag, Mic, Castle, Waypoints, Sparkles,
 } from 'lucide-react';
 import { playbooks, playbookHasDeck, scenariosForPlaybook } from '../data/links';
 import { getBuildSkill, getRunSkill } from '../data/skills';
 import CapabilityPicker, { type PickerOption } from '../components/CapabilityPicker';
 
 const ICONS: Record<string, typeof Rocket> = {
-  Rocket, GitBranch, Database, ShieldCheck, Eye, BookOpen, CloudSun, Mic, Wrench,
+  Rocket, GitBranch, Database, ShieldCheck, Eye, BookOpen, CloudSun, Mic, Wrench, Castle, Waypoints,
 };
 
 function toOptions(values: string[]): PickerOption[] {
