@@ -200,7 +200,7 @@ This keeps **skills, MCP tools, and Foundry IQ grounding** versioned, auditable,
 
 ## Source
 
-- [Use skills with Microsoft Foundry agents (preview) - azd](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/skills?pivots=azd)
+- [Use skills with Microsoft Foundry agents (preview) - azd](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/skills?pivots=azd#manage-skills-with-the-rest-api)
 - [Curate intent-based toolbox in Foundry (preview)](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/toolbox)
 - [Foundry hosted agents](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/concepts/hosted-agents?view=foundry)
 - [Send telemetry via the OpenTelemetry Collector](https://learn.microsoft.com/en-us/azure/azure-monitor/app/opentelemetry-add-modify?tabs=python#send-telemetry-using-the-opentelemetry-collector) · [Azure Monitor OpenTelemetry distro](https://learn.microsoft.com/en-us/azure/azure-monitor/app/opentelemetry-enable?tabs=python)

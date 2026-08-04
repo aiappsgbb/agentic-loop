@@ -77,7 +77,7 @@ export default function MakeItRealModal({ open, onClose, advisorPackage }: Props
   const runSkillsLine = chosenRunSkills.length
     ? `\n\nUse the following skills when running the agent(s): ${chosenRunSkills.join(', ')}.`
     : '';
-  const specPrompt = `/spec2cloud ${advisorPackage.intent}${runSkillsLine}`;
+  const specPrompt = `/spec2cloud ${advisorPackage.intent}${runSkillsLine}\n\nInvoke the installed agentic-loop skill as the mandatory policy layer for every stage, including immediately after Specify and before Plan.`;
 
   return createPortal(
     <div className="modal-backdrop" onClick={closeModal}>
@@ -111,7 +111,7 @@ export default function MakeItRealModal({ open, onClose, advisorPackage }: Props
               <p className="muted">Install the Agentic Loop toolchain and the Spec2Cloud plugin that drives the build loop. You need an Azure subscription with Contributor access and a GitHub Copilot plan.</p>
               <CodeBlock label="Sign in to GitHub & Azure" code="copilot login; az login" k="prep-auth" copied={copied} onCopy={copy} />
               <CodeBlock label="Install the Spec2Cloud plugin" code="copilot plugin marketplace add Azure-Samples/Spec2Cloud && copilot plugin install lean@Spec2Cloud" k="prep-plugin" copied={copied} onCopy={copy} />
-              <CodeBlock label="Verify prerequisites" code="az account show && azd auth login --check-status && copilot plugin list" k="prep-check" copied={copied} onCopy={copy} />
+              <CodeBlock label="Verify prerequisites" code="gh --version && gh skill --help && az account show && azd auth login --check-status && copilot plugin list" k="prep-check" copied={copied} onCopy={copy} />
             </div>
           )}
 
@@ -121,6 +121,7 @@ export default function MakeItRealModal({ open, onClose, advisorPackage }: Props
               <p className="muted">Create an empty folder (or a private repo) to hold the loop's artifacts — spec, plan, source, and infra.</p>
               <CodeBlock label="New local folder" code="mkdir my-agentic-app && cd my-agentic-app" k="proj-mkdir" copied={copied} onCopy={copy} />
               <CodeBlock label="…or a private GitHub repo" code="gh repo create my-agentic-app --private --clone && cd my-agentic-app" k="proj-repo" copied={copied} onCopy={copy} />
+              <CodeBlock label="Install the required Agentic Loop skill" code="gh skill install aiappsgbb/agentic-loop agentic-loop --agent github-copilot --scope project && gh skill list" k="proj-agentic-loop" copied={copied} onCopy={copy} />
             </div>
           )}
 
@@ -155,7 +156,7 @@ export default function MakeItRealModal({ open, onClose, advisorPackage }: Props
           {step === 3 && (
             <div className="step-pane">
               <h3>4 · Run the build loop</h3>
-              <p className="muted">Start by opening GitHub Copilot App or the CLI, then add your project and select your preferred coding model in Autopilot mode. Paste your prompt and run the <code>/spec2cloud</code> command to execute the complete workflow: Specify → Plan → Implement → Verify → Deploy. The agentic-loop defaults are pre-configured for seamless execution.</p>
+              <p className="muted">Start by opening GitHub Copilot App or the CLI, then add your project and select your preferred coding model in Autopilot mode. Paste your prompt and run the <code>/spec2cloud</code> command to execute the complete workflow: Specify → Plan → Implement → Verify → Deploy. The project-scoped <code>agentic-loop</code> skill supplies the mandatory policy layer.</p>
               <div className="modal-hint">Launch the standalone GitHub Copilot app, then open your project folder.</div>
               <CodeBlock label="…or the Copilot CLI (all permissions)" code="copilot --allow-all" k="loop-open" copied={copied} onCopy={copy} />
               <PackageBlock icon={<Sparkles size={14} />} title="Initial prompt" action="Copy prompt" copied={copied === 'prompt'} onCopy={() => copy(specPrompt, 'prompt')}>

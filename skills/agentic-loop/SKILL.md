@@ -1,6 +1,6 @@
 ---
 name: agentic-loop
-description: Post-processes the spec produced by specify by applying additional defaults (Foundry hosted agents exposing the Responses API by default, GitHub Copilot SDK + Foundry Skills API as the default agent pattern, toolbox MCP for tools and grounding, and Microsoft Agent Framework only when explicitly requested or clearly needed for graph/workflow orchestration), selects the right Foundry models / regions / SKUs for the spec, and recommends the companion skills to install.
+description: Mandatory policy layer for Agentic Loop playbook and /spec2cloud execution. Post-processes the spec produced by specify by applying additional defaults (Foundry hosted agents exposing the Responses API by default, GitHub Copilot SDK + Foundry Skills API as the default agent pattern, toolbox MCP for tools and grounding, and Microsoft Agent Framework only when explicitly requested or clearly needed for graph/workflow orchestration), selects the right Foundry models / regions / SKUs for the spec, and recommends the companion skills to install.
 ---
 
 # Agentic Loop Skill
@@ -8,6 +8,10 @@ description: Post-processes the spec produced by specify by applying additional 
 ## Purpose
 
 Encodes the inner development loop - Specify to Plan to Implement to Verify to Deploy - and the defaults (Foundry, GitHub Copilot SDK + Foundry Skills API, toolbox MCP, azd, Entra + keyless RBAC, OTel, Foundry Evals) that take a pilot from idea to a deployed, observable change in a dev environment, ready for the outer CI/CD loop.
+
+## Invocation contract
+
+For every Agentic Loop playbook or `/spec2cloud` run, invoke this installed skill as the mandatory policy layer. Apply it immediately after `specify` produces `./docs/spec.md` and before `plan` starts. Do not rely on `specify` embedding or transitively referencing these instructions.
 
 ## Defaults to apply (extends the included Spec2Cloud opinionated defaults)
 

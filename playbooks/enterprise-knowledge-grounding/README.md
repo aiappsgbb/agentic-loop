@@ -94,13 +94,22 @@ Take an empty workspace through the **Specify -> Plan -> Implement -> Verify -> 
 
 ```bash
 mkdir hr-onboarding-concierge
+cd hr-onboarding-concierge
 ```
 
 > Want version control from minute one? Create a private GitHub repo instead:
 >
 > ```bash
 > gh repo create hr-onboarding-concierge --private --clone
+> cd hr-onboarding-concierge
 > ```
+
+Install the Agentic Loop skill into the project before opening Copilot. Project scope keeps the policy version explicit and prevents execution from depending on the nested copy inside `specify`.
+
+```bash
+gh skill install aiappsgbb/agentic-loop agentic-loop --agent github-copilot --scope project
+gh skill list   # expect agentic-loop
+```
 
 ---
 
@@ -141,14 +150,14 @@ The **Spec2Cloud** tab should appear in the review panel. If it does not appear 
 Paste this starter prompt:
 
 ```text
-/spec2cloud Build an HR Onboarding Concierge for a fictional company called Zava. Employees and managers should ask onboarding questions about HR policies, benefits, PTO, equipment requests, security training, travel, remote work, and manager first-week checklists. Before planning or implementation, install and run the agentic-loop skill (`aiappsgbb/agentic-loop`, skill `agentic-loop`) to enhance the spec with its app, agent runtime, Azure infrastructure, identity, and telemetry defaults.
+/spec2cloud Build an HR Onboarding Concierge for a fictional company called Zava. Employees and managers should ask onboarding questions about HR policies, benefits, PTO, equipment requests, security training, travel, remote work, and manager first-week checklists. Invoke the installed agentic-loop skill as the mandatory policy layer for every stage, including immediately after Specify and before Plan, to enhance the spec with its app, agent runtime, Azure infrastructure, identity, and telemetry defaults.
 
 Ground all enterprise answers through Foundry IQ agentic retrieval. Do not let the app bypass Foundry IQ with direct ad hoc search calls. Create a realistic mock HR corpus in data/hr-onboarding-corpus with at least eight Markdown documents, including handbook, benefits, PTO and leave, remote work, equipment and access, security training, travel expenses, and manager onboarding guidance. Include metadata for title, owner, effective date, classification, source URI, allowed Entra groups or personas, and citation anchors.
 
 Implement a repeatable ingestion flow that uploads the mock corpus, injects it into the Foundry IQ knowledge base, maps ACL metadata, and verifies cited evidence comes back from Foundry IQ. The agent must apply caller-aware ACL filtering, include citations for grounded answers, and refuse with "I cannot answer from authorized HR sources" when no authorized source supports the response. Create seed evals in data/evals for known answers, citation correctness, ACL allow, ACL deny, freshness, no-authorized-source behavior, and retrieval telemetry.
 ```
 
-> `/spec2cloud` runs the same five-stage loop as the Getting Started playbook. The prompt explicitly tells Spec2Cloud to install and run `agentic-loop` because that skill supplies the Foundry hosted-agent runtime, model, Azure deployment, identity, and telemetry defaults. Everything else in the starter prompt is unique to this playbook: **Foundry IQ agentic retrieval**, mock HR data injection, ACL-aware citations, refusal behavior, and eval coverage.
+> `/spec2cloud` runs the same five-stage loop as the Getting Started playbook. The project-scoped `agentic-loop` prerequisite supplies the Foundry hosted-agent runtime, model, Azure deployment, identity, and telemetry defaults, and the prompt explicitly requires its invocation. Everything else in the starter prompt is unique to this playbook: **Foundry IQ agentic retrieval**, mock HR data injection, ACL-aware citations, refusal behavior, and eval coverage.
 
 > Tip: Prefer to run the loop one stage at a time? Use the same prompt with `/specify` first, then advance through each stage:
 >
