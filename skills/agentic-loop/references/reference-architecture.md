@@ -2,13 +2,13 @@
 
 Reference for the `agentic-loop` skill: maps reference-architecture areas to the Azure services and companion skills to add **only when the spec needs them**. `agentic-loop` matches the spec against this map during skill suggestion; it is not a default resource list.
 
-Use this map to propose additional Azure services only when they are needed or desired by the spec. Do not turn every reference-architecture box into a default resource. The default greenfield baseline remains MAF or the GitHub Copilot SDK (the Copilot SDK for skill-using agents) + Foundry hosted agent + Foundry model; add the services below when the requirement evidence appears.
+Use this map to propose additional Azure services only when they are needed or desired by the spec. Do not turn every reference-architecture box into a default resource. The default greenfield baseline remains GitHub Copilot SDK + Foundry Skills API + toolbox MCP + Foundry hosted agent + Foundry model; add MAF only when explicitly requested or clearly needed for graph/workflow orchestration.
 
 | Reference architecture area | Add when the spec needs | Suggested service / capability | Skill |
 | --- | --- | --- | --- |
 | Hosted Agent | Hosted runtime, agent deployment, prompt agent, agent tools, evals, model deployment, project setup | Azure AI Foundry hosted agents, Foundry projects, Foundry models, Foundry evals | `microsoft/azure-skills` / `microsoft-foundry` |
 | Foundry Models | Frontier model deployment, region/SKU selection, quota/capacity planning | Foundry model deployments | `microsoft/azure-skills` / `microsoft-foundry` |
-| Foundry IQ | Grounded knowledge, retrieval, vector/hybrid search, OCR/document extraction, speech features | Azure AI Search, Azure AI Document Intelligence, Azure AI Speech | `microsoft/azure-skills` / `azure-ai` |
+| Foundry IQ | Grounded knowledge, retrieval, vector/hybrid search, OCR/document extraction, speech features | Foundry IQ knowledge base exposed through the toolbox MCP endpoint; Azure AI Search / Document Intelligence / Speech as backing services when needed | `microsoft/azure-skills` / `azure-ai` - see [`foundry-iq-grounding.md`](foundry-iq-grounding.md) for the brokered toolbox path and direct-retrieval escape hatch |
 | Work IQ / Microsoft 365 integration | Microsoft Graph, delegated auth, enterprise workflow integration, agent identity | Entra app registration or Entra Agent ID; use a Work IQ-specific skill if available outside `microsoft/azure-skills` | `microsoft/azure-skills` / `entra-app-registration`, `entra-agent-id` |
 | Fabric IQ / analytics grounding | Analytics data, KQL exploration, data lake or blob-backed grounding | Azure Data Explorer for KQL analytics; Azure Storage/Data Lake for files and grounding data | `microsoft/azure-skills` / `azure-kusto`, `azure-storage` |
 | Toolbox / APIs / MCP tools | API front door, MCP governance, tool routing, quotas, rate limits, semantic caching | Azure API Management as AI Gateway | `microsoft/azure-skills` / `azure-aigateway` |

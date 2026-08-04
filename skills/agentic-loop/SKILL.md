@@ -1,24 +1,25 @@
 ---
 name: agentic-loop
-description: Post-processes the spec produced by specify by applying additional defaults (Foundry hosted agents, Microsoft Agent Framework or the GitHub Copilot SDK as the agent framework - both BYOK against Foundry models, the Copilot SDK for skills and integrated agent loops), selects the right Foundry models / regions / SKUs for the spec, and recommends the companion skills to install.
+description: Post-processes the spec produced by specify by applying additional defaults (Foundry hosted agents exposing the Responses API by default, GitHub Copilot SDK + Foundry Skills API as the default agent pattern, toolbox MCP for tools and grounding, and Microsoft Agent Framework only when explicitly requested or clearly needed for graph/workflow orchestration), selects the right Foundry models / regions / SKUs for the spec, and recommends the companion skills to install.
 ---
 
 # Agentic Loop Skill
 
 ## Purpose
 
-Encodes the inner development loop - Specify to Plan to Implement to Verify to Deploy - and the defaults (Foundry, Microsoft Agent Framework or the GitHub Copilot SDK as the agent framework, azd, Entra + keyless RBAC, OTel, Foundry Evals) that take a pilot from idea to a deployed, observable change in a dev environment, ready for the outer CI/CD loop.
+Encodes the inner development loop - Specify to Plan to Implement to Verify to Deploy - and the defaults (Foundry, GitHub Copilot SDK + Foundry Skills API, toolbox MCP, azd, Entra + keyless RBAC, OTel, Foundry Evals) that take a pilot from idea to a deployed, observable change in a dev environment, ready for the outer CI/CD loop.
 
 ## Defaults to apply (extends the included Spec2Cloud opinionated defaults)
 
 When choices are unspecified, prefer:
 
-- **Agent hosting** - Use Foundry **hosted agents** to implement AI agents. Proactively propose an agent-based design even when the user didn't explicitly ask for agents, if the use case involves reasoning over tools, multi-step workflows, data grounding, or external system calls.
-- **Agent framework** - Build every agent with **Microsoft Agent Framework (MAF)** **or** the **GitHub Copilot SDK** - pick one framework per agent, don't combine them. Both run BYOK against Microsoft Foundry models and host on Foundry **hosted agents** (the Copilot SDK via the **invocations** protocol). Use **MAF** for basic agents (simple model calls, light tool use, no skills) and for graph/workflow orchestration. Use the **GitHub Copilot SDK** when the use case benefits from **agent skills** or the **integrated agent loop**.
-- **Skills first** - When the design uses agent skills, **author them locally before implementing the agent, then publish them on Foundry**. Skills are governed artifacts the agent depends on: author each as `./skills/<skill-name>/SKILL.md` in the implement stage, then add a `postprovision` hook in `azure.yaml` that publishes each one with `azd ai skill create <skill-name> --file ./skills/<skill-name>/SKILL.md`.
-- **Custom MCP servers** - When the design uses **custom MCP servers** (or other tools), govern them through Foundry **connections** instead of hardcoding endpoints in agent code or images. Add a `postprovision` hook in `azure.yaml` that registers each MCP server the agent uses as a connection with `azd ai connection create <mcp-server-name> --kind remote-tool --target <mcp-server-url> `.
-- **Toolbox** - Bundle the published skills, MCP connections, and any connectionless tools (e.g. `web_search`, `file_search`) into one governed **toolbox** the agent consumes through a single MCP endpoint. Author `./src/tools.yaml` in the implement stage (see [`references/foundry-toolbox.md`](references/foundry-toolbox.md)), then add a `postprovision` hook in `azure.yaml` - **ordered after the skill and connection hooks**, since it references them by name - that runs `azd ai toolbox create <toolbox-name> --from-file ./src/tools.yaml`. The command writes the runtime endpoint to `TOOLBOX_<NORMALIZED_NAME>_MCP_ENDPOINT`; point the agent's tool discovery at it.
+- **Agent hosting** - Use Foundry **hosted agents** to implement AI agents. Expose the **Responses API** as the default hosted-agent protocol so clients call an OpenAI-compatible `/responses` endpoint and the platform manages conversation history, streaming, and session lifecycle. Use invocations only when the user explicitly needs that protocol or an existing sample/runtime requires it. Proactively propose an agent-based design even when the user didn't explicitly ask for agents, if the use case involves reasoning over tools, multi-step workflows, data grounding, or external system calls.
+- **Agent framework** - Default to the **GitHub Copilot SDK** for hosted agents. It runs BYOK against Microsoft Foundry models over the **Responses API**, consumes Foundry Skills from the Skills API, and bridges the Foundry toolbox MCP endpoint for tools and grounding. Use **Microsoft Agent Framework (MAF)** only when the user explicitly asks for MAF or the task is clearly graph/workflow orchestration. Pick one framework per agent; do not combine them.
+- **Skills first** - Treat **Foundry Skills API** skills as the default reusable behavior layer for agentic-loop specs. Author each skill as `./skills/<skill-name>/SKILL.md` in the implement stage, then use the **azd Foundry extension** for skill data-plane management (`azd ai skill create/update/list/show/download`). Add `postprovision` hooks in `azure.yaml` for repeatable create/update from the local `SKILL.md` files; use REST/SDK only for gaps not covered by `azd`. The hosted agent image must not copy this folder; at runtime the Copilot SDK agent downloads the governed skill versions from Foundry into a temp directory.
+- **Tools and grounding through toolbox MCP** - Govern custom MCP servers, Foundry IQ / CognitiveSearch grounding connections, A2A tools, and connectionless tools through Foundry **connections** and a single **toolbox**. Do not hardcode tool URLs, Search clients, or connection secrets in the agent runtime by default.
+- **Toolbox** - Bundle the published skills, MCP connections, Foundry IQ grounding connection, and any connectionless tools (e.g. `web_search`, `file_search`) into one governed **toolbox** the agent consumes through a single MCP endpoint. Author `./src/tools.yaml` in the implement stage (see [`references/foundry-toolbox.md`](references/foundry-toolbox.md)), then add a `postprovision` hook in `azure.yaml` - **ordered after the skill and connection hooks**, since it references them by name - that runs `azd ai toolbox create <toolbox-name> --from-file ./src/tools.yaml`. The command writes the runtime endpoint to `TOOLBOX_<NORMALIZED_NAME>_MCP_ENDPOINT`; point the Copilot SDK agent's tool discovery at it.
 - **Foundry model** - Use `gpt-5.4-mini` as the default Foundry model for general-purpose agent and chat workloads unless the spec clearly requires stronger reasoning, embeddings, image/audio, document AI, or cost routing.
+- **Grounded retrieval (Foundry IQ)** - When the agent answers over enterprise/private knowledge, ground it through a **Foundry IQ** knowledge base exposed as a toolbox MCP tool (typically a brokered `CognitiveSearch` / Foundry IQ connection on the toolbox). Keep grounding caller-aware (ACL-filtered), cited, and deterministically refused when no authorized source supports the answer. Direct in-code Search / Foundry IQ retrieval is an escape hatch only; see [`references/foundry-iq-grounding.md`](references/foundry-iq-grounding.md).
 - **Evals** - Use **Foundry Evals** for model and agent quality, safety, and regression gates. Out of scope unless the user explicitly calls for evals; when in scope, wire them in from day one.
 - **Guardrails** - Use **Foundry Guardrails** to reduce safety and security risks, so users can engage with AI apps and agents confidently. Adding custom guardrail controls is out of scope unless the user explicitly calls for custom guardrails.
 - **Identity & keyless RBAC** - All service-to-service auth uses **managed identities + least-privilege RBAC**; never admin keys, connection strings, or shared secrets on the control/data plane. The generated infra (Bicep, owned by `azure-prepare` / `microsoft-foundry`) **must** create every role assignment in the [Keyless identity & RBAC contract](#keyless-identity--rbac-contract) below. Defer exact role IDs and assignment syntax to `azure-rbac`.
@@ -26,7 +27,7 @@ When choices are unspecified, prefer:
 
 ### Skills & tools (MCP) lifecycle across the loop
 
-When the spec includes agent skills or MCP-server tools, orchestrate them across the loop stages on a single Foundry **toolbox** (a toolbox version carries both skills and tools). This file orchestrates; the **full Implement→Verify lifecycle** (author skills/MCP servers locally → `azd provision` → create/version skills, register MCP-server tools, attach to a toolbox, download skills back into `./skills`, wire the agent, verify discovery) and the toolbox mechanics (`azd ai toolbox create`, the `McpBridge`, the `CopilotClient` agent) live in [`references/foundry-toolbox.md`](references/foundry-toolbox.md#skills--tools-mcp-lifecycle-across-the-loop) and its reference agent [`references/copilot-sdk-with-toolbox.py`](references/copilot-sdk-with-toolbox.py). Defer MCP server authoring to `python-mcp-server-generator`, and MCP/tool routing governance to `azure-aigateway`.
+When the spec includes agent skills, MCP-server tools, or Foundry IQ grounding, orchestrate them across the loop stages on a single Foundry **toolbox** (a toolbox version carries skills, tools, and grounding connections). This file orchestrates; the **full Implement→Verify lifecycle** (author skills/MCP servers locally → `azd provision` → create/update skills with `azd ai skill`, register MCP-server tools and grounding connections, attach to a toolbox, download skills to a temp runtime directory, wire the agent, verify discovery) and the toolbox mechanics (`azd ai skill`, `azd ai toolbox create`, the `McpBridge`, the `CopilotClient` agent) live in [`references/foundry-toolbox.md`](references/foundry-toolbox.md#skills--tools-mcp-lifecycle-across-the-loop) and its reference agent [`references/copilot-sdk-with-toolbox.py`](references/copilot-sdk-with-toolbox.py). Defer MCP server authoring to `python-mcp-server-generator`, and MCP/tool routing governance to `azure-aigateway`.
 
 The net effect: **both skills and MCP tools** stay versioned, auditable, and updatable without rebuilding the agent image — re-version on Foundry, promote the toolbox `default_version`, and the agent picks up the change on its next session.
 
@@ -36,14 +37,14 @@ The net effect: **both skills and MCP tools** stay versioned, auditable, and upd
 
 ### Agent Framework selection
 
-**Two frameworks, pick one per agent** - build each agent with **either Microsoft Agent Framework (MAF)** or the **GitHub Copilot SDK** (BYOK Foundry models, invocations protocol). MAF covers basic agents and graph/workflow orchestration; the Copilot SDK covers skill-using agents and the integrated agent loop. Don't combine them in one agent.
+**Default to the GitHub Copilot SDK.** Build hosted agents with the **GitHub Copilot SDK** unless the user explicitly asks for MAF or the task is clearly graph/workflow orchestration. Both framework paths can run BYOK against Foundry models and host on Foundry hosted agents, but the Copilot SDK is the default because it consumes Foundry Skills API content and the toolbox MCP endpoint directly. Don't combine frameworks in one agent.
 
 | Agent shape | Build with | Companion skill(s) |
 | --- | --- | --- |
-| **Basic / orchestration agent** - simple model calls, light tool/function use, or graph/workflow orchestration; no agent skills | **MAF** | `microsoft-agent-framework` |
-| **Skill-using / integrated-loop agent** - uses agent skills or the integrated agent loop | **GitHub Copilot SDK** | `copilot-sdk` |
+| **Default hosted agent** - unspecified framework, tools, grounding, skills, or integrated agent loop | **GitHub Copilot SDK** | `copilot-sdk` |
+| **Graph/workflow orchestration agent** - user explicitly requests MAF, or the design is clearly a graph/workflow orchestrator | **MAF** | `microsoft-agent-framework` |
 
-Install `microsoft-agent-framework` for MAF agents and `copilot-sdk` for Copilot SDK agents. Document in `./docs/spec.md` or `./docs/plan.md` which framework each agent uses (MAF or Copilot SDK).
+Install `copilot-sdk` by default for agentic-loop specs. Install `microsoft-agent-framework` only for explicit MAF or graph/workflow orchestration. Document in `./docs/spec.md` or `./docs/plan.md` which framework each agent uses (Copilot SDK default, or MAF with the trigger that justified it).
 
 ### Python dependency contract (`requirements.txt`)
 
@@ -71,7 +72,7 @@ When implementing a **GitHub Copilot SDK hosted agent**, wire in the `configure_
 
 ### Reference architecture service map
 
-Propose additional Azure services only when the spec needs them — never turn every reference-architecture box into a default resource. The full area → "add when" → service → companion-skill map is in [`references/reference-architecture.md`](references/reference-architecture.md). The default greenfield baseline stays MAF or the GitHub Copilot SDK + Foundry hosted agent + Foundry model.
+Propose additional Azure services only when the spec needs them — never turn every reference-architecture box into a default resource. The full area → "add when" → service → companion-skill map is in [`references/reference-architecture.md`](references/reference-architecture.md). The default greenfield baseline stays GitHub Copilot SDK + Foundry Skills API + toolbox MCP + Foundry hosted agent + Foundry model.
 
 ## Foundry Models Selector
 
@@ -83,7 +84,7 @@ For model deployment, provisioning, quota, and RBAC details, invoke or recommend
 
 ## Install suggested skills
 
-Match the current `./docs/spec.md` against the [skill catalog](references/build-skills-catalog.md) and suggest installing every skill whose trigger appears in the spec. `microsoft-foundry` is the default for every agentic-loop spec; install `microsoft-agent-framework` for MAF agents (basic agents, graph/workflow orchestration) and `copilot-sdk` for Copilot SDK agents (skill-using or integrated-loop). The **Copilot SDK skills default** (author each `./skills/<skill-name>/SKILL.md`, version on Foundry, attach to a toolbox, download into `./skills`) is owned by this skill — see [`references/foundry-toolbox.md`](references/foundry-toolbox.md).
+Match the current `./docs/spec.md` against the [skill catalog](references/build-skills-catalog.md) and suggest installing every skill whose trigger appears in the spec. `microsoft-foundry` and `copilot-sdk` are the defaults for every agentic-loop spec; install `microsoft-agent-framework` only for explicit MAF or graph/workflow orchestration. The **Copilot SDK skills default** (author each `./skills/<skill-name>/SKILL.md`, manage Foundry skill versions with `azd ai skill`, attach to a toolbox, download into a temp runtime directory) is owned by this skill — see [`references/foundry-toolbox.md`](references/foundry-toolbox.md).
 
 Before installing, run a lightweight preflight:
 
@@ -109,4 +110,4 @@ Require GitHub CLI `v2.90.0+`; upgrade if older. Use `gh skills` as the canonica
 
 ### Reuse named run skills
 
-When the prompt **explicitly names** a run-phase skill, reuse it instead of generating a new one. Match the named skill against the [run skills catalog](references/run-skills-catalog.md): if it is listed, install/download the existing skill into `./skills/<skill-name>/` rather than authoring a fresh `SKILL.md`, then create the versioned skill on the Foundry project and attach it to the agent's toolbox (the Copilot SDK skills default — see [`references/foundry-toolbox.md`](references/foundry-toolbox.md)). Only author a brand-new skill when the named skill is **not** in the catalog.
+When the prompt **explicitly names** a run-phase skill, reuse it instead of generating a new one. Match the named skill against the [run skills catalog](references/run-skills-catalog.md): if it is listed, install/download the existing skill into `./skills/<skill-name>/` as the repo authoring artifact rather than authoring a fresh `SKILL.md`, then create/update the versioned skill on the Foundry project with `azd ai skill` and attach it to the agent's toolbox. The hosted agent still downloads the governed skill version into temp at runtime (the Copilot SDK skills default — see [`references/foundry-toolbox.md`](references/foundry-toolbox.md)). Only author a brand-new skill when the named skill is **not** in the catalog.
