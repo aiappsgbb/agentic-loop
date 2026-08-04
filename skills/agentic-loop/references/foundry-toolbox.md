@@ -171,7 +171,7 @@ Install the Python OTel API for the SDK with `pip install copilot-sdk[telemetry]
 
 ## Skills & tools (MCP) lifecycle across the loop
 
-When the spec includes agent skills or MCP-server tools, orchestrate them across the loop stages on a single Foundry **toolbox** (a toolbox version carries both skills and tools). Defer MCP server authoring to `python-mcp-server-generator`, and MCP/tool routing governance to `azure-aigateway`.
+When the spec includes agent skills, MCP-server tools, or grounding connections, orchestrate them across the loop stages on a single Foundry **toolbox** (a toolbox version carries skills, tools, and grounding). Defer MCP server authoring to `python-mcp-server-generator`, and MCP/tool routing governance to `azure-aigateway`.
 
 **Implement stage - author skills and MCP servers locally**
 

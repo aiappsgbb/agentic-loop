@@ -2,14 +2,14 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   BookOpen, Rocket, ShieldCheck, GitBranch, Database, Eye, ArrowRight, Layers, Wrench, CloudSun,
-  Search, X, Brain, Workflow, Tag, Mic,
+  Search, X, Brain, Workflow, Tag, Mic, Castle, Waypoints, Sparkles,
 } from 'lucide-react';
 import { playbooks, playbookHasDeck, scenariosForPlaybook } from '../data/links';
 import { getBuildSkill, getRunSkill } from '../data/skills';
 import CapabilityPicker, { type PickerOption } from '../components/CapabilityPicker';
 
 const ICONS: Record<string, typeof Rocket> = {
-  Rocket, GitBranch, Database, ShieldCheck, Eye, BookOpen, CloudSun, Mic, Wrench,
+  Rocket, GitBranch, Database, ShieldCheck, Eye, BookOpen, CloudSun, Mic, Wrench, Castle, Waypoints,
 };
 
 function toOptions(values: string[]): PickerOption[] {
@@ -156,17 +156,20 @@ export default function Playbooks() {
                 </div>
               </div>
               <div className="meta">
+                {p.accelerator && (
+                  <span className="playbook-accelerator"><Sparkles size={11} /> Accelerator</span>
+                )}
                 <span className="difficulty">{p.level}</span>
                 {interactive && <span className="playbook-open">Open <ArrowRight size={12} /></span>}
               </div>
             </>
           );
           return interactive ? (
-            <Link key={p.slug} to={`/playbooks/${p.slug}`} className="playbook-row interactive">
+            <Link key={p.slug} to={`/playbooks/${p.slug}`} className={`playbook-row interactive${p.accelerator ? ' playbook-row--accelerator' : ''}`}>
               {inner}
             </Link>
           ) : (
-            <div key={p.slug} className="playbook-row">{inner}</div>
+            <div key={p.slug} className={`playbook-row${p.accelerator ? ' playbook-row--accelerator' : ''}`}>{inner}</div>
           );
         })}
       </div>

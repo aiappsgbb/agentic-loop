@@ -1427,6 +1427,33 @@
   background: rgba(74,222,128,0.12); color: var(--success); font-size: 11px;
 }
 
+/* Advanced accelerators — Citadel & Threadlight: amber accent */
+.playbook-row--accelerator {
+  border-color: color-mix(in srgb, var(--accent-4) 55%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent-4) 8%, transparent), transparent 60%),
+    var(--surface);
+}
+.playbook-row--accelerator:hover {
+  border-color: color-mix(in srgb, var(--accent-4) 78%, var(--border));
+}
+.playbook-row--accelerator .ic {
+  background: color-mix(in srgb, var(--accent-4) 16%, var(--surface-strong));
+  color: var(--accent-4);
+}
+.playbook-row--accelerator .difficulty {
+  background: color-mix(in srgb, var(--accent-4) 16%, transparent);
+  color: var(--accent-4);
+}
+.playbook-accelerator {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;
+  letter-spacing: 0.02em; text-transform: uppercase;
+  color: var(--accent-4);
+  background: color-mix(in srgb, var(--accent-4) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-4) 40%, transparent);
+}
+
 /* ---------- Theme switch ---------- */
 .theme-switch {
   display: inline-flex;

@@ -107,7 +107,7 @@ Require GitHub CLI `v2.90.0+`; upgrade if older. Use `gh skills` as the canonica
 4. For automatic installs, run the command below only for skills missing from `gh skills list`:
 
    ```bash
-   gh skill install <repository> <skill> --agent github-copilot --scope project
+   gh skills install <repository> <skill> --agent github-copilot --scope project
    ```
 
 5. For manual installs, point the user at the repository's install instructions and move on.
