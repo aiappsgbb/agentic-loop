@@ -38,6 +38,7 @@ export interface AdvisorPackage {
   playbooks: Playbook[];
   buildSkills: string[];
   deploymentSkills: string[];
+  runSkills: string[];
   tools: string[];
   runArchitecture: string[];
   copilotPrompt: string;
@@ -279,6 +280,10 @@ export function buildAdvisorPackage(args: {
     ...DEFAULT_DEPLOYMENT_SKILLS,
     ...requirements.flatMap(r => r.deploymentSkills),
   ]);
+  const runSkills = unique([
+    ...(args.scenario?.runSkills ?? []),
+    ...selectedPlaybooks.flatMap(p => p.runSkills ?? []),
+  ]);
   const tools = unique(requirements.flatMap(r => r.tools));
   const runArchitecture = unique([
     'Microsoft Foundry Hosted Agents',
@@ -300,6 +305,7 @@ export function buildAdvisorPackage(args: {
     playbooks: selectedPlaybooks,
     buildSkills,
     deploymentSkills,
+    runSkills,
     tools,
     runArchitecture,
     deploymentCommand: 'azd up',

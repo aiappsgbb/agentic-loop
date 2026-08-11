@@ -14,7 +14,7 @@ import {
   inferRequirementsFromSelections,
 } from '../data/advisor';
 import { playbooks, playbookMatchTags, playbooksForScenario, type Scenario } from '../data/links';
-import { getBuildSkill, getRunSkill } from '../data/skills';
+import { getBuildSkill } from '../data/skills';
 import samplePrompts from '../data/sample-prompts.json';
 
 const CAPABILITIES: PickerOption[] = [
@@ -133,12 +133,6 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro }:
     return [...ids];
   }, [relatedPlaybooks]);
 
-  const relatedRunSkills = useMemo(() => {
-    const ids = new Set<string>();
-    relatedPlaybooks.forEach(p => (p.runSkills ?? []).forEach(s => { if (getRunSkill(s)) ids.add(s); }));
-    return [...ids];
-  }, [relatedPlaybooks]);
-
   function craftPrompt() {
     const caps = capabilities.map(c => labelMap.get(c)).filter(Boolean);
     const bls = blocks.map(c => labelMap.get(c)).filter(Boolean);
@@ -215,9 +209,9 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro }:
           <div className="skills-card">
             <h3><Rocket size={14} /> Run SKILLs</h3>
             <p className="sub">Reusable run-phase skills the agent invokes at execution time.</p>
-            {relatedRunSkills.length > 0 ? (
+            {advisorPackage.runSkills.length > 0 ? (
               <div className="advisor-chip-list">
-                {relatedRunSkills.map(s => (
+                {advisorPackage.runSkills.map(s => (
                   <Link key={s} to={`/skills/${s}`} className="skill-pill run skill-pill-link">
                     <Rocket size={12} /> {s}
                   </Link>

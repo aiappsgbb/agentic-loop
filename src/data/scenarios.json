@@ -527,7 +527,7 @@
       "Knowledge Grounding",
       "Forms Recognition"
     ],
-    "prompt": "Build a smart-factory app where industrial agents use MCP servers to access real-time machine, MES, and supply-chain data, then apply specialized agent skills to detect anomalies, optimize throughput, and guide operators",
+    "prompt": "Build a smart-factory app where industrial agents use MCP servers to access real-time machine, MES, maintenance, quality, and supply-chain data. Use the factory-operations-triage skill to correlate anomalies and produce evidence-backed operator actions, and use the production-flow-optimizer skill to diagnose bottlenecks and propose safe, constraint-aware production and shift plans. Require operator approval before any operational-system write or control action",
     "capabilities": [
       "Frontier Models",
       "Forms Recognition"
@@ -540,9 +540,8 @@
       "Multi-Agent Orchestration"
     ],
     "runSkills": [
-      "finalize-agent-prompt",
-      "roundup",
-      "md-to-docx"
+      "factory-operations-triage",
+      "production-flow-optimizer"
     ],
     "link": "https://www.microsoft.com/en-us/ai/use-case/transform-factory-operations-with-ai"
   },
@@ -892,7 +891,7 @@
     "tags": [
       "Personalization"
     ],
-    "prompt": "Build a patient-engagement app where an agent uses MCP servers to access patient records and care plans, then applies specialized agent skills to personalize access, answer questions, and drive better outcomes",
+    "prompt": "Build a patient-engagement app where an agent uses MCP servers to access authorized patient records, care plans, consent, and follow-up data. Use the care-gap-outreach-planner skill to prioritize care gaps and prepare personalized, consent-aware outreach, and use the post-discharge-care-coordinator skill to manage follow-up tasks, patient responses, and rule-based escalation. Keep diagnosis, treatment changes, and urgent clinical decisions with licensed professionals",
     "capabilities": [
       "Frontier Models"
     ],
@@ -904,7 +903,8 @@
       "Knowledge Grounding"
     ],
     "runSkills": [
-      "tldr-prompt"
+      "care-gap-outreach-planner",
+      "post-discharge-care-coordinator"
     ],
     "link": "https://www.microsoft.com/en-us/ai/use-case/drive-better-patient-outcomes-with-ai"
   },
@@ -1561,7 +1561,7 @@
       "Knowledge Grounding",
       "Governance"
     ],
-    "prompt": "Build a lending app where agents use MCP servers to gather application, credit, and compliance data, then apply specialized agent skills to automate analysis, assess risk, and accelerate approvals",
+    "prompt": "Build a lending and mortgage app where agents use MCP servers to gather authorized application, document, credit, collateral, and compliance data. Use the loan-file-readiness-reviewer skill to validate completeness, consistency, freshness, and provenance, and use the mortgage-underwriting-coordinator skill to assemble policy evidence, conditions, and fair-lending checks for a human underwriter. Keep approval, denial, and pricing decisions with authorized human reviewers",
     "capabilities": [
       "Frontier Models",
       "Forms Recognition"
@@ -1574,9 +1574,8 @@
       "Human-in-the-Loop"
     ],
     "runSkills": [
-      "incident-postmortem",
-      "md-to-docx",
-      "roundup"
+      "loan-file-readiness-reviewer",
+      "mortgage-underwriting-coordinator"
     ],
     "link": "https://www.microsoft.com/en-us/ai/use-case/modernize-lending-and-mortgage-processes-with-ai"
   },

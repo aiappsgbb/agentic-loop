@@ -69,9 +69,7 @@ export default function MakeItRealModal({ open, onClose, advisorPackage }: Props
     }
   }
 
-  const runSkillIds = new Set<string>();
-  advisorPackage.playbooks.forEach(p => (p.runSkills ?? []).forEach(s => { if (getRunSkill(s)) runSkillIds.add(s); }));
-  const availableRunSkills = [...runSkillIds];
+  const availableRunSkills = advisorPackage.runSkills.filter(s => getRunSkill(s));
 
   const chosenRunSkills = availableRunSkills.filter(s => selectedRunSkills.includes(s));
   const runSkillsLine = chosenRunSkills.length

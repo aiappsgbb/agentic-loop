@@ -3,7 +3,7 @@ import {
   KeyRound, ShieldCheck, FileCheck2, Rocket, Plug,
   Code as Github,
   Wand2, Briefcase, TrendingUp, AlertTriangle, Share2, FileText, Newspaper, ScrollText,
-  RefreshCw,
+  RefreshCw, Factory, HeartPulse, Landmark,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -201,6 +201,54 @@ export interface RunSkill {
  * Source: agentic-loop/skills/agentic-loop/references/run-skills-catalog.md
  */
 export const RUN_SKILLS: RunSkill[] = [
+  {
+    id: 'factory-operations-triage',
+    name: 'Factory Operations Triage',
+    repo: 'aiappsgbb/agentic-loop',
+    description: 'Triage smart-factory anomalies, maintenance signals, and quality deviations with evidence-backed operator actions.',
+    category: 'Manufacturing',
+    icon: Factory,
+  },
+  {
+    id: 'production-flow-optimizer',
+    name: 'Production Flow Optimizer',
+    repo: 'aiappsgbb/agentic-loop',
+    description: 'Diagnose production bottlenecks and propose safe, constraint-aware flow and shift plans.',
+    category: 'Manufacturing',
+    icon: Factory,
+  },
+  {
+    id: 'care-gap-outreach-planner',
+    name: 'Care-Gap Outreach Planner',
+    repo: 'aiappsgbb/agentic-loop',
+    description: 'Prioritize care gaps and prepare consent-aware patient outreach without making clinical decisions.',
+    category: 'Healthcare',
+    icon: HeartPulse,
+  },
+  {
+    id: 'post-discharge-care-coordinator',
+    name: 'Post-Discharge Care Coordinator',
+    repo: 'aiappsgbb/agentic-loop',
+    description: 'Coordinate follow-up tasks, patient responses, and rule-based escalation after discharge.',
+    category: 'Healthcare',
+    icon: HeartPulse,
+  },
+  {
+    id: 'loan-file-readiness-reviewer',
+    name: 'Loan-File Readiness Reviewer',
+    repo: 'aiappsgbb/agentic-loop',
+    description: 'Review lending files for completeness, consistency, freshness, and traceable exceptions.',
+    category: 'Financial services',
+    icon: Landmark,
+  },
+  {
+    id: 'mortgage-underwriting-coordinator',
+    name: 'Mortgage Underwriting Coordinator',
+    repo: 'aiappsgbb/agentic-loop',
+    description: 'Assemble evidence, conditions, and compliance checks for human mortgage underwriting.',
+    category: 'Financial services',
+    icon: Landmark,
+  },
   {
     id: 'eyeball',
     name: 'Eyeball',
