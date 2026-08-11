@@ -13,6 +13,8 @@ Encodes the inner development loop - Specify to Plan to Implement to Verify to D
 
 For every Agentic Loop playbook or `/spec2cloud` run, invoke this installed skill as the mandatory policy layer. Apply it immediately after `specify` produces `./docs/spec.md` and before `plan` starts. Do not rely on `specify` embedding or transitively referencing these instructions.
 
+Run the [RBAC pre-flight](#rbac-pre-flight) **before step 1** of the run, so a permission gap is reported as one complete list before any resource is created. Because it is owned here, every playbook inherits it with no playbook-specific wiring.
+
 ## Defaults to apply (extends the included Spec2Cloud opinionated defaults)
 
 When choices are unspecified, prefer:
@@ -63,10 +65,21 @@ When post-processing a spec, explicitly add or confirm these contracts in the ge
 | **azd environment naming** | Suggest a convention-based name and let the user accept or override it. Example: `agentic-loop-weather-dev-eus2` from app name, stage, and region. |
 | **Durable azd artifacts** | Keep `.azure/deployment-plan.md` as a durable repo artifact. If `.azure/` is ignored, prefer `.azure/*` plus `!.azure/deployment-plan.md`. |
 | **Playbook artifact option** | When the user wants the fastest deploy path, offer a deploy-ready playbook artifact that can be downloaded and deployed without rebuilding from source. |
+| **Caller RBAC pre-flight** | State the scopes the run targets (subscription, and any pre-existing resource group / Foundry account / project) so the pre-flight can be evaluated before step 1, and record its verdict. See [RBAC pre-flight](#rbac-pre-flight). |
 
 ### Keyless identity & RBAC contract
 
 Every component authenticates with a **managed identity** (user-assigned preferred) and **least-privilege RBAC** - no admin keys, no connection strings on the control/data plane. When post-processing the spec, declare the role assignments so the generated **Bicep creates them as part of provisioning**. The full principal → scope → role matrix (frontend/backend ACR pulls, backend → AI account, the Foundry project MI, hosted-agent runtime MIs for BYOK inference, the agent identity for tools, and telemetry publishers) and its notes live in [`references/rbac-contract.md`](references/rbac-contract.md). Defer exact role GUIDs and `Microsoft.Authorization/roleAssignments` syntax to `azure-rbac`.
+
+#### RBAC pre-flight
+
+Those assignments are created **by** the deployment, so the **caller** needs rights to create the resources *and* to write every row of the matrix. Verify that **before step 1**, never mid-provisioning: an RBAC gap discovered after partial resources exist gets fixed one scope at a time, when the whole set was knowable up front.
+
+Diff the [deployer prerequisites](references/rbac-contract.md#deployer-prerequisites-pre-flight) against the caller's **effective** (inherited and group-derived) assignments at each scope in play - subscription, resource group, Foundry AI account, and Foundry project - and report **every** gap at once as `principal → scope → role`, with a ready-to-run `az role assignment create` block to hand to a subscription owner. Verdicts: `PASS` (one line, silenceable - a fully-permissioned run adds no noise), `BLOCKED` (do not start step 1), `ERROR` (resolve it, don't skip the gate). The loop cannot grant itself permissions, so `BLOCKED` is a stop-and-hand-off, not a repair loop.
+
+> Note that subscription **Owner does not** satisfy `Azure AI Account Owner` or `Azure AI Project Manager` - those carry `dataActions`, which Owner's `*` does not cover. Grant them explicitly.
+
+The full step - scopes, role equivalence, the report contract, and the verdict/exit-code table - is in [`references/rbac-preflight.md`](references/rbac-preflight.md), with the reference check script [`references/check_rbac_preflight.py`](references/check_rbac_preflight.py). It needs only the caller identity and the scopes in play, so it is self-contained enough to be lifted into a shared cross-playbook step. In an azd-driven repo, also wire it as a `preprovision` hook so a bare `azd up` is gated too.
 
 ### Observability contract
 
