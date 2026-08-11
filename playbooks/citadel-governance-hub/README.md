@@ -193,8 +193,9 @@ This is the payoff. Each control is a concrete, observable behaviour — not a p
 
 This is where the two worlds meet. You built an agent with the [Agentic Loop](../getting-started/README.md) — or ran a [Threadlight](../threadlight-pipeline/README.md) pilot — and it currently calls models directly. **Onboarding turns it into a governed spoke:** the agent keeps its code and its identity, but its model calls now flow through the hub, keyless, under a quota and a policy.
 
-Again, this is a **skill**, not a runbook — [`citadel-spoke-onboarding`](https://github.com/aiappsgbb/awesome-gbb/tree/main/skills/citadel-spoke-onboarding) does the per‑team wiring:
+> **The spoke must be a Foundry hosted agent.** Citadel drives a different build-skill set than [Getting started](../getting-started/README.md), but the artifact contract is the same: the loop-built agent has to be a Foundry **hosted agent** (`kind: hosted`) — your image and your agent loop — not a portal-authored prompt/declarative agent, which looks nearly identical in the agent list. Before onboarding, confirm the artifact type and repair it if it is wrong; the `agentic-loop` skill's [hosted-agent guarantee](https://github.com/aiappsgbb/agentic-loop/blob/main/skills/agentic-loop/references/hosted-agent-guarantee.md) covers the read-back and the repair procedure. A prompt agent has no runtime of its own to attach a managed identity and toolbox to, so it cannot become a governed spoke.
 
+Again, this is a **skill**, not a runbook — [`citadel-spoke-onboarding`](https://github.com/aiappsgbb/awesome-gbb/tree/main/skills/citadel-spoke-onboarding) does the per‑team wiring:
 ```text
 Use the citadel-spoke-onboarding skill to grant an Access Contract for the
 MyTeam / MyAgent / DEV use case against hub <HUB-APIM>, keyless via a Foundry
