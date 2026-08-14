@@ -1,6 +1,6 @@
 # Keyless identity & RBAC contract
 
-Reference for the `agentic-loop` skill: the principal → scope → role matrix the generated **Bicep must create as part of provisioning**. `agentic-loop` declares the intent (managed identities + least-privilege RBAC, no admin keys or connection strings on the control/data plane); this file holds the full matrix and notes. Defer exact role GUIDs and `Microsoft.Authorization/roleAssignments` syntax to `azure-rbac`.
+Reference for the `agentic-loop` skill: the principal → scope → role matrix the generated **Bicep must create as part of provisioning**. `agentic-loop` declares the intent (managed identities + least-privilege RBAC, no admin keys or connection strings on the control/data plane); this file holds the full matrix and notes. Defer exact role GUIDs and `Microsoft.Authorization/roleAssignments` syntax to the maintained `microsoft-foundry/rbac` sub-skill.
 
 Every component authenticates with a **managed identity** (user-assigned preferred) and **least-privilege RBAC** - no admin keys, no connection strings on the control/data plane.
 
