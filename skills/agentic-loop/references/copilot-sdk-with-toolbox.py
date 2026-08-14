@@ -16,6 +16,8 @@ https://ai.azure.com/.default and the `Foundry-Features: Toolboxes=V1Preview` he
 
 """
 
+from __future__ import annotations
+
 import contextlib
 import io
 import json
@@ -465,6 +467,13 @@ def _session_config(tools: list[Tool]) -> dict:
     return config
 
 
+async def _send_prompt(client: CopilotClient, config: dict, prompt: str, on_event):
+    """Run one prompt using the keyword-only session API and lifecycle-safe cleanup."""
+    async with await client.create_session(**config) as session:
+        session.on(on_event)
+        return await session.send_and_wait(prompt)
+
+
 async def main() -> None:
     # In-process telemetry: configure Azure Monitor exporters from the App Insights
     # connection string before anything else runs.
@@ -472,53 +481,52 @@ async def main() -> None:
     # Copilot SDK/CLI OpenTelemetry: build the client with a TelemetryConfig so the CLI
     # child process also exports its gen_ai spans over OTLP (omit to leave it untraced).
     telemetry = _copilot_telemetry()
-    client = CopilotClient(telemetry=telemetry) if telemetry else CopilotClient()
-    await client.start()
 
     bridge: McpBridge | None = None
-    try:
-        # Default tool source: bridge the toolbox MCP endpoint and expose its tools to the session.
-        tools: list[Tool] = []
-        url = _toolbox_url()
-        if url:
-            bridge = McpBridge(url, _get_toolbox_token())
-            server = await bridge.initialize()
-            tools = _make_copilot_tools(bridge, await bridge.list_tools())
-            _logger.info("Connected to toolbox '%s' exposing %d tool(s).", server, len(tools))
+    client = CopilotClient(telemetry=telemetry) if telemetry else CopilotClient()
+    async with client:
+        try:
+            # Default tool source: bridge the toolbox MCP endpoint and expose its tools to the session.
+            tools: list[Tool] = []
+            url = _toolbox_url()
+            if url:
+                bridge = McpBridge(url, _get_toolbox_token())
+                server = await bridge.initialize()
+                tools = _make_copilot_tools(bridge, await bridge.list_tools())
+                _logger.info("Connected to toolbox '%s' exposing %d tool(s).", server, len(tools))
 
-        session = await client.create_session(_session_config(tools))
+            model = os.environ.get("AZURE_AI_MODEL_DEPLOYMENT_NAME") or None
+            assistant_chunks: list[str] = []
 
-        model = os.environ.get("AZURE_AI_MODEL_DEPLOYMENT_NAME") or None
-        assistant_chunks: list[str] = []
+            def handle_event(event) -> None:
+                if event.type == SessionEventType.ASSISTANT_MESSAGE_DELTA:
+                    assistant_chunks.append(event.data.delta_content)
+                    print(event.data.delta_content, end="", flush=True)
+                elif event.type == SessionEventType.SESSION_ERROR:
+                    _logger.error("Session error: %s", getattr(event.data, "message", "unknown"))
+                # Record token consumption whenever the SDK surfaces usage on an event.
+                _record_token_usage(getattr(getattr(event, "data", None), "usage", None), model)
 
-        def handle_event(event) -> None:
-            if event.type == SessionEventType.ASSISTANT_MESSAGE_DELTA:
-                assistant_chunks.append(event.data.delta_content)
-                print(event.data.delta_content, end="", flush=True)
-            elif event.type == SessionEventType.SESSION_ERROR:
-                _logger.error("Session error: %s", getattr(event.data, "message", "unknown"))
-            # Record token consumption whenever the SDK surfaces usage on an event.
-            _record_token_usage(getattr(getattr(event, "data", None), "usage", None), model)
-
-        session.on(handle_event)
-
-        # Wrap the turn in a conversation span so the prompt/response (content gated) and the
-        # nested tool spans form one distributed trace in App Insights.
-        prompt = "Hi, I am Alex! What tools are available?"
-        turn_cm = (
-            _tracer.start_as_current_span("conversation_turn") if _tracer else contextlib.nullcontext(None)
-        )
-        with turn_cm as span:
-            if span is not None:
-                span.set_attribute("gen_ai.operation.name", "invoke_agent")
-                _set_span_io(span, "gen_ai.prompt", prompt)
-            await session.send_and_wait({"prompt": prompt})
-            if span is not None and assistant_chunks:
-                _set_span_io(span, "gen_ai.completion", "".join(assistant_chunks))
-    finally:
-        if bridge:
-            await bridge.close()
-        await client.stop()
+            # Wrap the turn in a conversation span so the prompt/response (content gated) and the
+            # nested tool spans form one distributed trace in App Insights.
+            prompt = "Hi, I am Alex! What tools are available?"
+            turn_cm = (
+                _tracer.start_as_current_span("conversation_turn") if _tracer else contextlib.nullcontext(None)
+            )
+            with turn_cm as span:
+                if span is not None:
+                    span.set_attribute("gen_ai.operation.name", "invoke_agent")
+                    _set_span_io(span, "gen_ai.prompt", prompt)
+                response = await _send_prompt(client, _session_config(tools), prompt, handle_event)
+                if span is not None:
+                    completion = "".join(assistant_chunks) or getattr(
+                        getattr(response, "data", None), "content", ""
+                    )
+                    if completion:
+                        _set_span_io(span, "gen_ai.completion", completion)
+        finally:
+            if bridge:
+                await bridge.close()
 
 
 if __name__ == "__main__":

@@ -2,10 +2,12 @@
 
 Install `agentic-loop` as a project-scoped prerequisite before any playbook or `/spec2cloud` execution. Then match the current `./docs/spec.md` against this catalog and suggest installing every skill whose trigger appears in the spec. A spec that includes Foundry hosted agents implies the `microsoft-foundry` skill and, by default, the `copilot-sdk` skill. Use the GitHub Copilot SDK + Foundry Skills API + toolbox MCP endpoint unless the user explicitly requests MAF or the spec is clearly graph/workflow orchestration; suggest `microsoft-agent-framework` only for that MAF path.
 
+Catalog membership is a candidate list, not proof that a skill still exists or is current. Before relying on a row, validate it with `gh skill preview <repository> <skill>`, inspect installed source/version metadata with `gh skill list --json skillName,sourceURL,scope,version,pinned,path`, and run `gh skill update --dry-run`. Refresh approved stale skills through `gh skill update`; do not patch third-party installed copies locally.
+
 | Repository                | Skill                          | Suggest when the spec includes |
 | ------------------------- | ------------------------------ | ------------------------------ |
 | `aiappsgbb/agentic-loop`   | `agentic-loop`                 | Always - required project-scoped prerequisite for every playbook execution |
-| `microsoft/azure-skills`  | `microsoft-foundry`            | Microsoft Foundry (always - default for every agentic-loop spec) |
+| `microsoft/azure-skills`  | `microsoft-foundry`            | Microsoft Foundry (always - default for every agentic-loop spec); use its maintained `rbac` sub-skill for Foundry role selection and assignments |
 | `microsoft/azure-skills`  | `azure-ai`                     | AI Search, vector/hybrid search, semantic search, Document Intelligence/OCR, Speech/STT/TTS |
 | `microsoft/azure-skills`  | `azure-aigateway`              | AI Gateway, API Management for model/tool/agent routing, semantic caching, content safety, token limits, MCP governance |
 | `microsoft/azure-skills`  | `appinsights-instrumentation`  | Application Insights SDK setup, telemetry instrumentation, traces, metrics, and app monitoring |
@@ -14,7 +16,6 @@ Install `agentic-loop` as a project-scoped prerequisite before any playbook or `
 | `microsoft/azure-skills`  | `azure-messaging`              | Service Bus, Event Hubs, async business actions, event ingestion, queues, topics, or messaging SDK troubleshooting |
 | `microsoft/azure-skills`  | `entra-app-registration`       | Microsoft Graph/OAuth app registration, delegated auth, API permissions, MSAL integration |
 | `microsoft/azure-skills`  | `entra-agent-id`               | Entra Agent Identity, agent OAuth, OBO, workload identity federation, cross-tenant agent auth |
-| `microsoft/azure-skills`  | `azure-rbac`                   | Least-privilege Azure RBAC role selection, role assignments, managed identity permissions |
 | `microsoft/azure-skills`  | `azure-prepare`                | Azure app deployment scaffold, azure.yaml, Bicep/Terraform, Dockerfiles for prepared cloud deployment |
 | `microsoft/azure-skills`  | `azure-validate`               | Pre-deployment readiness, Bicep/Terraform validation, RBAC checks, what-if analysis, configuration preflight |
 | `microsoft/azure-skills`  | `azure-deploy`                 | Executing an already prepared deployment with azd/Bicep/Terraform and deployment error recovery |

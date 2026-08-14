@@ -114,7 +114,33 @@ Always recommend the best-fit first, then offer alternatives. Prefer GA over Pre
 
 > **Registration required** for: `gpt-5.5`, `gpt-5` (full), `gpt-image-1` family, `computer-use-preview`, `grok-4`, `grok-code-fast-1`. Request access before deploying.
 
+## Joint region and capacity preflight
+
+Treat placement as one subscription-specific decision, not a static model lookup. Before setting any azd environment variable, validate every required resource in each candidate region:
+
+| Resource | Validate live |
+| --- | --- |
+| Foundry model | Exact model, version, SKU, requested capacity/quota, and registration status |
+| Azure AI Search | Required SKU availability and regional feature support |
+| Foundry hosted agents | Hosted-agent availability for the target project/account shape |
+| Preview dependencies | Required provider/feature registration and regional availability |
+
+Start with the preferred region from the static catalog, then use the target subscription's live availability and quota checks through the maintained `microsoft-foundry` guidance. If any required resource fails, reject that candidate and rank alternatives that satisfy the **complete** resource set; do not move one resource independently unless the architecture explicitly supports cross-region placement.
+
+Write the placement decision to `./.azure/deployment-plan.md`:
+
+| Field | Value |
+| --- | --- |
+| Preferred location | User/data-residency preference |
+| Deployed location | First candidate that passed the joint preflight |
+| Evidence | Model/version/SKU/capacity, Search SKU, hosted-agent, and preview checks |
+| Variance | Reason deployed location differs, or `none` |
+
+When the deployed location differs from the preferred location, update `./docs/spec.md` and `./docs/plan.md` before implementation continues.
+
 ## How to Set Environment Variables
+
+Only persist these values after the joint preflight passes.
 
 ### Set Azure Location
 
@@ -176,11 +202,12 @@ As of the May 2026 catalog, **Global Standard** for the Azure-direct models from
 
 1. Ask the user what task / modality they need (chat, reasoning, coding, multimodal, embeddings, rerank, image gen, video, audio, document AI).
 2. Recommend the **Best** model from the matching table; offer alternatives only if cost, region, or registration is a blocker.
-3. Confirm region. Default to `eastus2`; fall back to `swedencentral` for EU data residency.
+3. Confirm the preferred region. Start with `eastus2`; prefer `swedencentral` for EU data residency.
 4. Confirm capacity. Defaults: **100** (chat / reasoning / coding), **30** (embeddings), **50** (image / audio).
 5. Flag any **registration-required** or **Preview** models explicitly before deploying.
-6. Run the `azd env set` commands.
-7. **Reconcile actual availability.** The recommended model may lack quota/availability in the target subscription, and `azd ai agent init`/provisioning may auto-select a different one. If the deployed model differs, update `./docs/spec.md`, `./docs/plan.md`, and `./.azure/deployment-plan.md` to match.
+6. Run the joint live preflight for the model and every co-located required service; rank only complete placements.
+7. Record preferred/deployed locations and evidence in `./.azure/deployment-plan.md`, then run the `azd env set` commands.
+8. **Reconcile actual availability.** If provisioning selects a different model or location, update `./docs/spec.md`, `./docs/plan.md`, and `./.azure/deployment-plan.md` immediately.
 
 ## Quick-Start Examples
 

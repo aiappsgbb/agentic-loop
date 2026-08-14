@@ -1,0 +1,46 @@
+{
+  "skill_name": "agentic-loop",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Post-process this /spec2cloud specification into concise architecture and planning guidance: Build a Zava HR Concierge on Microsoft Foundry. Use a GitHub Copilot SDK hosted agent, enterprise HR documents in Foundry IQ, one toolbox MCP endpoint, a React frontend, a Python backend, ingestion, and azd/Bicep deployment. Multiple engineers will implement components in parallel. The target subscription is not known to have model, Search, hosted-agent, or preview capacity in East US 2. Do not add document-level or caller-aware authorization. Return a Markdown policy addendum only; do not create or deploy resources.",
+      "expected_output": "A concise policy addendum that applies the one-toolbox/one-knowledge-base architecture, joint live placement preflight, frozen implementation contract, latest-stable SDK compatibility, citations, and deterministic no-source refusal without caller-aware document controls.",
+      "files": [],
+      "expectations": [
+        "The addendum defaults to one governed toolbox MCP endpoint and one Foundry IQ knowledge base.",
+        "Before persisting azd environment values, placement jointly validates the exact model/version/SKU/capacity, Azure AI Search SKU, hosted-agent availability, and required preview features.",
+        "The plan freezes a shared cross-component contract before parallel work and includes service names, environment variables, protocol/endpoint, MCP schemas, model configuration, response/citation/refusal shapes, and runtime/package versions.",
+        "Supported claims require citations, and no cited evidence produces a deterministic refusal.",
+        "The addendum does not require caller identity propagation, group/persona filters, entitlement knowledge bases, or document allow/deny evaluation.",
+        "The SDK guidance resolves and verifies the latest stable github-copilot-sdk API before generating code."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Review this generated Python reference against the latest stable github-copilot-sdk release and return a corrected code block plus a short compatibility note. The current code is: `client = CopilotClient(); await client.start(); session = await client.create_session(config); await session.send_and_wait({\"prompt\": prompt}); await client.stop()`. Preserve tool, model, provider, and permission options from `config`. Prefer safe lifecycle cleanup. Also state what to do if an installed companion skill's example disagrees with the package API.",
+      "expected_output": "Lifecycle-safe code verified against the latest stable package API, plus accurate Python/session/response-event compatibility and upstream-defect guidance.",
+      "files": [],
+      "expectations": [
+        "The latest stable github-copilot-sdk release is resolved from the official package source before API guidance is produced.",
+        "The corrected code follows the session creation, prompt sending, response/event, and lifecycle APIs exposed by that resolved release.",
+        "The compatibility note states the resolved package version and supported Python version.",
+        "Compatibility checks are assigned to the generated application's implementation or CI workflow, not to the agent skill itself.",
+        "If companion guidance conflicts with the resolved package API, the package source is authoritative and the defect is handled through an upstream issue or PR rather than a local third-party skill patch."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Prepare the preflight section for a /spec2cloud plan that needs gpt-5.4-mini at 100K TPM, Azure AI Search, Foundry hosted agents, Application Insights, and least-privilege RBAC. The project has copilot-sdk and microsoft-foundry installed from moving main branches, but their freshness is unknown. Explain how to validate placement and companion skills before persisting azd environment values. Return Markdown only and do not install or modify third-party skills.",
+      "expected_output": "A live joint placement check, preferred/deployed location recording, dynamic skill existence and freshness checks, supported refresh workflow, and use of microsoft-foundry/rbac rather than standalone azure-rbac.",
+      "files": [],
+      "expectations": [
+        "Placement is one live subscription-specific decision covering model/version/SKU/100K capacity, Search SKU, hosted agents, and required preview features before azd environment persistence.",
+        "The plan records preferred and deployed locations and immediately reconciles spec, plan, and deployment-plan artifacts when they differ.",
+        "Installed skill source URL, version/tree SHA, pin state, and update status are inspected; installation alone is not treated as freshness.",
+        "Catalog candidates are validated against the target repository before use, and stale approved unpinned skills are refreshed through gh skill update.",
+        "The output does not modify third-party installed skills and directs defects to an upstream issue or PR.",
+        "Foundry RBAC guidance uses the maintained microsoft-foundry/rbac sub-skill rather than standalone azure-rbac."
+      ]
+    }
+  ]
+}

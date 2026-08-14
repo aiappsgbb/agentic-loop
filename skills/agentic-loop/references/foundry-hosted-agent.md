@@ -10,7 +10,7 @@ Use the **invocations** protocol only when the user explicitly requests it, when
 
 ## Python dependency contract (`requirements.txt`)
 
-When post-processing the spec, declare the hosted agent's Python dependencies so the generated `requirements.txt` (or `pyproject.toml`) is complete. Pin versions in the generated repo; the list below is the **required intent**, conditional on the choices already made (framework, toolbox, telemetry). The reference agent [`copilot-sdk-with-toolbox.py`](copilot-sdk-with-toolbox.py) imports exactly this set.
+When post-processing the spec, declare the hosted agent's Python dependencies so the generated `requirements.txt` (or `pyproject.toml`) is complete. Resolve the latest stable compatible releases at implementation time and capture the resolved versions in the generated application's lockfile; the list below is the **required intent**, conditional on the choices already made (framework, toolbox, telemetry). The reference agent [`copilot-sdk-with-toolbox.py`](copilot-sdk-with-toolbox.py) imports exactly this set.
 
 | When | Package | Why |
 | --- | --- | --- |
@@ -26,6 +26,22 @@ When post-processing the spec, declare the hosted agent's Python dependencies so
 | **Observability — model-call tracing** | `opentelemetry-instrumentation-openai-v2` | Instrument in-process OpenAI/Foundry model calls |
 
 Keep the Copilot SDK, toolbox, and skill-download rows for the default agentic-loop hosted agent. Drop them only for an explicit MAF/non-toolbox variant. Do **not** add `azure-search-documents` to the default runtime dependency set; Foundry IQ grounding is consumed through the toolbox MCP endpoint. Add Search SDK dependencies only for the direct-retrieval escape hatch in [`foundry-iq-grounding.md`](foundry-iq-grounding.md#escape-hatch-direct-in-code-retrieval). Drop the model-tracing row only if no in-process model calls are made. Keep the observability core rows because telemetry is **ON by default**.
+
+## Copilot SDK compatibility
+
+Generated code and documentation examples must match the latest stable package release rather than a stale example from a moving upstream branch. At implementation time, query the official package index, install the latest stable release, inspect its package metadata and API signatures, and record the resolved version in the generated application's contract and lockfile.
+
+| Contract | Latest stable `github-copilot-sdk` resolved at implementation time |
+| --- | --- |
+| Python | 3.11+ |
+| Session creation | Inspect `CopilotClient.create_session`; the current reference uses `await client.create_session(**config)` |
+| Prompt send | Inspect `CopilotSession.send_and_wait`; the current reference passes a string prompt |
+| Return/event shape | Inspect the installed package's annotations and event data types before generating handlers |
+| Lifecycle | Prefer the async context-manager lifecycle supported by the installed release |
+
+Compatibility checks belong in the generated application, where they run against its resolved dependencies during implementation and CI. This skill does not bundle or automatically execute an SDK test suite. If current companion-skill guidance conflicts with the installed package source, treat that guidance as an upstream documentation defect and follow the package API.
+
+When reviewing or correcting generated SDK code, include the relevant compatibility facts in the response: resolved package version, Python minimum, session-creation shape, prompt-send shape, return/event shape, and lifecycle pattern. This makes the correction independently verifiable instead of leaving important constraints implicit in this reference.
 
 ## Read-only container filesystem
 

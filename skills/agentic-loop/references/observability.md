@@ -1,6 +1,6 @@
 # Observability contract
 
-Reference for the `agentic-loop` skill: the end-to-end monitoring contract the generated infra must satisfy. `agentic-loop` declares the intent (telemetry **ON by default**, one Application Insights, keyless); this file holds the baseline infra, per-tier instrumentation, agent-observability, and content-capture detail. Defer SDK/instrumentation wiring to `appinsights-instrumentation` and role assignments to `azure-rbac`.
+Reference for the `agentic-loop` skill: the end-to-end monitoring contract the generated infra must satisfy. `agentic-loop` declares the intent (telemetry **ON by default**, one Application Insights, keyless); this file holds the baseline infra, per-tier instrumentation, agent-observability, and content-capture detail. Defer SDK/instrumentation wiring to `appinsights-instrumentation` and role assignments to the `microsoft-foundry/rbac` sub-skill.
 
 End-to-end monitoring is **on by default**: every tier - **backend, hosted agents, MCP servers, and Foundry models** - emits OpenTelemetry into **one Application Insights** resource so a single distributed trace follows a request from the browser through the backend, the agent loop, each tool/MCP call, and every model call. The generated Bicep must provision and wire it.
 
@@ -39,4 +39,4 @@ Content capture is **off by default** because spans then carry prompts, completi
 
 - **Treat captured content as sensitive**: enable it in **dev/test** by default; in production gate it behind config, redact secrets/PII before it reaches telemetry, and apply the same access controls and retention as production logs.
 - Set a distinct **cloud role name / `service.name`** per component (frontend, backend, agent, mcp-server) so the **Application Map** renders the topology and transactions correlate across tiers.
-- Defer SDK/instrumentation wiring to `appinsights-instrumentation` and the role assignments to `azure-rbac`.
+- Defer SDK/instrumentation wiring to `appinsights-instrumentation` and role assignments to the `microsoft-foundry/rbac` sub-skill.
