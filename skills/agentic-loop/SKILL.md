@@ -53,9 +53,9 @@ Install `copilot-sdk` by default for agentic-loop specs. Install `microsoft-agen
 
 ### Python dependency contract (`requirements.txt`)
 
-When post-processing the spec, declare the hosted agent's Python dependencies so the generated `requirements.txt` (or `pyproject.toml`) is complete. The full conditional package list (auth, framework, hosted-agent runtime, toolbox, skill download, observability) — keyed to the choices already made and matching the reference agent's imports — lives in [`references/foundry-hosted-agent.md`](references/foundry-hosted-agent.md#python-dependency-contract-requirementstxt). Pin versions in the generated repo.
+When post-processing the spec, declare the hosted agent's Python dependencies so the generated `requirements.txt` (or `pyproject.toml`) is complete. The full conditional package list (auth, framework, hosted-agent runtime, toolbox, skill download, observability) — keyed to the choices already made and matching the reference agent's imports — lives in [`references/foundry-hosted-agent.md`](references/foundry-hosted-agent.md#python-dependency-contract-requirementstxt). Resolve the latest stable compatible releases at implementation time and capture the resolved versions in the generated application's lockfile.
 
-When reviewing or correcting generated Copilot SDK code, include the complete pinned compatibility contract from the same reference: package version, Python minimum, keyword-only session creation, string prompt send, response/event shape, and lifecycle pattern.
+When reviewing or correcting generated Copilot SDK code, resolve the latest stable release from the official package index and verify its installed API before relying on examples. Include the resolved package version, Python minimum, session-creation shape, prompt-send shape, response/event shape, and lifecycle pattern.
 
 ### Greenfield contract to declare
 
@@ -69,7 +69,7 @@ When post-processing a spec, explicitly add or confirm these contracts in the ge
 
 ### Freeze the implementation contract
 
-Before delegating frontend, backend, agent, ingestion, or infrastructure work, create the contract table in [`references/implementation-contract.md`](references/implementation-contract.md) and link it from `./docs/plan.md`. Freeze service names, environment variables, protocols, endpoints, schemas, identity scopes, response/citation/refusal shapes, and runtime/package versions so parallel workers consume one shared interface instead of inventing incompatible values.
+Before delegating frontend, backend, agent, ingestion, or infrastructure work, create the contract table in [`references/implementation-contract.md`](references/implementation-contract.md) and link it from `./docs/plan.md`. Freeze service names, environment variables, protocols, endpoints, schemas, identity scopes, response/citation/refusal shapes, and resolved runtime/package versions so parallel workers consume one shared interface instead of inventing incompatible values.
 
 Before merging parallel work, run the reconciliation checklist from the same reference against every component. Resolve drift in the contract and its consumers together; do not preserve incompatible aliases merely to make the merge pass.
 
@@ -124,7 +124,7 @@ Require GitHub CLI `v2.90.0+`; upgrade if older. Use `gh skill` as the canonical
 6. Refresh approved, unpinned stale skills with `gh skill update <skill>` before using their examples. Respect pins unless the user approves `--unpin`.
 7. For manual installs, point the user at the repository's install instructions and move on.
 
-In a read-only preflight, report the exact proposed `gh skill update <skill>` command and approval requirement, but do not execute it. Do not patch third-party project-installed skills locally to repair stale or incompatible examples. Draft an upstream issue or PR instead. When upstream guidance conflicts with the pinned package API, treat it as an upstream documentation defect and use the installed package source as authoritative.
+In a read-only preflight, report the exact proposed `gh skill update <skill>` command and approval requirement, but do not execute it. Do not patch third-party project-installed skills locally to repair stale or incompatible examples. Draft an upstream issue or PR instead. When upstream guidance conflicts with the resolved latest package API, treat it as an upstream documentation defect and use the installed package source as authoritative.
 
 ### Reuse named run skills
 

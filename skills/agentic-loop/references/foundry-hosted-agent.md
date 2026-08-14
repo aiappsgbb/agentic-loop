@@ -10,7 +10,7 @@ Use the **invocations** protocol only when the user explicitly requests it, when
 
 ## Python dependency contract (`requirements.txt`)
 
-When post-processing the spec, declare the hosted agent's Python dependencies so the generated `requirements.txt` (or `pyproject.toml`) is complete. Pin versions in the generated repo; the list below is the **required intent**, conditional on the choices already made (framework, toolbox, telemetry). The reference agent [`copilot-sdk-with-toolbox.py`](copilot-sdk-with-toolbox.py) imports exactly this set.
+When post-processing the spec, declare the hosted agent's Python dependencies so the generated `requirements.txt` (or `pyproject.toml`) is complete. Resolve the latest stable compatible releases at implementation time and capture the resolved versions in the generated application's lockfile; the list below is the **required intent**, conditional on the choices already made (framework, toolbox, telemetry). The reference agent [`copilot-sdk-with-toolbox.py`](copilot-sdk-with-toolbox.py) imports exactly this set.
 
 | When | Package | Why |
 | --- | --- | --- |
@@ -29,20 +29,19 @@ Keep the Copilot SDK, toolbox, and skill-download rows for the default agentic-l
 
 ## Copilot SDK compatibility
 
-Generated code and documentation examples must match the pinned package rather than a moving upstream branch. The reference agent and CI currently target:
+Generated code and documentation examples must match the latest stable package release rather than a stale example from a moving upstream branch. At implementation time, query the official package index, install the latest stable release, inspect its package metadata and API signatures, and record the resolved version in the generated application's contract and lockfile.
 
-| Contract | `github-copilot-sdk==1.0.9` |
+| Contract | Latest stable `github-copilot-sdk` resolved at implementation time |
 | --- | --- |
 | Python | 3.11+ |
-| Session creation | `await client.create_session(**config)`; all session options are keyword-only |
-| Prompt send | `await session.send_and_wait(prompt)` where `prompt` is a string |
-| Return shape | `SessionEvent \| None` |
-| Event shape | `SessionEvent.type` plus typed `SessionEvent.data`; streaming text is `AssistantMessageDeltaData.delta_content`, final text is `AssistantMessageData.content` |
-| Lifecycle | Prefer `async with CopilotClient()` and `async with await client.create_session(...)` |
+| Session creation | Inspect `CopilotClient.create_session`; the current reference uses `await client.create_session(**config)` |
+| Prompt send | Inspect `CopilotSession.send_and_wait`; the current reference passes a string prompt |
+| Return/event shape | Inspect the installed package's annotations and event data types before generating handlers |
+| Lifecycle | Prefer the async context-manager lifecycle supported by the installed release |
 
-When updating the pin, update this table, the reference agent, and its executable compatibility test together. If current companion-skill guidance conflicts with the installed package source, treat that guidance as an upstream documentation defect and follow the package API.
+Compatibility checks belong in the generated application, where they run against its resolved dependencies during implementation and CI. This skill does not bundle or automatically execute an SDK test suite. If current companion-skill guidance conflicts with the installed package source, treat that guidance as an upstream documentation defect and follow the package API.
 
-When reviewing or correcting generated SDK code, include the relevant compatibility facts in the response: package pin, Python minimum, session-creation shape, prompt-send shape, return/event shape, and lifecycle pattern. This makes the correction independently verifiable instead of leaving important constraints implicit in this reference.
+When reviewing or correcting generated SDK code, include the relevant compatibility facts in the response: resolved package version, Python minimum, session-creation shape, prompt-send shape, return/event shape, and lifecycle pattern. This makes the correction independently verifiable instead of leaving important constraints implicit in this reference.
 
 ## Read-only container filesystem
 

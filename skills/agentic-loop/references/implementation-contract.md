@@ -16,7 +16,7 @@ Reference for the `agentic-loop` skill: the small contract that must be frozen b
 | Response body | Exact JSON shape, status/error mapping, and streaming behavior | Backend API | Frontend/client | API contract test |
 | Citations | Source, section, anchor/chunk id, and claim association | Foundry IQ/toolbox | Agent, backend, frontend | Known-answer citation test |
 | Grounding refusal | Exact deterministic refusal text used when no cited evidence supports the answer | Product/API contract | Agent, backend, evals | No-supported-source test |
-| Runtime versions | Python, Node, hosted-agent runtime, and package pins including `github-copilot-sdk` | Build manifests | All services and CI | Lockfile/manifests match CI |
+| Runtime versions | Python, Node, hosted-agent runtime, and latest stable package versions resolved during implementation, including `github-copilot-sdk` | Package index and build manifests | All services and CI | Lockfile/manifests match CI |
 
 For environment variables, add one row per value when that is clearer than a comma-separated list. Record both the producer and every consumer; this catches values that provisioning emits under one name while runtime code expects another.
 
@@ -27,5 +27,5 @@ For environment variables, add one row per value when that is clearer than a com
 3. Exercise the Responses endpoint with contract-valid metadata and validate response/citation/refusal schemas.
 4. Initialize the toolbox endpoint, compare discovered MCP names and schemas with the frozen snapshot, and fail on drift.
 5. Confirm model endpoint, deployment name, and token scope agree across provisioning and agent configuration.
-6. Compare runtime and package manifests with the frozen version row and executable compatibility checks.
+6. Compare runtime and package manifests with the resolved version row and run compatibility checks in the generated application.
 7. Update the contract and all consumers in one change when an intentional interface change is required.

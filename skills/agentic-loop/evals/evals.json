@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "Post-process this /spec2cloud specification into concise architecture and planning guidance: Build a Zava HR Concierge on Microsoft Foundry. Use a GitHub Copilot SDK hosted agent, enterprise HR documents in Foundry IQ, one toolbox MCP endpoint, a React frontend, a Python backend, ingestion, and azd/Bicep deployment. Multiple engineers will implement components in parallel. The target subscription is not known to have model, Search, hosted-agent, or preview capacity in East US 2. Do not add document-level or caller-aware authorization. Return a Markdown policy addendum only; do not create or deploy resources.",
-      "expected_output": "A concise policy addendum that applies the one-toolbox/one-knowledge-base architecture, joint live placement preflight, frozen implementation contract, pinned SDK compatibility, citations, and deterministic no-source refusal without caller-aware document controls.",
+      "expected_output": "A concise policy addendum that applies the one-toolbox/one-knowledge-base architecture, joint live placement preflight, frozen implementation contract, latest-stable SDK compatibility, citations, and deterministic no-source refusal without caller-aware document controls.",
       "files": [],
       "expectations": [
         "The addendum defaults to one governed toolbox MCP endpoint and one Foundry IQ knowledge base.",
@@ -12,20 +12,20 @@
         "The plan freezes a shared cross-component contract before parallel work and includes service names, environment variables, protocol/endpoint, MCP schemas, model configuration, response/citation/refusal shapes, and runtime/package versions.",
         "Supported claims require citations, and no cited evidence produces a deterministic refusal.",
         "The addendum does not require caller identity propagation, group/persona filters, entitlement knowledge bases, or document allow/deny evaluation.",
-        "The SDK guidance is compatible with github-copilot-sdk 1.0.9: keyword-only session configuration and string prompt shape."
+        "The SDK guidance resolves and verifies the latest stable github-copilot-sdk API before generating code."
       ]
     },
     {
       "id": 2,
-      "prompt": "Review this generated Python reference for github-copilot-sdk==1.0.9 and return a corrected code block plus a short compatibility note. The current code is: `client = CopilotClient(); await client.start(); session = await client.create_session(config); await session.send_and_wait({\"prompt\": prompt}); await client.stop()`. Preserve tool, model, provider, and permission options from `config`. Prefer safe lifecycle cleanup. Also state what to do if an installed companion skill's example disagrees with the package API.",
-      "expected_output": "Version-correct lifecycle-safe code using keyword expansion and a string prompt, plus accurate Python/session/response-event compatibility and upstream-defect guidance.",
+      "prompt": "Review this generated Python reference against the latest stable github-copilot-sdk release and return a corrected code block plus a short compatibility note. The current code is: `client = CopilotClient(); await client.start(); session = await client.create_session(config); await session.send_and_wait({\"prompt\": prompt}); await client.stop()`. Preserve tool, model, provider, and permission options from `config`. Prefer safe lifecycle cleanup. Also state what to do if an installed companion skill's example disagrees with the package API.",
+      "expected_output": "Lifecycle-safe code verified against the latest stable package API, plus accurate Python/session/response-event compatibility and upstream-defect guidance.",
       "files": [],
       "expectations": [
-        "The corrected code calls create_session with keyword expansion or equivalent named keyword arguments, not a positional config mapping.",
-        "The corrected code passes prompt as a string to send_and_wait, not a dictionary.",
-        "Both CopilotClient and the created session use async context managers for cleanup.",
-        "The compatibility note states Python 3.11+ and that send_and_wait returns SessionEvent or None with typed event data.",
-        "If companion guidance conflicts with the pinned package API, the package source is authoritative and the defect is handled through an upstream issue or PR rather than a local third-party skill patch."
+        "The latest stable github-copilot-sdk release is resolved from the official package source before API guidance is produced.",
+        "The corrected code follows the session creation, prompt sending, response/event, and lifecycle APIs exposed by that resolved release.",
+        "The compatibility note states the resolved package version and supported Python version.",
+        "Compatibility checks are assigned to the generated application's implementation or CI workflow, not to the agent skill itself.",
+        "If companion guidance conflicts with the resolved package API, the package source is authoritative and the defect is handled through an upstream issue or PR rather than a local third-party skill patch."
       ]
     },
     {
