@@ -130,7 +130,8 @@ from copilot.tools import Tool, ToolInvocation, ToolResult
 bridge = McpBridge(toolbox_url, _get_toolbox_token())          # bearer token + Foundry-Features header
 await bridge.initialize()                                      # MCP initialize + notifications/initialized
 tools = _make_copilot_tools(bridge, await bridge.list_tools()) # toolbox tools/list → Copilot Tool[]
-session = await client.create_session({..., "tools": tools})   # tools resolve from the governed toolbox
+async with await client.create_session(tools=tools, ...) as session:
+    await session.send_and_wait(prompt)                         # prompt is a string
 ```
 
 ### `copilot-sdk-with-toolbox.py` — Copilot SDK agent consuming the toolbox
