@@ -1,6 +1,6 @@
 # Foundry IQ grounding
 
-Reference for the `agentic-loop` skill: how a GitHub Copilot SDK **hosted agent** grounds enterprise answers through a **Foundry IQ** knowledge base by consuming a governed Foundry **toolbox MCP endpoint**. `agentic-loop` decides *that* grounding is Foundry IQ; this file holds the access path, identity, refusal, ACL, validation, and escape-hatch guidance. Defer index/knowledge-base provisioning to `microsoft-foundry` and role GUIDs to `azure-rbac`.
+Reference for the `agentic-loop` skill: how a GitHub Copilot SDK **hosted agent** grounds enterprise answers through a **Foundry IQ** knowledge base by consuming a governed Foundry **toolbox MCP endpoint**. `agentic-loop` decides *that* grounding is Foundry IQ; this file holds the access path, identity, refusal, validation, and escape-hatch guidance. Defer index/knowledge-base provisioning and role selection to `microsoft-foundry` and its `rbac` sub-skill.
 
 ## Primary pattern: hosted agent + toolbox MCP
 
@@ -8,14 +8,14 @@ Default agentic-loop grounding uses:
 
 1. **GitHub Copilot SDK hosted agent** running on Foundry hosted agents and exposing the Responses API by default.
 2. **Foundry Skills API** for behavioral instructions; the agent downloads governed skill versions into a writable temp directory at runtime.
-3. **Foundry IQ knowledge base** exposed through a Foundry toolbox connection/tool, typically a `CognitiveSearch` or Foundry IQ grounding connection backed by Azure AI Search.
-4. **Foundry toolbox MCP endpoint** as the only runtime tool and grounding surface the agent calls.
+3. One **Foundry IQ knowledge base** exposed through a Foundry toolbox connection/tool, typically a `CognitiveSearch` or Foundry IQ grounding connection backed by Azure AI Search.
+4. One governed **Foundry toolbox MCP endpoint** as the only runtime tool and grounding surface the agent calls.
 
-The hosted agent should not import `azure-search-documents`, instantiate Search clients, or call Foundry IQ retrieval APIs by default. It bridges the toolbox MCP endpoint, lets the toolbox broker grounding/tool identity, and treats the toolbox response as the source of answer evidence and citations.
+The hosted agent should not import `azure-search-documents`, instantiate Search clients, or call Foundry IQ retrieval APIs by default. It bridges the toolbox MCP endpoint, lets the toolbox broker grounding/tool identity, and treats the toolbox response as the source of answer evidence and citations. Direct Search or Foundry IQ calls belong only in provisioning, ingestion, or the explicitly documented diagnostic escape hatch below.
 
 ## No-bypass rule
 
-Every enterprise answer flows through the toolbox-hosted Foundry IQ grounding tool. The app and agent must not issue ad hoc Azure AI Search queries that sidestep the knowledge base, toolbox governance, ACL path, or citation contract. Direct in-code retrieval belongs only in the [escape hatch](#escape-hatch-direct-in-code-retrieval).
+Every enterprise answer flows through the toolbox-hosted Foundry IQ grounding tool. The app and agent must not issue ad hoc Azure AI Search queries that sidestep the knowledge base, toolbox governance, or citation contract. Direct in-code retrieval belongs only in the [escape hatch](#escape-hatch-direct-in-code-retrieval).
 
 ## Grounding identity
 
@@ -28,32 +28,27 @@ The primary toolbox path is brokered:
 
 Generated plans should make the brokered toolbox/tool identity path the default. Runtime instance managed identity Search Reader is not part of the baseline; add it only when direct retrieval is explicitly selected for troubleshooting or unsupported-tool scenarios.
 
-## Caller-aware ACL filtering
-
-Carry ACL metadata on every chunk (allowed Entra groups / personas) at ingestion, and filter at query time by the caller's resolved groups before synthesis. Do not post-filter the answer. An unauthorized caller must not receive restricted evidence or a summary derived from it.
-
-For the primary toolbox path, pass caller context to the grounding tool using the tool schema the toolbox exposes, and validate that ACL-deny documents are absent from retrieved evidence. Pair each ACL-deny document with an eval.
-
 ## Citations and refusal
 
 Return source document, section, and anchor/chunk id for every grounded claim, sourced from retrieved evidence. Treat "answer with zero citations" as a refusal in the API contract.
 
-Refusal must be deterministic. Prefer a structural signal from the grounding tool - no authorized citations survived retrieval / reranking - rather than string-matching model prose. If the toolbox exposes a reranker or relevance threshold, keep it environment-configurable per corpus and apply it before synthesis so weak or ACL-residual matches become empty evidence.
+Refusal must be deterministic. Prefer a structural signal from the grounding tool - no citations survived retrieval / reranking - rather than string-matching model prose. If the toolbox exposes a reranker or relevance threshold, keep it environment-configurable per corpus and apply it before synthesis so weak matches become empty evidence.
 
 ## Runtime validation
 
-Post-deploy validation must invoke the **deployed** hosted agent with a known-answer question and assert:
+Post-deploy validation must invoke the **deployed** hosted agent and cover:
 
-1. The toolbox MCP endpoint initializes and `tools/list` exposes the grounding tool.
-2. The answer includes at least one citation from the expected authorized source.
-3. An ACL-deny query returns no restricted citation and produces the deterministic refusal.
-4. Agent logs show toolbox/tool calls, not direct Search client calls.
+1. **Known answer** - a supported question returns the expected grounded claim.
+2. **Citation correctness** - every supported claim cites the expected source, section, and anchor/chunk.
+3. **Freshness** - newly ingested or updated source content becomes retrievable within the documented ingestion window.
+4. **No-supported-source refusal** - an unsupported question returns the exact deterministic refusal with no fabricated citation.
+5. **Retrieval telemetry** - logs/traces show the toolbox grounding call, result/citation counts, latency, and refusal reason; runtime logs show no direct Search client calls.
 
-If a known-answer query refuses with empty citations, inspect the toolbox call result and agent logs for brokered identity / role assignment failures before tuning prompts.
+If a known-answer query refuses with empty citations, inspect the toolbox call result and agent logs for brokered identity, role assignment, ingestion, or retrieval failures before tuning prompts.
 
 ## Escape hatch: direct in-code retrieval
 
-Use direct in-code Search / Foundry IQ retrieval only when the toolbox path cannot support a required diagnostic or unsupported preview capability. Make it explicit in the plan and keep it isolated from the default agent runtime.
+Use direct in-code Search / Foundry IQ retrieval only when the toolbox path cannot support a required diagnostic or unsupported preview capability. Make it explicit in the plan, isolate it from the default agent runtime, and remove or disable it after the diagnostic is complete.
 
 Escape-hatch implications:
 
