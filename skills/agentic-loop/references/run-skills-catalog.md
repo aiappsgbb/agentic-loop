@@ -17,6 +17,12 @@ This is a starter set of examples, not an exhaustive list.
 | `github/awesome-copilot` | `md-to-docx`                     | Convert Markdown into a DOCX document |
 | `github/awesome-copilot` | `roundup`                        | Summarize multiple sources or items into a single roundup |
 | `github/awesome-copilot` | `tldr-prompt`                    | Produce a concise TL;DR summary of long content |
+| `aiappsgbb/agentic-loop`  | `factory-operations-triage`     | Triage smart-factory anomalies, maintenance signals, and quality deviations with evidence-backed operator actions |
+| `aiappsgbb/agentic-loop`  | `production-flow-optimizer`     | Diagnose production bottlenecks and propose safe, constraint-aware flow and shift plans |
+| `aiappsgbb/agentic-loop`  | `care-gap-outreach-planner`     | Prioritize care gaps and prepare consent-aware patient outreach without making clinical decisions |
+| `aiappsgbb/agentic-loop`  | `post-discharge-care-coordinator` | Coordinate follow-up tasks, patient responses, and rule-based escalation after discharge |
+| `aiappsgbb/agentic-loop`  | `loan-file-readiness-reviewer`  | Review lending files for completeness, consistency, freshness, and traceable exceptions |
+| `aiappsgbb/agentic-loop`  | `mortgage-underwriting-coordinator` | Assemble evidence, conditions, and compliance checks for human mortgage underwriting |
 
 For cataloged skills that declare a repository, install with the same command used for build skills:
 
