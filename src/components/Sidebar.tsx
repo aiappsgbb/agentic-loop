@@ -2,7 +2,7 @@ import { NavLink, Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import {
   Home, Layers, BookOpen, Sparkles, Bot, Wrench, Workflow,
-  ChevronRight, PanelLeftClose, PanelLeft, Sun, Moon, Monitor, Infinity as InfinityIcon, Library, Cpu, Lightbulb, Compass, Rocket, Boxes
+  ChevronRight, PanelLeftClose, PanelLeft, Sun, Moon, Monitor, Infinity as InfinityIcon, Library, Cpu, Lightbulb, DraftingCompass, Rocket, Boxes
 } from 'lucide-react';
 import { type ThemePref } from './ThemeContext';
 import { useTheme } from './useTheme';
@@ -109,7 +109,7 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
               end
               className={({ isActive }) => `nav-item nav-item-feature ${isActive || location.pathname === '/concepts/platform/overview' || location.pathname === '/concepts/platform/architecture' ? 'active' : ''}`}
             >
-              <Compass className="icon" size={16} />
+              <DraftingCompass className="icon" size={16} />
               <span className="nav-label">Reference Architecture</span>
             </NavLink>
             <NavLink to="/concepts/platform/foundry" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
