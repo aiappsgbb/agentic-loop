@@ -65,7 +65,7 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
           role="button"
         >
           <Lightbulb className="icon" size={18} />
-          <span className="nav-label">Concepts</span>
+          <span className="nav-label">Agentic Concepts</span>
           <ChevronRight className="chev" size={14} />
         </div>
         {conceptsExpanded && !collapsed && (
