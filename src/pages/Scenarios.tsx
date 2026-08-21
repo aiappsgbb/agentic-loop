@@ -1,14 +1,14 @@
 import ScenariosGallery from '../components/ScenariosGallery';
-import { Link } from 'react-router-dom';
+import LensSwitcher from '../components/LensSwitcher';
 
 export default function Scenarios() {
   return (
     <>
       <div className="page-head">
-        <div className="page-eyebrow">Scenarios · the WHAT</div>
-        <h1>Start from a vertical use case.</h1>
+        <LensSwitcher />
+        <h1>Start from a business problem.</h1>
         <p className="lede">
-          Scenarios are vertical, industry-shaped blueprints. Every scenario is assembled from reusable <Link to="/playbooks">Playbooks</Link>.
+          Pick a use case from your industry, copy the prompt, and the loop builds it. Every scenario ships a paste-ready prompt plus the architecture patterns behind it.
         </p>
       </div>
       <ScenariosGallery browse showExplore={false} />

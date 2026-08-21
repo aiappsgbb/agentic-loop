@@ -2,11 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Search, ChevronLeft, ChevronRight, ArrowRight, ExternalLink,
-  LayoutGrid, Rows3, X, Video, ChevronDown, Check, Play,
+  LayoutGrid, Rows3, X, Video, Play, Sparkles, Boxes,
+  Building2, Brain, Workflow, Rocket, type LucideIcon,
 } from 'lucide-react';
 import scenarios from '../data/scenarios.json';
 import { asset } from '../data/asset';
 import type { Scenario } from '../data/links';
+import { playbooksForScenario } from '../data/links';
+import CapabilityPicker, { type PickerOption } from './CapabilityPicker';
 import VideoModal from './VideoModal';
 
 function resolveImage(src: string) {
@@ -19,10 +22,10 @@ function prettifySkill(slug: string) {
 
 interface Props { carousel?: boolean; showExplore?: boolean; browse?: boolean; }
 
-type FacetKey = 'industries' | 'tags' | 'capabilities' | 'buildingBlocks' | 'patterns' | 'runSkills';
+type FacetKey = 'industries' | 'capabilities' | 'patterns' | 'runSkills';
 
 const EMPTY_FACETS: Record<FacetKey, string[]> = {
-  industries: [], tags: [], capabilities: [], buildingBlocks: [], patterns: [], runSkills: [],
+  industries: [], capabilities: [], patterns: [], runSkills: [],
 };
 
 export default function ScenariosGallery({ carousel = true, showExplore = true, browse = false }: Props) {
@@ -85,8 +88,8 @@ function ScenariosCarousel({ data, carousel, showExplore }: { data: Scenario[]; 
     <section className="section">
       <div className="section-head">
         <div>
-          <h2>Scenarios</h2>
-          <p>Real-world agentic patterns shipped with the Agentic Loop.</p>
+          <h2>Industry scenarios</h2>
+          <p>Start from a business problem — pick a use case from your industry and the loop builds it.</p>
         </div>
         <div className="filter-bar">
           <div className="search-input">
@@ -155,6 +158,7 @@ function ScenariosCarousel({ data, carousel, showExplore }: { data: Scenario[]; 
 }
 
 function ScenarioCard({ s, onPlayClick }: { s: Scenario; onPlayClick?: (scenario: Scenario) => void }) {
+  const patternCount = playbooksForScenario(s).length;
   return (
     <Link to={`/scenarios/${s.id}`} className="scenario-card">
       <div className="scenario-img">
@@ -177,6 +181,12 @@ function ScenarioCard({ s, onPlayClick }: { s: Scenario; onPlayClick?: (scenario
       <div className="scenario-body">
         <h3>{s.name}</h3>
         <p>{s.description}</p>
+        <div className="scenario-signals">
+          {s.prompt && <span className="scenario-signal prompt"><Sparkles size={11} /> Prompt ready</span>}
+          {patternCount > 0 && (
+            <span className="scenario-signal"><Boxes size={11} /> Built from {patternCount} pattern{patternCount === 1 ? '' : 's'}</span>
+          )}
+        </div>
         <div className="scenario-tags">
           {s.tags.map(t => <span key={t} className="scenario-tag">{t}</span>)}
         </div>
@@ -246,12 +256,8 @@ function ScenariosBrowse({ data }: { data: Scenario[] }) {
     setVideoModalOpen(true);
   }
 
-  function toggleFacet(key: FacetKey, val: string) {
-    setFacets(prev => {
-      const cur = prev[key];
-      const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val];
-      return { ...prev, [key]: next };
-    });
+  function setFacet(key: FacetKey, next: string[]) {
+    setFacets(prev => ({ ...prev, [key]: next }));
   }
 
   function clearAll() {
@@ -261,18 +267,18 @@ function ScenariosBrowse({ data }: { data: Scenario[] }) {
   }
 
   const facetOptions = useMemo(() => {
-    const build = (accessor: (s: Scenario) => string[]) => {
+    const build = (accessor: (s: Scenario) => string[], icon: LucideIcon, format?: (v: string) => string): PickerOption[] => {
       const counts = new Map<string, number>();
       data.forEach(s => accessor(s).forEach(v => counts.set(v, (counts.get(v) ?? 0) + 1)));
-      return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+      return [...counts.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .map(([id, count]) => ({ id, label: format ? format(id) : id, count, icon }));
     };
     return {
-      industries: build(s => [s.industry]),
-      tags: build(s => s.tags ?? []),
-      capabilities: build(s => s.capabilities ?? []),
-      buildingBlocks: build(s => s.buildingBlocks ?? []),
-      patterns: build(s => s.patterns ?? []),
-      runSkills: build(s => s.runSkills ?? []),
+      industries: build(s => [s.industry], Building2),
+      capabilities: build(s => s.capabilities ?? [], Brain),
+      patterns: build(s => s.patterns ?? [], Workflow),
+      runSkills: build(s => s.runSkills ?? [], Rocket, prettifySkill),
     };
   }, [data]);
 
@@ -285,9 +291,7 @@ function ScenariosBrowse({ data }: { data: Scenario[] }) {
       s.tags.some(t => t.toLowerCase().includes(q))
     )) return false;
     if (facets.industries.length && !facets.industries.includes(s.industry)) return false;
-    if (facets.tags.length && !s.tags.some(t => facets.tags.includes(t))) return false;
     if (facets.capabilities.length && !(s.capabilities ?? []).some(t => facets.capabilities.includes(t))) return false;
-    if (facets.buildingBlocks.length && !(s.buildingBlocks ?? []).some(t => facets.buildingBlocks.includes(t))) return false;
     if (facets.patterns.length && !(s.patterns ?? []).some(t => facets.patterns.includes(t))) return false;
     if (facets.runSkills.length && !(s.runSkills ?? []).some(t => facets.runSkills.includes(t))) return false;
     if (hasVideo && !s.video) return false;
@@ -340,12 +344,10 @@ function ScenariosBrowse({ data }: { data: Scenario[] }) {
       </div>
 
       <div className="browse-filters">
-        <FacetDropdown label="Industry" options={facetOptions.industries} selected={facets.industries} onToggle={v => toggleFacet('industries', v)} />
-        <FacetDropdown label="Tags" options={facetOptions.tags} selected={facets.tags} onToggle={v => toggleFacet('tags', v)} />
-        <FacetDropdown label="Capabilities" options={facetOptions.capabilities} selected={facets.capabilities} onToggle={v => toggleFacet('capabilities', v)} />
-        <FacetDropdown label="Building blocks" options={facetOptions.buildingBlocks} selected={facets.buildingBlocks} onToggle={v => toggleFacet('buildingBlocks', v)} />
-        <FacetDropdown label="Patterns" options={facetOptions.patterns} selected={facets.patterns} onToggle={v => toggleFacet('patterns', v)} />
-        <FacetDropdown label="Run skills" options={facetOptions.runSkills} selected={facets.runSkills} onToggle={v => toggleFacet('runSkills', v)} format={prettifySkill} />
+        <CapabilityPicker label="Industry" options={facetOptions.industries} selected={facets.industries} onChange={v => setFacet('industries', v)} triggerIcon={Building2} />
+        <CapabilityPicker label="Capabilities" options={facetOptions.capabilities} selected={facets.capabilities} onChange={v => setFacet('capabilities', v)} triggerIcon={Brain} />
+        <CapabilityPicker label="Patterns" options={facetOptions.patterns} selected={facets.patterns} onChange={v => setFacet('patterns', v)} triggerIcon={Workflow} />
+        <CapabilityPicker label="Run skills" options={facetOptions.runSkills} selected={facets.runSkills} onChange={v => setFacet('runSkills', v)} triggerIcon={Rocket} />
         {activeCount > 0 && (
           <button className="clear-filters" onClick={clearAll}>
             <X size={13} /> Clear all
@@ -379,56 +381,3 @@ function ScenariosBrowse({ data }: { data: Scenario[] }) {
   );
 }
 
-function FacetDropdown({ label, options, selected, onToggle, format }: {
-  label: string;
-  options: [string, number][];
-  selected: string[];
-  onToggle: (val: string) => void;
-  format?: (v: string) => string;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function onDoc(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
-  }, []);
-
-  return (
-    <div className="facet-dropdown" ref={ref}>
-      <button
-        className={`facet-trigger ${selected.length ? 'has-active' : ''} ${open ? 'open' : ''}`}
-        onClick={() => setOpen(o => !o)}
-      >
-        <span>{label}</span>
-        {selected.length > 0
-          ? <span className="facet-trigger-count">{selected.length}</span>
-          : <span className="facet-trigger-any">Any</span>}
-        <ChevronDown size={14} style={{ opacity: 0.7 }} />
-      </button>
-      {open && (
-        <div className="facet-menu" role="listbox">
-          {options.map(([val, count]) => {
-            const isSel = selected.includes(val);
-            return (
-              <div
-                key={val}
-                className={`facet-option ${isSel ? 'selected' : ''}`}
-                role="option"
-                aria-selected={isSel}
-                onClick={() => onToggle(val)}
-              >
-                <span className="facet-check">{isSel && <Check size={12} />}</span>
-                <span className="facet-option-label">{format ? format(val) : val}</span>
-                <span className="facet-count">{count}</span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
