@@ -1,48 +1,110 @@
-# Agentic Loop Site
+# Agentic Loop
 
-A static marketing and learning site for the **Agentic Loop**: building and running AI agents with **GitHub Copilot** + **Microsoft Foundry** on **Azure**.
+<p align="center">
+  <a href="https://aka.ms/agentic-loop"><strong>✨ Explore the live Agentic Loop →</strong></a>
+</p>
 
-It is content-only — no backend, no LLM calls at runtime. Its job is to inspire, educate, and hand off to GitHub Copilot for the actual build.
+> From idea to enterprise-ready agentic solution on Azure.
 
-## What's inside
+**Agentic Loop helps teams close the gap between an idea and a production-ready agentic solution.** It gives Microsoft field teams and their customers a streamlined, repeatable way to turn business intent into agents that are built with GitHub Copilot and run securely on Microsoft Foundry and Azure.
 
-- **Home** — pick Capabilities, Building blocks, and Themes; craft a mock prompt; preview suggested Build/Run skills; open the **Make it real** modal that points to the Copilot CLI (`/lean:implement`, `/lean:deploy`, `azd up`).
-- **Scenarios** — filterable gallery of industry scenarios; each opens a Build / Run / Scale playbook stepper.
-- **Playbooks** — markdown-driven slide decks rendered from `playbooks/<slug>/README.md` with chapter rail, code copy, callouts, and a pinnable TOC.
-- **Skills catalog** — skills grouped by Build (Copilot) and Run (Foundry) phases.
-- **Concepts** — Agentic Loop, Agents, Skills, Tools.
-- **Platform** — Foundry capabilities and Azure building blocks with deep-linkable cards.
+An idea can be something entirely new, an existing business process that should work better, or a known problem that AI agents may be able to solve. Agentic Loop simplifies the path from that starting point to a specified, implemented, verified, deployed, and observable solution.
 
-## Tech stack
+## Who this is for
 
-React 19 · TypeScript (strict) · Vite 8 · React Router 7 · `react-markdown` + `remark-gfm` + `rehype-highlight` · `lucide-react` · hand-authored CSS with light/dark/system theming.
+Agentic Loop is designed for **Microsoft customer-facing field roles and the customers they support**.
 
-## Scripts
+- Microsoft field teams can use it to position the Microsoft agentic approach, shape customer conversations, demonstrate production patterns, and move from opportunity to implementation.
+- Customers can use it with their Microsoft teams to translate a business idea or problem into an enterprise-ready agentic solution on Azure.
+- Builders using coding agents such as GitHub Copilot, Claude Code, or Codex can use it to turn locally working prototypes into governed, observable, deployable solutions on Azure—not solutions that run only on one developer's laptop.
+- Architects and engineers can use its opinionated playbooks, skills, and deployment workflow to avoid assembling every design decision from scratch.
+
+## What this changes
+
+Creating an agent demo that works locally is no longer the hard part. Coding agents have made pilots fast. The difficult work is translating an idea into a production system with the right architecture, tools, grounding, identity, governance, evaluation, observability, and deployment model.
+
+Without a repeatable approach, agents either remain developer-led experiments that the business cannot evolve or spread through business-led experimentation faster than IT can govern.
+
+That streamlining comes from standardizing on a **proven, repeatable, enterprise-ready reference architecture for Azure**. Instead of freezing the architecture into one rigid set of infrastructure-as-code templates that can become brittle and difficult to maintain, Agentic Loop expresses its architectural intent, production defaults, and guardrails through agent skills and maintained references. GitHub Copilot translates those instructions into scenario-appropriate application and infrastructure code, so implementations can evolve without losing architectural consistency.
+
+Agentic Loop streamlines that translation. It turns customer intent and requirements into:
+
+- a clear solution specification;
+- recommended build and run skills;
+- reusable implementation playbooks;
+- an opinionated Microsoft Foundry and Azure architecture;
+- working application, agent, tool, and infrastructure code;
+- verification, safety, evaluation, and observability gates; and
+- a repeatable deployment path ending in `azd up`.
+
+The result is a simpler path from **idea → pilot → production**, with enterprise readiness built into the process rather than added afterward.
+
+## The Microsoft agentic approach
+
+Agentic Loop brings together:
+
+- **GitHub Copilot** to specify, plan, implement, verify, and deploy the solution.
+- **GitHub Copilot SDK** as the default execution harness for agentic loops.
+- **SKILLs** as reusable specialization packages for domain knowledge, instructions, tools, and workflows.
+- **Microsoft Foundry Hosted Agents** as the governed runtime for secure and scalable execution.
+- **Foundry Models** as the intelligence layer, connected to evaluation, optimization, and measurable consumption.
+- **Foundry Skills and Toolboxes** to distribute versioned behavior, tools, and grounding without rebuilding the agent.
+- **Azure** for identity, networking, data, integration, observability, governance, and deployment.
+
+The default pattern is a GitHub Copilot SDK agent hosted on Microsoft Foundry, using Foundry Skills and a governed toolbox MCP endpoint. Microsoft Agent Framework is used when a solution explicitly requires graph or workflow orchestration.
+
+## How the loop works
+
+The inner development loop is:
+
+1. **Specify** — turn the idea, business process, or problem into explicit requirements.
+2. **Plan** — select the architecture, models, tools, skills, grounding, and Azure services the scenario needs.
+3. **Implement** — build the agent, application, integrations, infrastructure, and reusable skills.
+4. **Verify** — test behavior, safety, identity, deployment readiness, and scenario-specific quality.
+5. **Deploy** — provision and release the solution to Azure with `azd`.
+
+The deployed solution then enters an outer production loop: observe, evaluate, learn, improve, and redeploy.
+
+## Three ways to start
+
+| Path | Use it when | Outcome |
+| --- | --- | --- |
+| **Kratos** | You want to experience a production-shaped reference implementation first. | A ready-to-use demonstration of agents, personas, and task skills. |
+| **Agentic Launchpad** | You already have an idea, process, or problem to solve. | A Copilot-ready package of requirements, skills, playbooks, architecture, and deployment guidance. |
+| **Industry scenarios** | You want to begin with a proven vertical use case. | A scenario-seeded package that can be adapted to the customer's requirements. |
+
+The Launchpad and industry-scenario paths converge on the same playbook-driven workflow. A **scenario** answers *what outcome are we building?* A **playbook** answers *how do we implement a reusable part of it?*
+
+## Use the build loop
+
+Install the Agentic Loop skill into the project you want GitHub Copilot to build:
 
 ```bash
-npm install
-npm run dev      # Vite dev server on http://localhost:5173
-npm run build    # tsc -b && vite build  →  dist/
-npm run preview  # serve the production build locally
-npm run lint     # eslint .
+gh skill install aiappsgbb/agentic-loop agentic-loop \
+  --agent github-copilot \
+  --scope project
 ```
 
-## Project layout
+Open that project in GitHub Copilot App or the CLI, describe the idea or business problem, and run:
 
-```
-src/
-  components/   Hero, Sidebar, CapabilityPicker, ScenariosGallery, MakeItRealModal, ThemeProvider
-  pages/        Home, Scenarios, ScenarioPlaybook, Playbooks, PlaybookPage, SkillsCatalog, concepts/*
-  data/         scenarios.json
-  styles/       app.css
-playbooks/      <slug>/README.md  (rendered as slide decks at /playbooks/:slug)
-public/         images/*, playbooks/<slug>/images/*, Foundry.svg, Azure.svg
-docs/spec.md    Full functional spec
+```text
+/spec2cloud
 ```
 
-## Deployment
+The workflow carries the solution through **Specify → Plan → Implement → Verify → Deploy**. The Agentic Loop skill applies the Microsoft Foundry and Azure production defaults, selects relevant companion skills, and keeps the generated architecture aligned with the requirements.
 
-Produces a single static bundle (`dist/`) suitable for Azure Static Web Apps or any CDN. See [deploy.ps1](deploy.ps1) and [docs/spec.md](docs/spec.md).
+## Guiding outcomes
+
+1. **Pilot to production, repeatably.** Every artifact should shorten the path to a governed, observable, evaluated production agent.
+2. **Microsoft Foundry adoption.** Hosted agents, models, skills, tools, evaluation, and observability form one coherent production platform.
+3. **Reusable field execution.** Customer learning becomes reusable scenarios, playbooks, skills, reference implementations, and improvements to the loop.
+
+## Sources
+
+- [Skills support in Microsoft Foundry Agents](https://learn.microsoft.com/azure/foundry/agents/how-to/tools/skills)
+- [Microsoft Foundry Agent Service overview](https://learn.microsoft.com/azure/foundry/agents/overview)
+- [GitHub Copilot SDK](https://github.com/github/copilot-sdk)
+- [Azure Developer CLI](https://learn.microsoft.com/azure/developer/azure-developer-cli/)
 
 ## License
 
