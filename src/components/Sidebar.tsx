@@ -1,8 +1,8 @@
 import { NavLink, Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import {
-  Home, Layers, BookOpen, Sparkles, Bot, Wrench, Workflow,
-  ChevronRight, PanelLeftClose, PanelLeft, Sun, Moon, Monitor, Infinity as InfinityIcon, Library, Cpu, Lightbulb, Compass, Rocket, Boxes
+  Home, BriefcaseBusiness, BookOpen, Sparkles, Bot, Wrench, Workflow,
+  ChevronRight, PanelLeftClose, PanelLeft, Sun, Moon, Monitor, Infinity as InfinityIcon, Library, Cpu, Lightbulb, DraftingCompass, Rocket, Boxes
 } from 'lucide-react';
 import { type ThemePref } from './ThemeContext';
 import { useTheme } from './useTheme';
@@ -46,7 +46,7 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
 
         <div className="nav-section-title">Build &amp; Run</div>
         <NavLink to="/scenarios" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-          <Layers className="icon" size={18} />
+          <BriefcaseBusiness className="icon" size={18} />
           <span className="nav-label">Industry scenarios</span>
         </NavLink>
         <NavLink to="/playbooks" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
@@ -65,7 +65,7 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
           role="button"
         >
           <Lightbulb className="icon" size={18} />
-          <span className="nav-label">Concepts</span>
+          <span className="nav-label">Agentic Concepts</span>
           <ChevronRight className="chev" size={14} />
         </div>
         {conceptsExpanded && !collapsed && (
@@ -107,10 +107,10 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
             <NavLink
               to="/concepts/platform"
               end
-              className={({ isActive }) => `nav-item ${isActive || location.pathname === '/concepts/platform/overview' ? 'active' : ''}`}
+              className={({ isActive }) => `nav-item nav-item-feature ${isActive || location.pathname === '/concepts/platform/overview' || location.pathname === '/concepts/platform/architecture' ? 'active' : ''}`}
             >
-              <Compass className="icon" size={16} />
-              <span className="nav-label">Overview</span>
+              <DraftingCompass className="icon" size={16} />
+              <span className="nav-label">Reference Architecture</span>
             </NavLink>
             <NavLink to="/concepts/platform/foundry" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <img src={asset('/Foundry.svg')} alt="" className="icon nav-asset" />

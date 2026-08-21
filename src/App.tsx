@@ -15,8 +15,9 @@ const TITLES: Record<string, string> = {
   '/concepts/skills': 'Skills',
   '/concepts/tools': 'Tools',
   '/concepts/agent-harness': 'Agent Harness',
-  '/concepts/platform': 'Platform overview',
-  '/concepts/platform/overview': 'Platform overview',
+  '/concepts/platform': 'Reference architecture',
+  '/concepts/platform/overview': 'Reference architecture',
+  '/concepts/platform/architecture': 'Reference architecture',
   '/concepts/platform/foundry': 'Microsoft Foundry',
   '/concepts/platform/azure': 'Azure',
 };
