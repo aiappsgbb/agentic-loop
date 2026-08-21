@@ -2,18 +2,23 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   BookOpen, Rocket, ShieldCheck, GitBranch, Database, Eye, ArrowRight, Layers, Wrench, CloudSun,
-  Search, X, Brain, Workflow, Tag, Mic, Castle, Waypoints, Sparkles,
+  Search, X, Brain, Tag, Mic, Castle, Waypoints, Sparkles,
 } from 'lucide-react';
 import { playbooks, playbookHasDeck, scenariosForPlaybook } from '../data/links';
 import { getBuildSkill, getRunSkill } from '../data/skills';
 import CapabilityPicker, { type PickerOption } from '../components/CapabilityPicker';
+import LensSwitcher from '../components/LensSwitcher';
 
 const ICONS: Record<string, typeof Rocket> = {
   Rocket, GitBranch, Database, ShieldCheck, Eye, BookOpen, CloudSun, Mic, Wrench, Castle, Waypoints,
 };
 
 function toOptions(values: string[]): PickerOption[] {
-  return [...new Set(values)].sort().map(v => ({ id: v, label: v, icon: Tag }));
+  const counts = new Map<string, number>();
+  values.forEach(v => counts.set(v, (counts.get(v) ?? 0) + 1));
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([id, count]) => ({ id, label: id, count, icon: Tag }));
 }
 
 export default function Playbooks() {
@@ -21,15 +26,10 @@ export default function Playbooks() {
   const [levels, setLevels] = useState<string[]>([]);
   const [caps, setCaps] = useState<string[]>([]);
   const [blocks, setBlocks] = useState<string[]>([]);
-  const [pats, setPats] = useState<string[]>([]);
 
   const levelOptions = useMemo(() => toOptions(playbooks.map(p => p.level)), []);
   const capOptions = useMemo(() => toOptions(playbooks.flatMap(p => p.capabilities ?? [])), []);
   const blockOptions = useMemo(() => toOptions(playbooks.flatMap(p => p.building_blocks ?? [])), []);
-  const patternOptions = useMemo(
-    () => toOptions(playbooks.flatMap(p => p.patterns ?? []).filter(x => x !== '*')),
-    [],
-  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -45,24 +45,20 @@ export default function Playbooks() {
       if (levels.length && !levels.includes(p.level)) return false;
       if (caps.length && !caps.some(c => (p.capabilities ?? []).includes(c))) return false;
       if (blocks.length && !blocks.some(b => (p.building_blocks ?? []).includes(b))) return false;
-      if (pats.length) {
-        const pp = p.patterns ?? [];
-        if (!(pp.includes('*') || pats.some(x => pp.includes(x)))) return false;
-      }
       return true;
     });
-  }, [query, levels, caps, blocks, pats]);
+  }, [query, levels, caps, blocks]);
 
-  const activeCount = levels.length + caps.length + blocks.length + pats.length + (query.trim() ? 1 : 0);
-  const clearAll = () => { setQuery(''); setLevels([]); setCaps([]); setBlocks([]); setPats([]); };
+  const activeCount = levels.length + caps.length + blocks.length + (query.trim() ? 1 : 0);
+  const clearAll = () => { setQuery(''); setLevels([]); setCaps([]); setBlocks([]); };
 
   return (
     <>
       <div className="page-head">
-        <div className="page-eyebrow">Playbooks · the HOW</div>
-        <h1>Master a reusable pattern.</h1>
+        <LensSwitcher />
+        <h1>Start from an architecture pattern.</h1>
         <p className="lede">
-          Playbooks are horizontal, step-by-step guides to a single capability — grounding, orchestration, governance, evaluation, voice. Combine several and you get a <Link to="/scenarios">Scenario</Link>. Use a playbook when you want to learn <em>how</em> to do one thing well.
+          Pick the pattern your solution needs, such as grounding, multi-agent orchestration, governance, evaluation or voice, then follow a step-by-step guide to building it on Azure.
         </p>
       </div>
 
@@ -74,7 +70,6 @@ export default function Playbooks() {
         <CapabilityPicker label="Level" options={levelOptions} selected={levels} onChange={setLevels} triggerIcon={Layers} />
         <CapabilityPicker label="Capabilities" options={capOptions} selected={caps} onChange={setCaps} triggerIcon={Brain} />
         <CapabilityPicker label="Building blocks" options={blockOptions} selected={blocks} onChange={setBlocks} triggerIcon={ShieldCheck} />
-        <CapabilityPicker label="Patterns" options={patternOptions} selected={pats} onChange={setPats} triggerIcon={Workflow} />
         {activeCount > 0 && (
           <button className="playbook-filter-clear" type="button" onClick={clearAll}>
             <X size={13} /> Clear
@@ -160,6 +155,7 @@ export default function Playbooks() {
                   <span className="playbook-accelerator"><Sparkles size={11} /> Accelerator</span>
                 )}
                 <span className="difficulty">{p.level}</span>
+                <span className="playbook-kind">Guide</span>
                 {interactive && <span className="playbook-open">Open <ArrowRight size={12} /></span>}
               </div>
             </>

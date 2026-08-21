@@ -6,6 +6,7 @@ export interface PickerOption {
   id: string;
   label: string;
   description?: string;
+  count?: number;
   icon: LucideIcon;
   link?: string;
 }
@@ -76,6 +77,7 @@ export default function CapabilityPicker({ label, options, selected, onChange, t
                     <ExternalLink size={13} />
                   </Link>
                 )}
+                {typeof opt.count === 'number' && <span className="opt-count">{opt.count}</span>}
                 <div className="check">{isSel && <Check size={12} />}</div>
               </div>
             );
