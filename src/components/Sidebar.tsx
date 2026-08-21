@@ -107,10 +107,10 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
             <NavLink
               to="/concepts/platform"
               end
-              className={({ isActive }) => `nav-item ${isActive || location.pathname === '/concepts/platform/overview' ? 'active' : ''}`}
+              className={({ isActive }) => `nav-item nav-item-feature ${isActive || location.pathname === '/concepts/platform/overview' || location.pathname === '/concepts/platform/architecture' ? 'active' : ''}`}
             >
               <Compass className="icon" size={16} />
-              <span className="nav-label">Overview</span>
+              <span className="nav-label">Reference Architecture</span>
             </NavLink>
             <NavLink to="/concepts/platform/foundry" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <img src={asset('/Foundry.svg')} alt="" className="icon nav-asset" />

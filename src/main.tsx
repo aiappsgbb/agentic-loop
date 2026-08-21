@@ -55,6 +55,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path="platform">
                 <Route index element={lazyRoute(<PlatformOverview />)} />
                 <Route path="overview" element={lazyRoute(<PlatformOverview />)} />
+                <Route path="architecture" element={lazyRoute(<PlatformOverview />)} />
                 <Route path="foundry" element={lazyRoute(<Foundry />)} />
                 <Route path="azure" element={lazyRoute(<Azure />)} />
               </Route>

@@ -24,7 +24,7 @@ const CAPABILITIES: PickerOption[] = [
   { id: 'speech-to-text', label: 'Speech to Text', description: 'Real-time transcription', icon: Headphones, link: '/concepts/platform/foundry#speech-to-text' },
   { id: 'realtime', label: 'Real-Time Conversations', description: 'Voice-first agents', icon: MessagesSquare, link: '/concepts/platform/foundry#realtime' },
   { id: 'forms', label: 'Forms Recognition', description: 'Document intelligence', icon: FileSearch, link: '/concepts/platform/foundry#forms' },
-  { id: 'knowledge', label: 'Knowledge', description: 'Vector grounding & RAG', icon: BookOpen, link: '/concepts/platform/foundry#knowledge' },
+  { id: 'knowledge', label: 'Foundry IQ', description: 'Grounded knowledge & retrieval', icon: BookOpen, link: '/concepts/platform/foundry#foundry-iq' },
 ];
 
 const BUILDING_BLOCKS: PickerOption[] = [

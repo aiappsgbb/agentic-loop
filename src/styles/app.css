@@ -135,6 +135,8 @@
   border-left: 1px solid var(--border);
 }
 .sub-nav .nav-item { padding: 8px 12px; font-size: 13.5px; }
+.sub-nav .nav-item-feature { font-weight: 600; color: var(--text); }
+.sub-nav .nav-item-feature .icon { color: var(--accent, currentColor); }
 .sidebar-footer {
   margin-top: auto;
   padding: 12px 10px;
