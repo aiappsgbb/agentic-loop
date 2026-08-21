@@ -1,7 +1,7 @@
 import { NavLink, Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import {
-  Home, Layers, BookOpen, Sparkles, Bot, Wrench, Workflow,
+  Home, BriefcaseBusiness, BookOpen, Sparkles, Bot, Wrench, Workflow,
   ChevronRight, PanelLeftClose, PanelLeft, Sun, Moon, Monitor, Infinity as InfinityIcon, Library, Cpu, Lightbulb, DraftingCompass, Rocket, Boxes
 } from 'lucide-react';
 import { type ThemePref } from './ThemeContext';
@@ -46,7 +46,7 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
 
         <div className="nav-section-title">Build &amp; Run</div>
         <NavLink to="/scenarios" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-          <Layers className="icon" size={18} />
+          <BriefcaseBusiness className="icon" size={18} />
           <span className="nav-label">Industry scenarios</span>
         </NavLink>
         <NavLink to="/playbooks" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
