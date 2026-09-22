@@ -88,10 +88,16 @@ gh skill install aiappsgbb/agentic-loop agentic-loop \
 Open that project in GitHub Copilot App or the CLI, describe the idea or business problem, and run:
 
 ```text
-/spec2cloud
+Use Agentic Loop to guide me through building a complete agentic solution.
 ```
 
-The workflow carries the solution through **Specify → Plan → Implement → Verify → Deploy**. The Agentic Loop skill applies the Microsoft Foundry and Azure production defaults, selects relevant companion skills, and keeps the generated architecture aligned with the requirements.
+The concise Agentic Loop skill coordinates architecture, implementation, toolbox configuration, agent deployment and local end-to-end testing using the separately installed Microsoft Foundry skill. It defaults to hosted agents, Python 3.13 and the Responses API, with React/FastAPI app services. Frontend/backend deployment to Azure requires a separate approval after local testing succeeds.
+
+### Agentic Loop plugin and canvas
+
+The [Agentic Loop plugin](plugins/agentic-loop/README.md) packages the concise skill and a five-tab canvas: **Setup, Resources, Build, Explore, and Cost**. Check prerequisites, choose a Foundry project, start from an illustrated industry scenario, explore deployed resources, and review session usage and Azure costs.
+
+It requires the separately installed [Microsoft Foundry skill](https://github.com/microsoft/azure-skills/tree/main/skills/microsoft-foundry). The existing Foundry canvas is reused through its public APIs for management and testing. Run `npm run plugin:build` to create a self-contained local plugin in `dist/plugin/agentic-loop/`; see the plugin README for installation, permissions, limitations and Awesome Copilot contribution steps. The plugin is not yet published to a marketplace.
 
 ## Guiding outcomes
 

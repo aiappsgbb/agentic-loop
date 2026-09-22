@@ -1,144 +1,40 @@
 ---
 name: agentic-loop
-description: Mandatory policy layer for Agentic Loop playbook and /spec2cloud execution. Post-processes the spec produced by specify by applying additional defaults (Foundry hosted agents exposing the Responses API by default, GitHub Copilot SDK + Foundry Skills API as the default agent pattern, toolbox MCP for tools and grounding, and Microsoft Agent Framework only when explicitly requested or clearly needed for graph/workflow orchestration), selects the right Foundry models / regions / SKUs for the spec, and recommends the companion skills to install.
-compatibility: Requires GitHub CLI 2.90+, azd with the Foundry extension, Python 3.11+, network access, and Azure subscription access for live placement checks.
+description: Build complete agentic applications with Microsoft Foundry agents, toolbox tools and skills, and a React/FastAPI application. Use for Agentic Loop requests or end-to-end agentic solutions spanning architecture, implementation, local testing, and optional Azure deployment. Supplies concise defaults to microsoft-foundry; not for unrelated UI edits or isolated Azure administration.
 ---
 
-# Agentic Loop Skill
+# Agentic Loop
 
-## Purpose
+Use this as the solution coordinator and `microsoft-foundry` for platform execution. Explicit user choices override defaults. Reuse known context; ask only for missing decisions. Read only the applicable Foundry workflow and its required references, not the whole skill tree. Report decisions, blockers, and endpoints concisely.
 
-Encodes the inner development loop - Specify to Plan to Implement to Verify to Deploy - and the defaults (Foundry, GitHub Copilot SDK + Foundry Skills API, toolbox MCP, azd, Entra + keyless RBAC, OTel, Foundry Evals) that take a pilot from idea to a deployed, observable change in a dev environment, ready for the outer CI/CD loop.
+## Defaults
 
-## Invocation contract
+- **Agents:** hosted agents; prompt agents only when explicitly requested. For new hosted agents, use `microsoft-foundry`'s `foundry-agent/create/quick-start-hosted.md`. Start with the **Basic sample**, **Python 3.13**, **Responses API**, and **code deployment**. Resolve the current sample through the skill; do not guess its URL. Use its advanced workflow only when quick-start cannot support the requested capability, retaining these defaults.
+- **Orchestration:** Copilot SDK for agents using agent skills; Microsoft Agent Framework for basic agents or explicit agent workflows. If a workflow also needs skills, clarify the framework choice. Use one framework per agent.
+- **Models:** preserve the Basic sample's model deployment configuration unless the user supplies an existing deployment; then verify and reuse it. Do not replace it with a hard-coded model or silently create a duplicate.
+- **App services:** React frontend, FastAPI backend, FastMCP custom MCP servers; Python 3.13 for Python services. Host these on Azure Container Apps using `az containerapp up --source <service-directory>` with explicit subscription, resource group, name, environment, ingress and target port. Do not substitute image-only deployment.
+- **Tools/skills:** publish and govern built-in tools, remote/custom MCP connections, and agent skills through Foundry toolbox; agents consume the toolbox rather than hard-coded tool endpoints.
+- **Safety:** use managed identity and least-privilege RBAC; keep credentials out of browser code and Git. Reuse resources and confirm billable changes. Surface failures; never report an unverified deployment as successful.
 
-For every Agentic Loop playbook or `/spec2cloud` run, invoke this installed skill as the mandatory policy layer. Apply it immediately after `specify` produces `./docs/spec.md` and before `plan` starts. Do not rely on `specify` embedding or transitively referencing these instructions.
+## Workflow
 
-Run the [RBAC pre-flight](#rbac-pre-flight) **before step 1** of the run, so a permission gap is reported as one complete list before any resource is created. Because it is owned here, every playbook inherits it with no playbook-specific wiring.
+1. **Preflight.** Confirm `microsoft-foundry` is installed and enabled; if missing, install from `microsoft/azure-skills` with approval and reload skills. Follow its dependency/authentication checks and azd guidance. Resolve the intended project from the user, workspace or root `.env`; ask if absent. Validate it with `az cognitiveservices account project show --subscription <subscription> --resource-group <group> --name <account> --project-name <project>`. Record its returned ARM ID, endpoint, region and resource group; verify permissions for planned resources and role assignments. Do not create a replacement for an inaccessible project.
+   Check the runtime canvas catalog for `agentic-loop`. If missing, install the self-contained Agentic Loop canvas at user scope from a verified distribution, reload extensions and confirm discovery. Use the [plugin installation documentation](https://github.com/aiappsgbb/agentic-loop/blob/canvas/plugins/agentic-loop/README.md); if not published or accessible, ask for its source path/URL. Do not invent an install source.
 
-## Defaults to apply (extends the included Spec2Cloud opinionated defaults)
+2. **Architecture.** Clarify the use case and user experience. Update the root `README.md`, preserving unrelated content, with each agent's purpose, framework, model deployment, and assigned toolbox tools/skills; identify remote versus custom MCP servers, generated versus reused skills, frontend, backend, databases/APIs, data flow, identity boundaries and deployment targets. Include only required components. Resolve unknowns before implementation.
 
-When choices are unspecified, prefer:
+3. **Generate.** Scaffold hosted agents through quick-start, then implement the required agents, React UI, FastAPI API, FastMCP servers and custom `SKILL.md` files. Wire configuration, authentication, health checks, telemetry, tests and service startup/build settings. Preserve existing code. Keep browser-to-backend and backend-to-agent contracts consistent.
 
-- **Agent hosting** - Use Foundry **hosted agents** to implement AI agents. Expose the **Responses API** as the default hosted-agent protocol so clients call an OpenAI-compatible `/responses` endpoint and the platform manages conversation history, streaming, and session lifecycle. Use invocations only when the user explicitly needs that protocol or an existing sample/runtime requires it. Proactively propose an agent-based design even when the user didn't explicitly ask for agents, if the use case involves reasoning over tools, multi-step workflows, data grounding, or external system calls.
-- **Agent framework** - Default to the **GitHub Copilot SDK** for hosted agents. It runs BYOK against Microsoft Foundry models over the **Responses API**, consumes Foundry Skills from the Skills API, and bridges the Foundry toolbox MCP endpoint for tools and grounding. Use **Microsoft Agent Framework (MAF)** only when the user explicitly asks for MAF or the task is clearly graph/workflow orchestration. Pick one framework per agent; do not combine them.
-- **Skills first** - Treat **Foundry Skills API** skills as the default reusable behavior layer for agentic-loop specs. Author each skill as `./skills/<skill-name>/SKILL.md` in the implement stage, then use the **azd Foundry extension** for skill data-plane management (`azd ai skill create/update/list/show/download`). Add `postprovision` hooks in `azure.yaml` for repeatable create/update from the local `SKILL.md` files; use REST/SDK only for gaps not covered by `azd`. The hosted agent image must not copy this folder; at runtime the Copilot SDK agent downloads the governed skill versions from Foundry into a temp directory.
-- **Tools and grounding through toolbox MCP** - Govern custom MCP servers, Foundry IQ / CognitiveSearch grounding connections, A2A tools, and connectionless tools through Foundry **connections** and a single **toolbox**. Do not hardcode tool URLs, Search clients, or connection secrets in the agent runtime by default.
-- **Toolbox** - Bundle the published skills, MCP connections, Foundry IQ grounding connection, and any connectionless tools (e.g. `web_search`, `file_search`) into one governed **toolbox** the agent consumes through a single MCP endpoint. Author `./src/tools.yaml` in the implement stage (see [`references/foundry-toolbox.md`](references/foundry-toolbox.md)), then add a `postprovision` hook in `azure.yaml` - **ordered after the skill and connection hooks**, since it references them by name - that runs `azd ai toolbox create <toolbox-name> --from-file ./src/tools.yaml`. The command writes the runtime endpoint to `TOOLBOX_<NORMALIZED_NAME>_MCP_ENDPOINT`; point the Copilot SDK agent's tool discovery at it.
-- **Foundry model** - Use `gpt-5.4-mini` as the default Foundry model for general-purpose agent and chat workloads unless the spec clearly requires stronger reasoning, embeddings, image/audio, document AI, or cost routing.
-- **Grounded retrieval (Foundry IQ)** - When the agent answers over enterprise/private knowledge, default to one **Foundry IQ** knowledge base exposed through one governed toolbox MCP endpoint (typically a brokered `CognitiveSearch` / Foundry IQ connection). Require citations for supported claims and deterministically refuse when no cited evidence supports the answer. Keep direct Search / Foundry IQ calls confined to provisioning, ingestion, and an explicitly documented diagnostic escape hatch; see [`references/foundry-iq-grounding.md`](references/foundry-iq-grounding.md).
-- **Evals** - Use **Foundry Evals** for model and agent quality, safety, and regression gates. Out of scope unless the user explicitly calls for evals; when in scope, wire them in from day one.
-- **Guardrails** - Use **Foundry Guardrails** to reduce safety and security risks, so users can engage with AI apps and agents confidently. Adding custom guardrail controls is out of scope unless the user explicitly calls for custom guardrails.
-- **Identity & keyless RBAC** - All service-to-service auth uses **managed identities + least-privilege RBAC**; never admin keys, connection strings, or shared secrets on the control/data plane. The generated infra (Bicep, owned by `azure-prepare` / `microsoft-foundry`) **must** create every role assignment in the [Keyless identity & RBAC contract](#keyless-identity--rbac-contract) below. Defer exact role IDs and assignment syntax to the maintained `microsoft-foundry/rbac` sub-skill.
-- **Observability** - Agent and app **telemetry is ON by default** with **end-to-end monitoring**: OpenTelemetry traces, logs, and metrics from the **backend, hosted agents, MCP servers, and Foundry models** are exported to **one Application Insights** resource from day one, so a single distributed trace follows a request from the browser through the backend, the agent loop, every tool/MCP call, and each model call. Capture the **full detail** - request data, prompts, completions, and tool arguments/results - by turning on content capture per layer (dev/test by default; gated and redacted in production). The generated infra must provision Application Insights, connect it to the Foundry project, and wire it per the [Observability contract](#observability-contract) below. Defer instrumentation detail to `appinsights-instrumentation`.
+4. **Deploy MCP.** Deploy required custom MCP servers first with `az containerapp up --source <mcp-directory>`. Verify their actual reachable MCP endpoints and authentication before registering connections. Reuse remote servers without redeploying them.
 
-### Skills & tools (MCP) lifecycle across the loop
+5. **Configure toolbox.** Follow current `microsoft-foundry` guidance and supported `azd ai` commands to publish generated skills, register remote/custom MCP connections and built-in tools, and create/update toolboxes. Assign the required toolbox to each agent and verify authenticated tool/skill discovery.
 
-When the spec includes agent skills, MCP-server tools, or Foundry IQ grounding, orchestrate them across the loop stages on a single Foundry **toolbox** (a toolbox version carries skills, tools, and grounding connections). This file orchestrates; the **full Implement→Verify lifecycle** (author skills/MCP servers locally → `azd provision` → create/update skills with `azd ai skill`, register MCP-server tools and grounding connections, attach to a toolbox, download skills to a temp runtime directory, wire the agent, verify discovery) and the toolbox mechanics (`azd ai skill`, `azd ai toolbox create`, the `McpBridge`, the `CopilotClient` agent) live in [`references/foundry-toolbox.md`](references/foundry-toolbox.md#skills--tools-mcp-lifecycle-across-the-loop) and its reference agent [`references/copilot-sdk-with-toolbox.py`](references/copilot-sdk-with-toolbox.py). Defer MCP server authoring to `python-mcp-server-generator`, and MCP/tool routing governance to `azure-aigateway`.
+6. **Deploy agents.** Continue the Foundry workflow using code deployment; verify remote Responses API invocations and required tool/skill execution. Return each actual agent endpoint with its authentication requirements and a minimal test example. Do not invent endpoints from names.
 
-The net effect: **both skills and MCP tools** stay versioned, auditable, and updatable without rebuilding the agent image — re-version on Foundry, promote the toolbox `default_version`, and the agent picks up the change on its next session.
+7. **Local acceptance gate.** Start FastAPI with reload and React's development server with hot reload. Verify both are responsive; run end-to-end tests through UI, backend, deployed agents and required MCP/tools. Fix failures before proceeding. After success, upsert these keys in root `.env`, preserve unrelated keys, and ensure `.env` is Git-ignored:
+   - `FOUNDRY_PROJECT`: verified project ARM ID.
+   - `RESOURCE_GROUP`: selected resource group name.
+   - `LOCAL_FRONTEND`: verified local frontend URL.
+   Keep local servers running and report their URLs. **Stop and ask whether to deploy the backend and frontend to Azure; wait for explicit confirmation.** Earlier approval for agents/MCP does not authorize this step.
 
-## Greenfield readiness policy
-
-`agentic-loop` owns defaults, decision policy, and generated contracts. It should make future `verify` and `deploy` runs smoother by declaring the right architecture and repository expectations before implementation starts.
-
-### Agent Framework selection
-
-**Default to the GitHub Copilot SDK.** Build hosted agents with the **GitHub Copilot SDK** unless the user explicitly asks for MAF or the task is clearly graph/workflow orchestration. Both framework paths can run BYOK against Foundry models and host on Foundry hosted agents, but the Copilot SDK is the default because it consumes Foundry Skills API content and the toolbox MCP endpoint directly. Don't combine frameworks in one agent.
-
-| Agent shape | Build with | Companion skill(s) |
-| --- | --- | --- |
-| **Default hosted agent** - unspecified framework, tools, grounding, skills, or integrated agent loop | **GitHub Copilot SDK** | `copilot-sdk` |
-| **Graph/workflow orchestration agent** - user explicitly requests MAF, or the design is clearly a graph/workflow orchestrator | **MAF** | `microsoft-agent-framework` |
-
-Install `copilot-sdk` by default for agentic-loop specs. Install `microsoft-agent-framework` only for explicit MAF or graph/workflow orchestration. Document in `./docs/spec.md` or `./docs/plan.md` which framework each agent uses (Copilot SDK default, or MAF with the trigger that justified it).
-
-### Python dependency contract (`requirements.txt`)
-
-When post-processing the spec, declare the hosted agent's Python dependencies so the generated `requirements.txt` (or `pyproject.toml`) is complete. The full conditional package list (auth, framework, hosted-agent runtime, toolbox, skill download, observability) — keyed to the choices already made and matching the reference agent's imports — lives in [`references/foundry-hosted-agent.md`](references/foundry-hosted-agent.md#python-dependency-contract-requirementstxt). Resolve the latest stable compatible releases at implementation time and capture the resolved versions in the generated application's lockfile.
-
-When reviewing or correcting generated Copilot SDK code, resolve the latest stable release from the official package index and verify its installed API before relying on examples. Include the resolved package version, Python minimum, session-creation shape, prompt-send shape, response/event shape, and lifecycle pattern.
-
-### Greenfield contract to declare
-
-When post-processing a spec, explicitly add or confirm these contracts in the generated requirements/plan:
-
-| Contract | Required guidance |
-| --- | --- |
-| **azd environment naming** | Suggest a convention-based name and let the user accept or override it. Example: `agentic-loop-weather-dev-eus2` from app name, stage, and region. |
-| **Durable azd artifacts** | Keep `.azure/deployment-plan.md` as a durable repo artifact. If `.azure/` is ignored, prefer `.azure/*` plus `!.azure/deployment-plan.md`. |
-| **Playbook artifact option** | When the user wants the fastest deploy path, offer a deploy-ready playbook artifact that can be downloaded and deployed without rebuilding from source. |
-| **Caller RBAC pre-flight** | State the scopes the run targets (subscription, and any pre-existing resource group / Foundry account / project) so the pre-flight can be evaluated before step 1, and record its verdict. See [RBAC pre-flight](#rbac-pre-flight). |
-
-### Freeze the implementation contract
-
-Before delegating frontend, backend, agent, ingestion, or infrastructure work, create the contract table in [`references/implementation-contract.md`](references/implementation-contract.md) and link it from `./docs/plan.md`. Freeze service names, environment variables, protocols, endpoints, schemas, identity scopes, response/citation/refusal shapes, and resolved runtime/package versions so parallel workers consume one shared interface instead of inventing incompatible values.
-
-Before merging parallel work, run the reconciliation checklist from the same reference against every component. Resolve drift in the contract and its consumers together; do not preserve incompatible aliases merely to make the merge pass.
-
-### Keyless identity & RBAC contract
-
-Every component authenticates with a **managed identity** (user-assigned preferred) and **least-privilege RBAC** - no admin keys, no connection strings on the control/data plane. When post-processing the spec, declare the role assignments so the generated **Bicep creates them as part of provisioning**. The full principal → scope → role matrix (frontend/backend ACR pulls, backend → AI account, the Foundry project MI, hosted-agent runtime MIs for BYOK inference, the agent identity for tools, and telemetry publishers) and its notes live in [`references/rbac-contract.md`](references/rbac-contract.md). Defer exact role GUIDs and `Microsoft.Authorization/roleAssignments` syntax to the `microsoft-foundry/rbac` sub-skill.
-
-#### RBAC pre-flight
-
-Those assignments are created **by** the deployment, so the **caller** needs rights to create the resources *and* to write every row of the matrix. Verify that **before step 1**, never mid-provisioning: an RBAC gap discovered after partial resources exist gets fixed one scope at a time, when the whole set was knowable up front.
-
-Diff the [deployer prerequisites](references/rbac-contract.md#deployer-prerequisites-pre-flight) against the caller's **effective** (inherited and group-derived) assignments at each scope in play - subscription, resource group, Foundry AI account, and Foundry project - and report **every** gap at once as `principal → scope → role`, with a ready-to-run `az role assignment create` block to hand to a subscription owner. Verdicts: `PASS` (one line, silenceable - a fully-permissioned run adds no noise), `BLOCKED` (do not start step 1), `ERROR` (resolve it, don't skip the gate). The loop cannot grant itself permissions, so `BLOCKED` is a stop-and-hand-off, not a repair loop.
-
-> Note that subscription **Owner does not** satisfy `Azure AI Account Owner` or `Azure AI Project Manager` - those carry `dataActions`, which Owner's `*` does not cover. Grant them explicitly.
-
-The full step - scopes, role equivalence, the report contract, and the verdict/exit-code table - is in [`references/rbac-preflight.md`](references/rbac-preflight.md), with the reference check script [`references/check_rbac_preflight.py`](references/check_rbac_preflight.py). It needs only the caller identity and the scopes in play, so it is self-contained enough to be lifted into a shared cross-playbook step. In an azd-driven repo, also wire it as a `preprovision` hook so a bare `azd up` is gated too.
-
-### Observability contract
-
-End-to-end monitoring is **on by default**: every tier - **backend, hosted agents, MCP servers, and Foundry models** - emits OpenTelemetry into **one Application Insights** resource (backed by Log Analytics) so a single distributed trace follows a request across the backend, the agent loop, every tool/MCP call, and each model call. The generated Bicep must provision it, inject `APPLICATIONINSIGHTS_CONNECTION_STRING` into every component (keyless, authenticated by each component's managed identity via **Monitoring Metrics Publisher**), and connect the same resource to the Foundry project so server-side agent/model traces land there too. The **baseline infra, per-tier instrumentation, agent observability (MAF vs Copilot SDK), and content-capture** detail lives in [`references/observability.md`](references/observability.md). Defer SDK/instrumentation wiring to `appinsights-instrumentation`.
-
-When implementing a **GitHub Copilot SDK hosted agent**, wire in the `configure_otel()` setup from the reference agent [`references/copilot-sdk-with-toolbox.py`](references/copilot-sdk-with-toolbox.py) and call it once at startup (before the client/session is created). It reads `APPLICATIONINSIGHTS_CONNECTION_STRING` and emits conversation-turn spans, MCP tool input/output spans, and a `gen_ai.client.token.usage` token-consumption metric straight to Application Insights (no collector); it is a safe no-op when the connection string is unset (local dev). Pair it with `_copilot_telemetry()` from the same file to capture the Copilot CLI child process's gen_ai spans over OTLP.
-
-### Reference architecture service map
-
-Propose additional Azure services only when the spec needs them — never turn every reference-architecture box into a default resource. The full area → "add when" → service → companion-skill map is in [`references/reference-architecture.md`](references/reference-architecture.md). The default greenfield baseline stays GitHub Copilot SDK + Foundry Skills API + toolbox MCP + Foundry hosted agent + Foundry model.
-
-## Foundry Models Selector
-
-Select the right Foundry models and candidate regions for the spec. Defaults: model `gpt-5.4-mini`, preferred region `eastus2` (prefer `swedencentral` for EU data residency).
-
-Before persisting `AZURE_LOCATION` or `AI_PROJECT_DEPLOYMENTS`, run the joint placement preflight in [`references/foundry-models.md`](references/foundry-models.md): validate the selected model/version/SKU/capacity, Azure AI Search SKU, hosted-agent availability, and required preview features in the target subscription as one placement decision. Rank fallback regions only when they satisfy the complete resource set. Record both preferred and deployed locations in `./.azure/deployment-plan.md`; when they differ, immediately reconcile `./docs/spec.md` and `./docs/plan.md`.
-
-For model deployment, provisioning, quota, and RBAC details, invoke or recommend `microsoft-foundry`.
-
-## Install suggested skills
-
-Match the current `./docs/spec.md` against the [skill catalog](references/build-skills-catalog.md) and suggest installing every skill whose trigger appears in the spec. `microsoft-foundry` and `copilot-sdk` are the defaults for every agentic-loop spec; install `microsoft-agent-framework` only for explicit MAF or graph/workflow orchestration. The **Copilot SDK skills default** (author each `./skills/<skill-name>/SKILL.md`, manage Foundry skill versions with `azd ai skill`, attach to a toolbox, download into a temp runtime directory) is owned by this skill — see [`references/foundry-toolbox.md`](references/foundry-toolbox.md).
-
-Before installing, run a lightweight preflight:
-
-```bash
-gh --version
-gh skill list --json skillName,sourceURL,scope,version,pinned,path
-gh skill update --dry-run
-```
-
-Require GitHub CLI `v2.90.0+`; upgrade if older. Use `gh skill` as the canonical command (not the Copilot CLI plugin command `copilot plugin install ...`). `gh skill list` proves installation, not freshness: use its source URL/version metadata plus `gh skill update --dry-run` to compare the installed tree SHA with upstream before relying on examples.
-
-### Propose and install
-
-1. Run the preflight and record each matching skill's installed path, source URL, version/tree SHA, pin state, and update status.
-2. Validate every catalog candidate against the target repository with `gh skill preview <repository> <skill>` before suggesting it. If discovery shows the capability moved into a maintained parent/sub-skill, use that maintained path instead of the stale standalone name.
-3. List each matching skill with the spec evidence that triggered it and mark it **missing**, **current**, **update available**, or **pinned**.
-4. For missing skills, ask the user to **approve**, **modify**, or **reject**, and to pick **automatic** or **manual** install. When running unattended, default to approve + automatic.
-5. Install only missing skills:
-
-   ```bash
-   gh skill install <repository> <skill> --agent github-copilot --scope project
-   ```
-
-6. Refresh approved, unpinned stale skills with `gh skill update <skill>` before using their examples. Respect pins unless the user approves `--unpin`.
-7. For manual installs, point the user at the repository's install instructions and move on.
-
-In a read-only preflight, report the exact proposed `gh skill update <skill>` command and approval requirement, but do not execute it. Do not patch third-party project-installed skills locally to repair stale or incompatible examples. Draft an upstream issue or PR instead. When upstream guidance conflicts with the resolved latest package API, treat it as an upstream documentation defect and use the installed package source as authoritative.
-
-### Reuse named run skills
-
-When the prompt **explicitly names** a run-phase skill, reuse it instead of generating a new one. Match the named skill against the [run skills catalog](references/run-skills-catalog.md): if it is listed, install/download the existing skill into `./skills/<skill-name>/` as the repo authoring artifact rather than authoring a fresh `SKILL.md`, then create/update the versioned skill on the Foundry project with `azd ai skill` and attach it to the agent's toolbox. The hosted agent still downloads the governed skill version into temp at runtime (the Copilot SDK skills default — see [`references/foundry-toolbox.md`](references/foundry-toolbox.md)). Only author a brand-new skill when the named skill is **not** in the catalog.
+8. **Optional app deployment.** Only after that confirmation, deploy backend then frontend with `az containerapp up --source <service-directory>`. Configure the deployed backend URL, allowed frontend origin and authenticated service access. Verify the cloud app end to end; only after success upsert `DEPLOYED_FRONTEND` in root `.env` with the actual Container Apps frontend URL. Return that URL and any sign-in requirements. If declined, leave the working local app and do not deploy.

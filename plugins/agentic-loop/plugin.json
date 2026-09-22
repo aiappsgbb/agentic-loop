@@ -1,0 +1,33 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "agentic-loop",
+  "description": "Build complete agentic solutions with concise Microsoft Foundry defaults and a five-tab canvas for setup, resources, scenarios, exploration and costs. Requires the separately installed Microsoft Foundry skill.",
+  "version": "0.1.0",
+  "keywords": [
+    "agentic-loop",
+    "azure",
+    "copilot-sdk",
+    "hosted-agents",
+    "microsoft-foundry"
+  ],
+  "author": {
+    "name": "aiappsgbb",
+    "url": "https://github.com/aiappsgbb"
+  },
+  "repository": "https://github.com/aiappsgbb/agentic-loop",
+  "license": "MIT",
+  "extensions": {
+    "com.github.copilot": {
+      "logo": "assets/preview.png"
+    },
+    "com.github.awesome-copilot": {
+      "agents": [],
+      "extensions": [
+        "./extensions/agentic-loop"
+      ],
+      "skills": [
+        "./skills/agentic-loop/"
+      ]
+    }
+  }
+}

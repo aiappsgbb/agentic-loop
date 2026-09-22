@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "plugin:build": "node scripts/build-plugin.mjs",
+    "plugin:test": "node --test extensions/agentic-loop/tests/*.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

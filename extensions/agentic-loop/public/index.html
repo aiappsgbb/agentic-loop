@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="canvas-token" content="__CANVAS_TOKEN__">
+    <title>Agentic Loop</title>
+    <link rel="stylesheet" href="/app.css">
+    <script type="module" src="/app.js"></script>
+</head>
+<body>
+<!-- THESIS: A working engineering loop, not a cloud dashboard.
+OWN-WORLD: Foundry-compatible semantic theme tokens, compact controls, precise status rows.
+STORY: Check readiness, choose a project, build from intent, inspect and improve.
+FIRST VIEWPORT: Project context above five tabs; actionable readiness below.
+FORM: User-specified five-tab workbench; scenario imagery belongs only to Build. -->
+<header>
+    <div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 16c-3-4-5-6-8-6a6 6 0 0 0 0 12c3 0 5-2 8-6s5-6 8-6a6 6 0 0 1 0 12c-3 0-5-2-8-6Z"/></svg><h1>Agentic Loop</h1></div>
+    <button id="refresh" class="quiet icon-button" title="Recheck this tab" aria-label="Refresh this tab"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7a9 9 0 0 0-15-1L2 9m0-6v6h6M4 17a9 9 0 0 0 15 1l3-3m0 6v-6h-6"/></svg></button>
+</header>
+<button id="project-bar" class="project-bar"><span><span class="muted">Microsoft Foundry project</span><strong id="project-name">Choose a project</strong></span><span aria-hidden="true">⌄</span></button>
+<nav role="tablist" aria-label="Solution workspace">
+    <button role="tab" id="tab-setup" aria-controls="setup" aria-selected="true" data-tab="setup">Setup <span id="setup-mark"></span></button>
+    <button role="tab" id="tab-resources" aria-controls="resources" aria-selected="false" tabindex="-1" data-tab="resources">Resources <span id="resources-mark"></span></button>
+    <button role="tab" id="tab-build" aria-controls="build" aria-selected="false" tabindex="-1" data-tab="build">Build <span id="build-mark"></span></button>
+    <button role="tab" id="tab-explore" aria-controls="explore" aria-selected="false" tabindex="-1" data-tab="explore">Explore</button>
+    <button role="tab" id="tab-cost" aria-controls="cost" aria-selected="false" tabindex="-1" data-tab="cost">Cost</button>
+</nav>
+<p id="notice" role="status" aria-live="polite" hidden></p>
+<main>
+    <section id="setup" role="tabpanel" aria-labelledby="tab-setup">
+        <h2>Ready to build?</h2><p class="intro">Connect your tools once. Carry a complete solution from intent to production.</p>
+        <div id="checks" aria-live="polite"><p class="loading">Checking skills, tools and Azure sign-in…</p></div>
+        <div class="section-heading"><h3>Complete your setup</h3></div>
+        <label for="scope">Install missing skills in</label>
+        <select id="scope"><option value="project">This project (default)</option><option value="user">My user profile</option></select>
+        <div class="actions"><button data-prompt="skills">Set up skills in Chat</button><button data-prompt="auth">Sign in with Azure</button></div>
+        <p class="muted">Installs and sign-in happen with your approval in Chat. Refresh after completing them.</p>
+        <div class="section-heading"><h3>Missing command-line tools?</h3></div>
+        <p>Foundry DevPack sets up azd and the Foundry extensions. If Azure CLI is still missing, the guide will help install it separately.</p>
+        <div class="actions"><button data-prompt="devpack">Guide me through setup</button><a href="https://learn.microsoft.com/azure/foundry/how-to/develop/install-cli-sdk?tabs=macos%2Cpython%2Cazd-ai#install-foundry-devpack" target="_blank" rel="noreferrer">DevPack guide ↗</a></div>
+    </section>
+    <section id="resources" role="tabpanel" aria-labelledby="tab-resources" hidden>
+        <h2>Your deployment home</h2><p class="intro">Choose a Foundry project. Its resource group brings the rest of your solution together.</p>
+        <label for="subscription">Azure subscription</label><select id="subscription"><option value="">Discovering subscriptions…</option></select>
+        <label for="project-search">Find a project</label><input id="project-search" type="search" placeholder="Search project or resource group">
+        <div id="projects" class="project-list" aria-live="polite"></div>
+        <div id="resource-context"></div><div id="monitoring" aria-live="polite"></div>
+        <div class="section-heading"><h3>Start with new resources</h3></div>
+        <div class="choice"><div><h4>Foundry quickstart</h4><p>A focused starting point for development.</p></div><button data-prompt="quickstart">Create in Chat</button></div>
+        <div class="choice"><div><h4>AI Landing Zone</h4><p>Enterprise networking, identity and governance for production.</p></div><button data-prompt="landingZone">Plan in Chat</button></div>
+        <p class="muted">Discovery is read-only. Creating resources requires approval in Chat.</p>
+    </section>
+    <section id="build" role="tabpanel" aria-labelledby="tab-build" hidden>
+        <h2>Start with an outcome</h2><p class="intro">Choose a proven industry scenario or shape a solution around your own use case.</p>
+        <div class="guided"><div><h3>Build with a guide</h3><p>Define the agents, user experience and path to production together.</p></div><button class="primary" data-prompt="guided">Guide me</button></div>
+        <div id="scenario-browser">
+            <label for="scenario-search">Search scenarios</label><input id="scenario-search" type="search" placeholder="Search use cases, industries, capabilities">
+            <div class="filters">
+                <div><label for="industry">Industry</label><select id="industry"><option value="">All industries</option></select></div>
+                <div><label for="capability">Capability</label><select id="capability"><option value="">All capabilities</option></select></div>
+                <div><label for="sort">Sort</label><select id="sort"><option value="name">Name A–Z</option><option value="industry">Industry</option><option value="reverse">Name Z–A</option></select></div>
+            </div>
+            <div class="result-heading"><p id="result-count" aria-live="polite"></p><button id="clear-filters" class="quiet">Clear filters</button></div>
+            <div id="scenarios" class="scenarios"></div>
+        </div>
+        <div id="prompt-review" hidden>
+            <div class="actions"><button id="cancel-prompt"><span aria-hidden="true">←</span> Back to scenarios</button></div>
+            <h3 id="prompt-title" tabindex="-1">Review starting prompt</h3><label for="prompt-text">Prompt to send to Chat</label><textarea id="prompt-text" rows="9" maxlength="16000"></textarea>
+            <div class="actions"><button id="send-prompt" class="primary">Send to Chat</button></div>
+            <p class="muted">Sending starts a Copilot turn in this session. Review the prompt before sending.</p>
+        </div>
+    </section>
+    <section id="explore" role="tabpanel" aria-labelledby="tab-explore" hidden>
+        <h2>Explore your solution</h2><p class="intro">See what is deployed, then continue the loop: observe, evaluate, improve.</p>
+        <h3>Your apps</h3>
+        <div id="frontend-links" aria-live="polite"><p class="muted">Reading frontend URLs from workspace .env…</p></div>
+        <p class="muted">From LOCAL_FRONTEND and DEPLOYED_FRONTEND in the root .env. The Build check means a value is configured, not that the app is running.</p>
+        <div class="section-heading"><h3>Foundry resources</h3></div>
+        <div class="actions"><button data-prompt="foundry">Open Microsoft Foundry Canvas</button><button id="refresh-foundry">Refresh Foundry panel</button></div>
+        <p class="muted">Reuses the installed Foundry panel for configuration, deployment and interactive testing. Chat synchronizes your selected project; opening does not deploy anything.</p>
+        <div id="inventory-toolbar" hidden>
+            <label for="inventory-search">Find a resource</label>
+            <input id="inventory-search" type="search" placeholder="Search names, models, versions or tools">
+            <div class="inventory-controls">
+                <div><label for="inventory-kind">Resource type</label><select id="inventory-kind"><option value="">All resources</option><option value="agents">Agents</option><option value="models">Model deployments</option><option value="tools">Toolboxes</option><option value="resources">Azure resources</option></select></div>
+                <button id="inventory-reset" class="quiet">Clear filters</button>
+            </div>
+            <p id="inventory-count" class="muted" role="status"></p>
+        </div>
+        <div id="inventory"></div>
+        <p id="inventory-updated" class="muted"></p>
+    </section>
+    <section id="cost" role="tabpanel" aria-labelledby="tab-cost" hidden>
+        <h2>Understand your consumption</h2><p class="intro">Copilot session usage, Azure spend and workload estimates are different measures. Keep each in view.</p>
+        <h3>This Copilot session</h3><div id="usage" aria-live="polite"></div>
+        <div class="section-heading"><h3>Azure spend · month to date</h3></div><div id="azure-cost"></div>
+        <p class="muted">Actual resource-group charges reported by Azure, not just this project. Billing data can lag. Cost Management Reader access may be required.</p>
+        <div class="section-heading"><h3>Monthly workload estimate</h3></div>
+        <p>Supply your expected workload. Copilot will calculate the estimate in Chat using current prices from the Azure Retail Prices API.</p>
+        <form id="estimate-form">
+            <div class="estimate-grid">
+                <label>Input tokens (millions / month)<input name="inputMillions" type="number" min="0" max="1000000000" step="any" required></label>
+                <label>Output tokens (millions / month)<input name="outputMillions" type="number" min="0" max="1000000000" step="any" required></label>
+                <label>Hosted-agent instance-hours / month<input name="agentHours" type="number" min="0" max="1000000000" step="any" required></label>
+            </div>
+            <p class="muted">Include replicas in instance-hours. Sending starts a Copilot turn with your selected project and workload. Copilot will clarify other service usage, cite pricing sources and flag unavailable rates. This estimate is not a bill.</p>
+            <div class="actions"><button type="submit">Calculate estimate in Chat</button><a href="https://azure.microsoft.com/pricing/calculator/" target="_blank" rel="noreferrer">Pricing calculator ↗</a></div>
+        </form>
+        <div id="estimate-result" aria-live="polite"></div>
+    </section>
+</main>
+<footer>Observe <span>→</span> Evaluate <span>→</span> Improve <span>↻</span><span class="muted">Keep the loop going.</span></footer>
+</body>
+</html>
