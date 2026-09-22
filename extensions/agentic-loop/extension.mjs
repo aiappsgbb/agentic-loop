@@ -3,9 +3,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { joinSession, createCanvas, CanvasError } from "@github/copilot-sdk/extension";
 import { Azure } from "./azure.mjs";
-import { Model, validateWorkload, workloadFields } from "./model.mjs";
+import { Model } from "./model.mjs";
 import { startServer } from "./server.mjs";
-import { frontendStatus, openFrontend } from "./frontends.mjs";
+import { openFrontend } from "./frontends.mjs";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 let dataRoot = path.join(root, "assets");
@@ -17,7 +17,7 @@ catch (error) {
 const scenarios = JSON.parse(await readFile(path.join(dataRoot, "scenarios.json"), "utf8"));
 const images = dataRoot === path.join(root, "assets") ? path.join(dataRoot, "images") : path.resolve(root, "../../public/images");
 const servers = new Map();
-const tabs = ["setup", "resources", "build", "explore", "cost"];
+const tabs = ["setup", "resources", "build", "explore", "optimize"];
 let model;
 let resolveReady;
 let rejectReady;
@@ -32,17 +32,14 @@ const schemas = {
     monitoring: objectSchema({}),
     explore: objectSchema({}),
     inspect_agent: { ...objectSchema({ projectId: { type: "string" }, agentName: { type: "string", maxLength: 256 } }), required: ["projectId", "agentName"] },
-    frontends: objectSchema({}),
+    frontends: objectSchema({ retry: { type: "boolean" } }),
     open_frontend: { ...objectSchema({ frontend: { enum: ["local", "deployed"] } }), required: ["frontend"] },
     usage: objectSchema({}),
     cost: objectSchema({}),
     preferences: objectSchema({ tab: { enum: tabs }, scope: { enum: ["project", "user"] }, draft: { type: "string", maxLength: 16000 } }),
     refresh_foundry: objectSchema({}),
-    estimate: { ...objectSchema(Object.fromEntries(workloadFields
-        .map(key => [key, { type: "number", minimum: 0, maximum: 1e9 }]))),
-        required: workloadFields },
     prompt: { ...objectSchema({
-        kind: { enum: ["skills", "devpack", "auth", "quickstart", "landingZone", "insights", "guided", "scenario", "custom", "foundry", "cost"] },
+        kind: { enum: ["skills", "devpack", "auth", "quickstart", "landingZone", "insights", "guided", "scenario", "custom", "foundry", "optimizer", "evaluations", "insightsScan"] },
         scenarioId: { type: "string" }, scope: { enum: ["project", "user"] }, text: { type: "string", maxLength: 16000 },
     }), required: ["kind"] },
 };
@@ -67,7 +64,7 @@ async function perform(action, input) {
         case "discover": return model.discover(input.subscriptionId);
         case "select": return model.select(input.projectId);
         case "usage": return model.session.rpc.usage.getMetrics();
-        case "frontends": return frontendStatus(model.session);
+        case "frontends": return model.frontends(input.retry);
         case "open_frontend": return openFrontend(model.session, input.frontend);
         case "inspect_agent": return model.inspectAgent(input);
         case "refresh_foundry": {
@@ -80,12 +77,6 @@ async function perform(action, input) {
             return result;
         }
         case "preferences": Object.assign(model.state, input); await model.save(); return model.state;
-        case "estimate": {
-            const workload = validateWorkload(input);
-            model.state.estimate = workload;
-            await model.save();
-            return model.send({ kind: "cost", workload });
-        }
         case "prompt": return model.send(input);
         default:
             if (!project) throw new Error("Select a Foundry project on Resources first.");
@@ -98,7 +89,7 @@ async function perform(action, input) {
 
 function dispatch(action, input = {}) {
     // Serialize state changes; a slow subscription discovery cannot overwrite a later selection.
-    if (["discover", "select", "preferences", "estimate", "prompt", "inspect_agent"].includes(action)) {
+    if (["discover", "select", "frontends", "preferences", "prompt", "inspect_agent"].includes(action)) {
         const result = mutation.then(() => perform(action, input));
         mutation = result.catch(() => {});
         return result;
@@ -110,7 +101,7 @@ const session = await joinSession({
     canvases: [createCanvas({
         id: "agentic-loop",
         displayName: "Agentic Loop",
-        description: "Build complete agentic solutions with setup checks, Foundry resources, industry scenarios, resource exploration, and session and Azure costs.",
+        description: "Build and improve agentic solutions with setup, Foundry resources, scenarios, exploration, optimization and evaluation prompts, and session and Azure costs.",
         inputSchema: objectSchema({ tab: { enum: tabs } }),
         actions: Object.entries(schemas).map(([name, inputSchema]) => ({
             name, inputSchema,
@@ -121,13 +112,12 @@ const session = await joinSession({
                 monitoring: "Check the selected project's Application Insights connections.",
                 explore: "List agents, model deployments, toolboxes and resource-group resources.",
                 inspect_agent: "Ask Copilot in Chat to launch local Agent Inspector for a verified agent in the selected project; starts a Copilot turn.",
-                frontends: "Read only LOCAL_FRONTEND and DEPLOYED_FRONTEND from the current workspace's root .env.",
+                frontends: "Read frontend URLs and synchronize changed FOUNDRY_PROJECT from workspace .env; retry failed project discovery on request.",
                 open_frontend: "Open a configured frontend in the integrated browser, rereading its URL from .env.",
                 usage: "Get actual accumulated current-session usage by model.",
                 cost: "Query resource-group month-to-date actual Azure spend.",
                 preferences: "Save the active tab and preferred skill installation scope.",
                 refresh_foundry: "Reuse the existing Foundry canvas public refreshWorkspaceState action.",
-                estimate: "Send workload assumptions to Chat to calculate an estimate using the Azure Retail Prices API; starts a Copilot turn.",
                 prompt: "Send a user-reviewed canvas prompt to Chat; this starts a Copilot turn.",
             }[name],
             handler: async ctx => {

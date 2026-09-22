@@ -41,6 +41,138 @@
         "The output does not modify third-party installed skills and directs defects to an upstream issue or PR.",
         "Foundry RBAC guidance uses the maintained microsoft-foundry/rbac sub-skill rather than standalone azure-rbac."
       ]
+    },
+    {
+      "id": 4,
+      "prompt": "Use Agentic Loop to plan a basic service-desk agent and React/FastAPI app in my existing Foundry project. I am subscription Owner but data-plane access is unknown, and the backend managed identity has not been created. Keep the Basic sample's model, do not use runtime skills or private document retrieval, and do not provision anything. Return only a concise architecture and acceptance checklist.",
+      "expected_output": "A concise plan using MAF, the sample's model and source deployment, with consolidated deployer permission gaps, planned runtime assignments, a README implementation contract, correlated privacy-preserving telemetry, and separate approval for cloud app deployment.",
+      "files": [],
+      "expectations": [
+        "Uses Microsoft Agent Framework for the basic agent, Python 3.13, Responses API and the Basic sample's model without substituting a hard-coded model or region.",
+        "Checks management-plane and data-plane access separately; Owner is not accepted as proof of data-plane access.",
+        "Checks ability to assign planned runtime roles without requiring a not-yet-created identity to already have effective permissions.",
+        "Records shared service, environment, protocol/schema, authentication, streaming/error and dependency contracts in the root README.",
+        "Acceptance verifies a correlated backend/agent/tool trace in Application Insights, with sensitive content capture off unless explicitly approved and controlled.",
+        "Preserves local E2E testing and a separate approval gate before frontend/backend deployment using az containerapp up --source.",
+        "Does not require Search, Foundry IQ, a spec2cloud workflow or an audit of every installed skill.",
+        "Proves the minimal deployed inference path before full application work, records explicitly excluded runtime skills as not applicable, and does not add an unused skill or switch frameworks to satisfy the checkpoint."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Plan a skill-driven incident assistant using the existing incident-postmortem runtime skill and private operational runbooks. The user experience is React with FastAPI. There is an existing Foundry project, a pinned Copilot SDK build skill and no approved Search resource yet. Do not install, update, rewrite skills or provision anything; return concise guidance covering reuse, grounding, compatibility, placement and acceptance.",
+      "expected_output": "A Copilot SDK plan that reuses the named runtime skill, preserves its governed version, respects the pinned build skill, validates SDK APIs and joint placement conditionally, and includes cited and insufficient-evidence acceptance cases.",
+      "files": [],
+      "expectations": [
+        "Selects Copilot SDK for the skill-driven agent and distinguishes the build skill from the incident-postmortem runtime skill.",
+        "Resolves incident-postmortem from the run catalog rather than generating a replacement and plans to publish/version it in the agent's toolbox.",
+        "Respects the pinned companion skill and does not update it, patch third-party copies or audit unrelated installed skills.",
+        "Checks installed SDK APIs and locks compatible dependency versions.",
+        "Plans governed grounding with citations and an explicit insufficient-evidence response, testing both paths.",
+        "Checks new resource availability, model/SKU/quota and required service placement jointly without changing the existing project, model or region silently.",
+        "Does not provision an unapproved Search resource or send runtime test prompts.",
+        "Plans the deployed identity, named skill load, required MCP call and model request checkpoint before full application implementation."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Finish the local acceptance handoff for an Agentic Loop build. The UI-to-agent E2E checks and correlated telemetry verification have passed, and the verified local frontend URL has just been saved as LOCAL_FRONTEND in root .env. During this build, a backend/frontend API schema mismatch caused a failed E2E test; updating both sides to the README contract fixed it and the test passed. Existing LOOP.md contains a user-authored note and a proposed early contract check that we tried successfully. There are no measured time or token savings. Return the proposed LOOP.md update and handoff only; do not run services, modify installed skills or deploy anything.",
+      "expected_output": "An evidence-grounded LOOP.md update after the .env write, preserving prior content, evaluating the earlier lesson, and proposing generalizable changes to the agentic-loop skill with regression checks, followed by the separate app deployment approval question.",
+      "files": [],
+      "expectations": [
+        "Creates or updates root LOOP.md after writing LOCAL_FRONTEND and before the frontend/backend deployment approval pause.",
+        "Preserves the existing user-authored note and prior entries rather than replacing the feedback file.",
+        "Records the observed schema mismatch, its correction and passing E2E result without inventing commands, file paths or measurements.",
+        "Proposes a specific improvement to agentic-loop instructions with a target section, expected benefit and regression check, rather than only summarizing the application.",
+        "Revisits the earlier early-contract-check proposal and records its supported outcome.",
+        "Separates proposals from validated changes and does not claim measured time or token savings.",
+        "Does not disclose secrets or raw .env contents, rewrite installed skills or treat LOOP.md as authorization to relax approval gates.",
+        "Retains the explicit confirmation gate before backend/frontend deployment."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Use Agentic Loop to plan a skill-driven operations assistant with one existing toolbox skill, one read-only MCP tool, a React UI and FastAPI backend. We previously built the whole app before finding hosted identity failures. The agent principal does not exist yet. Return the ordered implementation and acceptance plan only; do not provision or invoke anything. Keep Python 3.13, the Basic sample's model and code deployment.",
+      "expected_output": "An integration-first plan that blocks full app work until a minimal deployed skill/tool/model path passes, distinguishes planned from actual identity checks, and persists four separate endpoint contracts without reserved-variable collisions.",
+      "files": [],
+      "expectations": [
+        "Consults hosted-integration-checkpoint.md and copilot-sdk-foundry.md at the relevant steps rather than inventing platform mechanics.",
+        "Orders minimal MCP/toolbox and hosted-agent deployment before full UI, backend or orchestration implementation.",
+        "Plans to discover the actual agent principal after creation and verifies principal/resource/role combinations separately from the toolbox connection identity.",
+        "Distinguishes the full project endpoint, model API base URL, hosted Responses endpoint and toolbox MCP endpoint; persists discovered values and uses a nonreserved project-endpoint variable.",
+        "Requires actual deployed-identity skill loading, MCP execution and model-request evidence with terminal completion and schema-valid output before expansion.",
+        "Configures hosting and Copilot runtime telemetry before deployment and requires correlated hosting, model and required tool spans at the checkpoint rather than deferring telemetry until full application work.",
+        "Preserves Python 3.13, code deployment, the sample's model and the separate frontend/backend deployment approval gate.",
+        "Does not execute deployment or runtime probes for this plan-only request."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Our minimal hosted agent is active. The CLI exits zero and returns HTTP 200, but its SSE stream ends in response.failed after a model 403. The same prompt works with my az login credentials. An agent identity now exists, the toolbox connection has a different identity, and the application uses a full project URL stored in FOUNDRY_PROJECT_ENDPOINT. Can we proceed with the full app? Give a bounded diagnostic and acceptance plan only. Include tests for missing upstream fields, JSON versus SSE, concurrent response IDs and async tool-call limits.",
+      "expected_output": "A blocked checkpoint with targeted identity/endpoint and direct-versus-SDK diagnosis, bounded propagation retries, safe correlation evidence and exact contract tests instead of repeated full deployments.",
+      "files": [],
+      "expectations": [
+        "Explicitly blocks full application expansion; active, CLI zero and HTTP 200 do not override response.failed.",
+        "Requires response.completed for SSE or final completed status for JSON, schema-valid output and actual required skill/tool/model execution evidence.",
+        "Uses the actual deployed principal and verifies project Foundry User, model-host account Cognitive Services OpenAI User and authenticated telemetry emitter Monitoring Metrics Publisher where applicable, without blanket grants.",
+        "Keeps the agent-to-toolbox and toolbox-connection-to-downstream identities distinct and does not substitute developer credentials.",
+        "Checks the reserved endpoint-variable collision and moves the application full project URL to a validated nonreserved variable without overwriting platform configuration.",
+        "Compares minimal direct and SDK requests under the same hosted identity/context, uses bounded RBAC propagation retries and avoids unchanged redeployments.",
+        "Requests response, hosted and SDK session, agent-version and service request IDs in safe diagnostics, without tokens, sensitive bodies or opaque caller-context values.",
+        "Tests missing fields, JSON/SSE errors, interleaved response-ID matching and tool-budget reservation before asynchronous dispatch.",
+        "Includes failure rendering, persistence, export, mobile and keyboard acceptance and cleanup restricted to task-created debug sessions."
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Write an implementation recipe, not a deployment, for our Python 3.13 code-deployed Copilot SDK agent. Use the versioned Agentic Loop reference as a source-checked baseline and explain what to verify in the installed SDK/runtime. Model requests use a discovered /openai/v1/ URL; toolbox requests pass on the first turn but fail after token expiry. Concurrent hosted calls carry different x-agent-foundry-call-id and x-agent-user-id headers. Remote pip resolution also fails, although our locked Linux wheels are available locally. Preserve code deployment and our pinned dependencies.",
+      "expected_output": "A version-aware OpenAI Responses provider recipe with refreshed workload tokens and request-isolated allowlisted context for model and toolbox, plus a conditional reproducible bundled-dependency fallback.",
+      "files": [],
+      "expectations": [
+        "Names the source-checked SDK reference version without claiming the whole recipe was deployment-tested; checks installed signatures and logs the actual running SDK/runtime versions before troubleshooting.",
+        "Uses type openai, wire_api responses and the discovered /openai/v1/ base, with bearer_token_provider for refresh rather than a startup token.",
+        "Forwards each request's x-agent-foundry-call-id unchanged to model and toolbox requests, never forwards x-agent-user-id outbound and never trusts arbitrary browser headers as platform identity.",
+        "Explains that model bearer-token callbacks do not refresh static MCP headers and chooses a supported refreshing or lifecycle-managed request-scoped MCP transport.",
+        "Isolates concurrent caller contexts and tests token renewal without modifying global mutable headers or weakening tool approvals.",
+        "Uses bundling only after remote-resolution diagnosis; retains Python 3.13 and source-code deployment with pinned hash-verified Linux-compatible dependencies.",
+        "Includes extracted packages and compatible runtime assets in the flat deployment archive while excluding them from Git and pytest discovery.",
+        "Does not copy a macOS virtualenv, discard hashes, upgrade pinned dependencies silently or claim upload/active status proves runtime success.",
+        "Requires the hosted checkpoint to pass after the changed bundled artifact is deployed, without performing that deployment in this recipe-only task."
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Use Agentic Loop to plan parallel implementation of a skill-driven operations assistant with React, FastAPI and a Foundry hosted agent/toolbox. Coding subagents are available, but the minimal hosted checkpoint has not passed yet. The UI and API share schemas; all components share .env and a lockfile. Explain what can run in parallel now and after the checkpoint, worker ownership and integration gates. Return a plan only; do not launch workers or provision resources.",
+      "expected_output": "A dependency-aware subagent plan that preserves integration-first ordering, gives workers non-overlapping ownership and complete context, and reserves shared configuration, approvals and final acceptance for coordinated integration.",
+      "files": [],
+      "expectations": [
+        "Limits pre-checkpoint parallel work to independent research/preflight checks and blocks full application implementation until hosted proof passes.",
+        "Plans concurrent substantial frontend, backend or agent/tool tasks only after freezing the shared contract and resolving dependencies.",
+        "Gives each worker bounded goals, exclusive files, relevant skill references, verified context, acceptance checks and stop conditions.",
+        "Assigns shared schemas/contracts, .env, lockfiles and deployment configuration to one owner rather than allowing conflicting edits.",
+        "Keeps the worker set small, honors configured limits, and avoids recursive delegation or duplicating worker tasks.",
+        "Serializes dependent work and shared Azure mutations without extending provisioning or deployment approval.",
+        "Requires worker evidence and central cross-component verification; retains hosted proof, local E2E acceptance, LOOP.md and separate app-deployment approval.",
+        "Does not actually launch subagents or provision anything for this plan-only request."
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "Our Python Copilot SDK hosted agent completes its minimal skill/tool/model probe. The Foundry project has Application Insights linked and APPLICATIONINSIGHTS_CONNECTION_STRING is set. We see hosting requests but no model or tool spans. CopilotClient currently has no telemetry options; two hosted requests can run concurrently. Can we pass the Agentic Loop checkpoint and build the UI? Give a bounded configuration and acceptance plan only. We have not approved a new collector or Azure resources; do not provision, deploy, invoke agents or change dependencies.",
+      "expected_output": "A blocked telemetry checkpoint and version-aware two-producer configuration plan, with a verified OTLP export route, correct exporter identity scope, privacy-preserving trace correlation and deployed span evidence before expansion.",
+      "files": [],
+      "expectations": [
+        "Blocks full application expansion despite terminal probe completion, a linked project and hosting spans because required model/tool trace evidence is missing.",
+        "Uses the telemetry section of copilot-sdk-foundry.md and checks actual hosting/Copilot SDK/runtime versions rather than claiming every installed version supports current source behavior.",
+        "Configures the host's supported observability once and explicit Copilot runtime telemetry without duplicate providers or runtime clients.",
+        "Uses a real reachable OTLP HTTP receiver with a supported onward export path, not a connection string, ordinary ingestion URL or gRPC-only endpoint as the runtime receiver.",
+        "Records the destination, export routes and actual exporting identities; distinguishes direct Application Insights emitter scope from native OTLP collector DCR scope without unconditional grants.",
+        "Reuses an approved route or reports the missing route as a blocker; does not silently provision a collector or change dependencies.",
+        "Preserves W3C traceparent/tracestate and request-local parent relationships across concurrent runtime/tool callbacks, separately from Foundry authentication caller context.",
+        "Keeps both content-capture settings off and avoids sensitive explicit logs; checks sampling, graceful flush and bounded ingestion delay.",
+        "Requires deployed hosting, model and required tool spans in the destination's actual schema, with correct trace relationships and agent/version identification, not mocks or exporter startup messages.",
+        "Keeps diagnosis bounded and does not invoke probes, deploy or repeatedly redeploy unchanged artifacts for this plan-only request."
+      ]
     }
   ]
 }

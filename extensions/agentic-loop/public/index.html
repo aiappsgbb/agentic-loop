@@ -15,7 +15,7 @@ STORY: Check readiness, choose a project, build from intent, inspect and improve
 FIRST VIEWPORT: Project context above five tabs; actionable readiness below.
 FORM: User-specified five-tab workbench; scenario imagery belongs only to Build. -->
 <header>
-    <div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 16c-3-4-5-6-8-6a6 6 0 0 0 0 12c3 0 5-2 8-6s5-6 8-6a6 6 0 0 1 0 12c-3 0-5-2-8-6Z"/></svg><h1>Agentic Loop</h1></div>
+    <div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 16c-3-4-5-6-8-6a6 6 0 0 0 0 12c3 0 5-2 8-6s5-6 8-6a6 6 0 0 1 0 12c-3 0-5-2-8-6Z"/></svg><h1>Agentic Loop</h1><a class="quiet icon-button brand-link" href="https://aka.ms/agentic-loop" target="_blank" rel="noopener noreferrer" title="Open Agentic Loop website in external browser" aria-label="Open Agentic Loop website in external browser"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7m0-7L10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"/></svg></a></div>
     <button id="refresh" class="quiet icon-button" title="Recheck this tab" aria-label="Refresh this tab"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7a9 9 0 0 0-15-1L2 9m0-6v6h6M4 17a9 9 0 0 0 15 1l3-3m0 6v-6h-6"/></svg></button>
 </header>
 <button id="project-bar" class="project-bar"><span><span class="muted">Microsoft Foundry project</span><strong id="project-name">Choose a project</strong></span><span aria-hidden="true">⌄</span></button>
@@ -24,21 +24,35 @@ FORM: User-specified five-tab workbench; scenario imagery belongs only to Build.
     <button role="tab" id="tab-resources" aria-controls="resources" aria-selected="false" tabindex="-1" data-tab="resources">Resources <span id="resources-mark"></span></button>
     <button role="tab" id="tab-build" aria-controls="build" aria-selected="false" tabindex="-1" data-tab="build">Build <span id="build-mark"></span></button>
     <button role="tab" id="tab-explore" aria-controls="explore" aria-selected="false" tabindex="-1" data-tab="explore">Explore</button>
-    <button role="tab" id="tab-cost" aria-controls="cost" aria-selected="false" tabindex="-1" data-tab="cost">Cost</button>
+    <button role="tab" id="tab-optimize" aria-controls="optimize" aria-selected="false" tabindex="-1" data-tab="optimize">Optimize</button>
 </nav>
 <p id="notice" role="status" aria-live="polite" hidden></p>
+<p id="project-env-error" class="error" role="status" aria-live="polite" hidden></p>
 <main>
     <section id="setup" role="tabpanel" aria-labelledby="tab-setup">
         <h2>Ready to build?</h2><p class="intro">Connect your tools once. Carry a complete solution from intent to production.</p>
         <div id="checks" aria-live="polite"><p class="loading">Checking skills, tools and Azure sign-in…</p></div>
-        <div class="section-heading"><h3>Complete your setup</h3></div>
-        <label for="scope">Install missing skills in</label>
-        <select id="scope"><option value="project">This project (default)</option><option value="user">My user profile</option></select>
-        <div class="actions"><button data-prompt="skills">Set up skills in Chat</button><button data-prompt="auth">Sign in with Azure</button></div>
-        <p class="muted">Installs and sign-in happen with your approval in Chat. Refresh after completing them.</p>
-        <div class="section-heading"><h3>Missing command-line tools?</h3></div>
-        <p>Foundry DevPack sets up azd and the Foundry extensions. If Azure CLI is still missing, the guide will help install it separately.</p>
-        <div class="actions"><button data-prompt="devpack">Guide me through setup</button><a href="https://learn.microsoft.com/azure/foundry/how-to/develop/install-cli-sdk?tabs=macos%2Cpython%2Cazd-ai#install-foundry-devpack" target="_blank" rel="noreferrer">DevPack guide ↗</a></div>
+        <div id="setup-actions" hidden>
+            <div id="setup-skills-help" hidden>
+                <div class="section-heading"><h3>Set up missing skills</h3></div>
+                <p id="setup-missing-skills" class="muted"></p>
+                <label for="scope">Install missing skills in</label>
+                <select id="scope"><option value="project">This project (default)</option><option value="user">My user profile</option></select>
+                <div class="actions"><button data-prompt="skills">Set up skills in Chat</button></div>
+            </div>
+            <div id="setup-cli-help" hidden>
+                <div class="section-heading"><h3>Check command-line tools</h3></div>
+                <p id="setup-missing-tools" class="muted"></p>
+                <p>Foundry DevPack sets up azd and the Foundry extensions. If Azure CLI is still missing, the guide will help install it separately.</p>
+                <div class="actions"><button data-prompt="devpack">Guide me through setup</button><a href="https://learn.microsoft.com/azure/foundry/how-to/develop/install-cli-sdk?tabs=macos%2Cpython%2Cazd-ai#install-foundry-devpack" target="_blank" rel="noreferrer">DevPack guide ↗</a></div>
+            </div>
+            <div id="setup-auth-help" hidden>
+                <div class="section-heading"><h3>Sign in to Azure</h3></div>
+                <p id="setup-missing-auth" class="muted"></p>
+                <div class="actions"><button data-prompt="auth">Sign in with Azure</button></div>
+            </div>
+            <p class="muted">Installs and sign-in happen with your approval in Chat. Refresh after completing them.</p>
+        </div>
     </section>
     <section id="resources" role="tabpanel" aria-labelledby="tab-resources" hidden>
         <h2>Your deployment home</h2><p class="intro">Choose a Foundry project. Its resource group brings the rest of your solution together.</p>
@@ -75,7 +89,6 @@ FORM: User-specified five-tab workbench; scenario imagery belongs only to Build.
         <h2>Explore your solution</h2><p class="intro">See what is deployed, then continue the loop: observe, evaluate, improve.</p>
         <h3>Your apps</h3>
         <div id="frontend-links" aria-live="polite"><p class="muted">Reading frontend URLs from workspace .env…</p></div>
-        <p class="muted">From LOCAL_FRONTEND and DEPLOYED_FRONTEND in the root .env. The Build check means a value is configured, not that the app is running.</p>
         <div class="section-heading"><h3>Foundry resources</h3></div>
         <div class="actions"><button data-prompt="foundry">Open Microsoft Foundry Canvas</button><button id="refresh-foundry">Refresh Foundry panel</button></div>
         <p class="muted">Reuses the installed Foundry panel for configuration, deployment and interactive testing. Chat synchronizes your selected project; opening does not deploy anything.</p>
@@ -91,23 +104,28 @@ FORM: User-specified five-tab workbench; scenario imagery belongs only to Build.
         <div id="inventory"></div>
         <p id="inventory-updated" class="muted"></p>
     </section>
-    <section id="cost" role="tabpanel" aria-labelledby="tab-cost" hidden>
-        <h2>Understand your consumption</h2><p class="intro">Copilot session usage, Azure spend and workload estimates are different measures. Keep each in view.</p>
-        <h3>This Copilot session</h3><div id="usage" aria-live="polite"></div>
+    <section id="optimize" role="tabpanel" aria-labelledby="tab-optimize" hidden>
+        <h2>Improve your agents</h2><p class="intro">Optimize behavior, automate evaluations and investigate production insights. Each action starts a guided workflow in Chat using your selected project.</p>
+        <p id="optimize-project-hint" class="muted">Select a Foundry project on Resources to use these prompts. Session usage is available below.</p>
+        <div class="optimization-action">
+            <h3>Foundry Agent Optimizer</h3>
+            <p class="muted">Compare candidate instructions, skills, tools and models against a measured baseline. Preview support varies by agent type.</p>
+            <div class="actions"><button data-prompt="optimizer" data-requires-project disabled>Optimize in Chat</button><a href="https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/agent-optimizer-overview" target="_blank" rel="noopener noreferrer">Optimizer guide ↗</a></div>
+        </div>
+        <div class="optimization-action">
+            <h3>Automatic evaluations</h3>
+            <p class="muted">Build a repeatable quality and safety check with representative data, evaluators and acceptance thresholds.</p>
+            <div class="actions"><button data-prompt="evaluations" data-requires-project disabled>Create evaluations in Chat</button><a href="https://learn.microsoft.com/en-us/azure/foundry/observability/how-to/evaluate-agent?tabs=python" target="_blank" rel="noopener noreferrer">Evaluation guide ↗</a></div>
+        </div>
+        <div class="optimization-action">
+            <h3>Agent Insights scan</h3>
+            <p class="muted">Find recurring issues in recent traces, review the evidence and identify what to improve next. Available in preview.</p>
+            <div class="actions"><button data-prompt="insightsScan" data-requires-project disabled>Run scan in Chat</button><a href="https://learn.microsoft.com/en-us/azure/foundry/observability/how-to/agent-insights" target="_blank" rel="noopener noreferrer">Insights guide ↗</a></div>
+        </div>
+        <p class="muted">Copilot confirms the agent and prerequisites in Chat. Billable runs, recurring execution and changes to deployed agents require approval.</p>
+        <div class="section-heading"><h3>This Copilot session</h3></div><div id="usage" aria-live="polite"></div>
         <div class="section-heading"><h3>Azure spend · month to date</h3></div><div id="azure-cost"></div>
         <p class="muted">Actual resource-group charges reported by Azure, not just this project. Billing data can lag. Cost Management Reader access may be required.</p>
-        <div class="section-heading"><h3>Monthly workload estimate</h3></div>
-        <p>Supply your expected workload. Copilot will calculate the estimate in Chat using current prices from the Azure Retail Prices API.</p>
-        <form id="estimate-form">
-            <div class="estimate-grid">
-                <label>Input tokens (millions / month)<input name="inputMillions" type="number" min="0" max="1000000000" step="any" required></label>
-                <label>Output tokens (millions / month)<input name="outputMillions" type="number" min="0" max="1000000000" step="any" required></label>
-                <label>Hosted-agent instance-hours / month<input name="agentHours" type="number" min="0" max="1000000000" step="any" required></label>
-            </div>
-            <p class="muted">Include replicas in instance-hours. Sending starts a Copilot turn with your selected project and workload. Copilot will clarify other service usage, cite pricing sources and flag unavailable rates. This estimate is not a bill.</p>
-            <div class="actions"><button type="submit">Calculate estimate in Chat</button><a href="https://azure.microsoft.com/pricing/calculator/" target="_blank" rel="noreferrer">Pricing calculator ↗</a></div>
-        </form>
-        <div id="estimate-result" aria-live="polite"></div>
     </section>
 </main>
 <footer>Observe <span>→</span> Evaluate <span>→</span> Improve <span>↻</span><span class="muted">Keep the loop going.</span></footer>

@@ -13,6 +13,9 @@ let usageLoading = false;
 let scenarioReturn = null;
 let frontendsLoading = false;
 let frontendsSignature;
+let frontendRevision;
+let resourcesSignature;
+let projectSyncError = false;
 let inventory = null;
 const collapsedInventory = new Set(["resources"]);
 const inventoryGroups = {
@@ -44,18 +47,36 @@ async function busy(button, work) {
     button.disabled = true;
     try { await work(); }
     catch (error) { notice(error.message, true); }
-    finally { button.disabled = false; }
+    finally { button.disabled = button.hasAttribute("data-requires-project") && !selected; }
 }
 
 function failure(container, error) {
     container.innerHTML = `<p class="error">${escape(error.message)} Refresh to retry.</p>`;
 }
 
-async function frontends() {
+async function frontends(retry = false) {
     if (frontendsLoading) return;
     frontendsLoading = true;
     try {
-        const result = await api("frontends");
+        const selection = selectionRevision;
+        const result = await api("frontends", retry ? { retry: true } : {});
+        if (result.projectSync && selection === selectionRevision && !discovering) {
+            const sync = result.projectSync;
+            projectSyncError = Boolean(sync.error);
+            $("project-env-error").hidden = !sync.error;
+            $("project-env-error").textContent = sync.error
+                ? `Could not synchronize FOUNDRY_PROJECT from .env: ${sync.error} Current selection kept. Refresh to retry.` : "";
+            const signature = JSON.stringify({ ...sync, error: null });
+            if (signature !== resourcesSignature) {
+                resourcesSignature = signature;
+                applyResources(sync);
+                await monitoring();
+                if (activeTab === "explore") await explore();
+                if (activeTab === "optimize") await costs();
+            }
+        }
+        const changed = frontendRevision !== undefined && frontendRevision !== result.revision;
+        frontendRevision = result.revision;
         const signature = JSON.stringify(result);
         if (signature === frontendsSignature) return;
         frontendsSignature = signature;
@@ -66,8 +87,14 @@ async function frontends() {
         $("frontend-links").innerHTML = configured.map(row => `<div class="inventory-row"><strong>${escape(row.label)}</strong>${row.error
             ? `<p class="error">${escape(row.error)}</p>`
             : `<span class="frontend-url">${escape(row.url)}</span><div class="actions"><button data-frontend="${escape(row.key)}" aria-label="Open ${escape(row.label)} in integrated browser">Open in integrated browser</button><a href="${escape(row.url)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${escape(row.label)} in external browser">Open in external browser ↗</a></div>`}</div>`).join("") ||
-            '<p class="muted">No frontend configured. Set LOCAL_FRONTEND or DEPLOYED_FRONTEND in the workspace root .env to open your app here.</p>';
+            '<p class="muted">No frontend configured. Finish the build first.</p>';
+        if (changed && result.frontends.some(row => row.key === "local" && row.configured) && activeTab !== "explore") {
+            await selectTab("explore").catch(error => notice(`Could not finish switching to Explore: ${error.message}`, true));
+        }
     } catch (error) {
+        projectSyncError = true;
+        $("project-env-error").hidden = false;
+        $("project-env-error").textContent = `Could not read project configuration: ${error.message} Current selection kept. Refresh to retry.`;
         frontendsSignature = undefined;
         $("build-mark").textContent = "";
         $("build-mark").ariaLabel = "Frontend configuration unavailable";
@@ -77,16 +104,48 @@ async function frontends() {
 }
 
 async function setup() {
+    const toolsOpen = $("setup-tools")?.open ?? false;
+    const skillsOpen = $("setup-skills")?.open ?? true;
+    $("setup-actions").hidden = true;
     $("checks").innerHTML = '<p class="loading">Checking skills, tools and Azure sign-in…</p>';
     $("setup-mark").textContent = "";
+    $("setup-mark").ariaLabel = "Checking";
     try {
         const result = await api("setup");
         $("setup-mark").textContent = result.ready ? "✓" : "";
         $("setup-mark").ariaLabel = result.ready ? "Ready" : "Incomplete";
-        $("checks").innerHTML = result.checks.map(check => `<div class="check"><span class="${check.status === "ready" ? "status-ok" : "status-warn"}" aria-label="${check.status === "ready" ? "Ready" : "Needs attention"}">${check.status === "ready" ? "✓" : "!"}</span><div><strong>${escape(check.label)}</strong><p class="muted">${escape(check.status === "ready" ? check.data : check.error)}</p></div></div>`).join("") +
-            (result.discoveryError ? `<p class="error">${escape(result.discoveryError)}</p>` : "") +
+        const toolIds = new Set(["az", "azd", "azd-ai", "az-auth", "azd-auth"]);
+        const tools = result.checks.filter(check => toolIds.has(check.id));
+        const skills = result.checks.filter(check => !toolIds.has(check.id));
+        const renderCheck = check => `<div class="check"><span class="${check.status === "ready" ? "status-ok" : "status-warn"}" aria-label="${check.status === "ready" ? "Ready" : "Needs attention"}">${check.status === "ready" ? "✓" : "!"}</span><div><strong>${escape(check.label)}</strong><p class="muted">${escape(check.status === "ready" ? check.data : check.error)}</p></div></div>`;
+        const renderGroup = (id, title, checks, open) => {
+            if (!checks.length) return "";
+            const count = checks.filter(check => check.status === "ready").length;
+            const ready = count === checks.length;
+            return `<details id="${id}" class="setup-group"${open ? " open" : ""}><summary><span class="${ready ? "status-ok" : "status-warn"}" aria-hidden="true">${ready ? "✓" : "!"}</span> ${title} <span class="muted">${count}/${checks.length} ready${ready ? "" : ` · ${checks.length - count} need attention`}</span></summary><div class="setup-group-checks">${checks.map(renderCheck).join("")}</div></details>`;
+        };
+        $("checks").innerHTML = renderGroup("setup-skills", "Skills", skills, skillsOpen) +
+            renderGroup("setup-tools", "Azure tools and sign-in", tools, toolsOpen) +
+            (result.discoveryError ? `<p class="error">${escape(result.discoveryError)} Refresh to retry skill discovery before installing skills.</p>` : "") +
             `<p class="muted">Checked ${escape(new Date(result.checkedAt).toLocaleTimeString())}</p>`;
-    } catch (error) { failure($("checks"), error); }
+        const missingSkills = result.discoveryError ? [] : skills.filter(check => check.status !== "ready");
+        const missingTools = tools.filter(check => ["az", "azd", "azd-ai"].includes(check.id) && check.status !== "ready");
+        const missingAuth = tools.filter(check => ["az-auth", "azd-auth"].includes(check.id) && check.status !== "ready" &&
+            tools.some(tool => tool.id === check.id.replace("-auth", "") && tool.status === "ready"));
+        for (const [section, description, missing] of [
+            ["setup-skills-help", "setup-missing-skills", missingSkills],
+            ["setup-cli-help", "setup-missing-tools", missingTools],
+            ["setup-auth-help", "setup-missing-auth", missingAuth],
+        ]) {
+            $(section).hidden = missing.length === 0;
+            $(description).textContent = missing.length ? `Needs attention: ${missing.map(check => check.label).join(", ")}.` : "";
+        }
+        $("setup-actions").hidden = !missingSkills.length && !missingTools.length && !missingAuth.length;
+    } catch (error) {
+        $("setup-mark").textContent = "";
+        $("setup-mark").ariaLabel = "Setup checks unavailable";
+        failure($("checks"), error);
+    }
 }
 
 function updateProject(project) {
@@ -97,6 +156,8 @@ function updateProject(project) {
         $("inventory-updated").textContent = "";
         $("inventory-search").value = "";
         $("inventory-kind").value = "";
+        $("azure-cost").replaceChildren();
+        $("monitoring").replaceChildren();
         collapsedInventory.clear();
         collapsedInventory.add("resources");
     }
@@ -106,9 +167,19 @@ function updateProject(project) {
     $("resources-mark").textContent = project ? "✓" : "";
     $("resources-mark").ariaLabel = project ? "Project selected" : "No project selected";
     loaded.delete("explore");
-    loaded.delete("cost");
+    loaded.delete("optimize");
+    $("optimize-project-hint").hidden = Boolean(project);
+    for (const button of document.querySelectorAll("[data-requires-project]")) button.disabled = !project;
     $("resource-context").innerHTML = project ? `<div class="context"><span class="muted">Resource group · ${escape(project.location)}</span><strong>${escape(project.resourceGroup)}</strong><p class="muted">This resource group will also host additional resources such as Application Insights and Container Apps.</p></div>` : "";
     renderProjects();
+}
+
+function applyResources(result) {
+    projects = result.projects;
+    $("subscription").innerHTML = result.subscriptions.map(row => `<option value="${escape(row.id)}">${escape(row.name)}</option>`).join("");
+    $("subscription").value = result.subscriptionId ?? result.selected?.subscriptionId ?? "";
+    updateProject(result.selected);
+    if (result.warnings?.length) notice(`Some resources could not be listed: ${result.warnings.join("; ")}`, true);
 }
 
 function renderProjects() {
@@ -140,11 +211,7 @@ async function discover(subscriptionId) {
     $("projects").innerHTML = '<p class="loading">Discovering Foundry projects…</p>';
     try {
         const result = await api("discover", subscriptionId ? { subscriptionId } : {});
-        projects = result.projects;
-        $("subscription").innerHTML = result.subscriptions.map(row => `<option value="${escape(row.id)}">${escape(row.name)}</option>`).join("");
-        $("subscription").value = result.selected?.subscriptionId ?? subscriptionId ?? snapshot.state.subscriptionId ?? result.subscriptions[0]?.id;
-        updateProject(result.selected);
-        if (result.warnings.length) notice(`Some resources could not be listed: ${result.warnings.join("; ")}`, true);
+        applyResources(result);
         await monitoring();
     } catch (error) {
         // Never keep a green check for a project whose current discovery failed.
@@ -220,7 +287,7 @@ function renderInventory() {
                 ? `<dl class="resource-metadata">${row.metadata.map(item => `<div><dt>${escape(item.label)}</dt><dd>${escape(item.value)}</dd></div>`).join("")}</dl>`
                 : `<p class="resource-description">${escape(row.detail)}</p>`}</div><div class="resource-actions">${row.playgroundUrl
                     ? `<a class="resource-test" href="${escape(row.playgroundUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Test ${escape(row.name)} in Foundry (opens in a new tab)">Test in Foundry <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7m0-7L10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"/></svg></a>`
-                    : ""}${key === "agents" ? `<button class="resource-test" data-inspect-agent="${escape(row.name)}" data-inspect-project="${escape(selected.id)}" title="Ask Copilot in Chat to launch Agent Inspector for this agent" aria-label="Inspect ${escape(row.name)} locally via Chat">Inspect locally</button>` : ""}</div></li>`).join("")}</ul>`
+                    : ""}${row.portalUrl ? `<a class="resource-test" href="${escape(row.portalUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${escape(row.name)} in ${key === "resources" ? "Azure" : "Foundry"} Portal (opens in a new tab)">Open in ${key === "resources" ? "Azure" : "Foundry"} Portal <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7m0-7L10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"/></svg></a>` : ""}${key === "agents" ? `<button class="resource-test" data-inspect-agent="${escape(row.name)}" data-inspect-project="${escape(selected.id)}" title="Ask Copilot in Chat to launch Agent Inspector for this agent" aria-label="Inspect ${escape(row.name)} locally via Chat">Inspect locally</button>` : ""}</div></li>`).join("")}</ul>`
             : `<div class="inventory-empty"><strong>${escape(group.empty)}</strong><p>${escape(group.hint)}</p></div>`;
         return `<details class="inventory-section" data-inventory-group="${key}" ${expanded ? "open" : ""}>
             <summary><svg class="resource-icon" viewBox="0 0 24 24" aria-hidden="true">${group.icon}</svg><span class="inventory-heading"><span class="inventory-title">${group.title}</span><span class="inventory-scope">${group.scope}</span></span><span class="${failed ? "inventory-unavailable" : "inventory-badge"}">${failed ? "Unavailable" : query ? `${rows.length} / ${list.data.length}` : list.data.length}</span><svg class="inventory-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary>
@@ -277,13 +344,13 @@ async function costs() {
 }
 
 async function loadTab(tab, force = false) {
-    if (tab === "build" || tab === "explore" || force) await frontends();
+    if (tab === "build" || tab === "explore" || force) await frontends(force);
     if (loaded.has(tab) && !force) return;
     loaded.add(tab);
     if (tab === "setup") await setup();
     if (tab === "resources" && (force || !projects.length)) await discover();
     if (tab === "explore") await explore();
-    if (tab === "cost") await costs();
+    if (tab === "optimize") await costs();
 }
 
 async function selectTab(tab) {
@@ -385,14 +452,6 @@ $("send-prompt").onclick = () => busy($("send-prompt"), async () => {
     returnToScenarios();
     notice("Starting prompt sent to Chat. Your selected project is included.");
 });
-$("estimate-form").onsubmit = event => {
-    event.preventDefault();
-    busy(event.submitter, async () => {
-        const values = Object.fromEntries([...new FormData(event.target)].map(([key, value]) => [key, Number(value)]));
-        await api("estimate", values);
-        $("estimate-result").textContent = "Estimate request sent to Chat with your workload. Copilot will use the Azure Retail Prices API to look up rates and calculate the breakdown.";
-    });
-};
 
 async function start() {
     const response = await fetch("/api/state", { headers: { "X-Canvas-Token": token } });
@@ -407,19 +466,19 @@ async function start() {
         ["industry", snapshot.scenarios.map(row => row.industry)],
         ["capability", snapshot.scenarios.flatMap(row => [...row.tags, ...(row.capabilities ?? [])])],
     ]) for (const value of [...new Set(values)].sort()) $(id).add(new Option(value, value));
-    if (snapshot.state.estimate) for (const key of ["inputMillions", "outputMillions", "agentHours"]) {
-        if (snapshot.state.estimate[key] != null) $("estimate-form").elements[key].value = snapshot.state.estimate[key];
-    }
     renderScenarios();
     const initialTab = snapshot.state.tab ?? "setup";
     // Always run readiness and resource discovery on open, including restored tabs.
     loaded.add("setup");
     loaded.add("resources");
-    const initial = Promise.all([setup(), discover(), frontends()]);
-    await selectTab(["explore", "cost"].includes(initialTab) ? "setup" : initialTab);
+    const initial = Promise.all([setup(), (async () => {
+        await frontends();
+        if (!projects.length && !projectSyncError) await discover();
+    })()]);
+    await selectTab(["explore", "optimize"].includes(initialTab) ? "setup" : initialTab);
     await initial;
-    if (["explore", "cost"].includes(initialTab)) await selectTab(initialTab);
-    setInterval(() => { if (activeTab === "cost" && !document.hidden) usage(); }, 15_000);
+    if (["explore", "optimize"].includes(initialTab)) await selectTab(initialTab);
+    setInterval(() => { if (activeTab === "optimize" && !document.hidden) usage(); }, 15_000);
     setInterval(() => { if (!document.hidden) frontends(); }, 5_000);
     window.addEventListener("focus", () => frontends());
 }

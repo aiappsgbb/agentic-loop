@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile, rm, rename, utimes } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { readFrontends, frontendStatus, openFrontend } from "../frontends.mjs";
@@ -55,6 +55,31 @@ test("file read failures are explicit rather than treated as absent configuratio
     await mkdir(path.join(directory, ".env"));
     await assert.rejects(readFrontends(directory), /Cannot read workspace .env/);
     await assert.rejects(readFrontends(undefined), /workspace directory is unavailable/);
+});
+
+test("env revisions detect creation, edits, atomic replacement and deletion without exposing other values", async t => {
+    const directory = await fixture(t);
+    const file = path.join(directory, ".env");
+    assert.equal((await readFrontends(directory)).revision, null);
+    const source = "LOCAL_FRONTEND=http://localhost:5173\nSECRET=never-expose\n";
+    await writeFile(file, source);
+    const created = await readFrontends(directory);
+    assert.match(created.revision, /^[a-f0-9]{64}$/);
+    assert.equal((await readFrontends(directory)).revision, created.revision);
+    await writeFile(file, source + "OTHER_SETTING=changed\n");
+    const edited = await readFrontends(directory);
+    assert.notEqual(edited.revision, created.revision);
+    assert.deepEqual(edited.frontends, created.frontends);
+    assert(!JSON.stringify(edited).includes("never-expose"));
+    assert(!JSON.stringify(edited).includes("OTHER_SETTING"));
+    await utimes(file, new Date("2026-01-01"), new Date("2026-01-01"));
+    const touched = await readFrontends(directory);
+    assert.notEqual(touched.revision, edited.revision);
+    await writeFile(path.join(directory, ".env.next"), source);
+    await rename(path.join(directory, ".env.next"), file);
+    assert.notEqual((await readFrontends(directory)).revision, touched.revision);
+    await rm(file);
+    assert.equal((await readFrontends(directory)).revision, null);
 });
 
 test("integrated browser rereads the current session workspace and uses URL-specific panel IDs", async t => {

@@ -1,7 +1,8 @@
-import { readFile } from "node:fs/promises";
+import { open } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { parseEnv } from "node:util";
+import { projectIdentity } from "./azure.mjs";
 
 const fields = [
     { key: "local", variable: "LOCAL_FRONTEND", label: "Local app" },
@@ -11,7 +12,15 @@ const fields = [
 export async function readFrontends(directory) {
     if (typeof directory !== "string" || !path.isAbsolute(directory)) throw new Error("The session workspace directory is unavailable.");
     let source = "";
-    try { source = await readFile(path.join(directory, ".env"), "utf8"); }
+    let revision = null;
+    try {
+        const file = await open(path.join(directory, ".env"), "r");
+        try {
+            const stat = await file.stat({ bigint: true });
+            source = await file.readFile("utf8");
+            revision = createHash("sha256").update([directory, stat.dev, stat.ino, stat.mtimeNs, stat.ctimeNs, stat.size].join(":")).digest("hex");
+        } finally { await file.close(); }
+    }
     catch (error) {
         if (error.code !== "ENOENT") throw new Error(`Cannot read workspace .env (${error.code ?? "read failed"}).`);
     }
@@ -31,7 +40,20 @@ export async function readFrontends(directory) {
         }
         return result;
     });
-    return { configured: frontends.some(row => row.configured), frontends };
+    const value = env.FOUNDRY_PROJECT?.trim() ?? "";
+    const foundryProject = { id: null, error: null };
+    if (value) {
+        try {
+            const { subscriptionId } = projectIdentity(value);
+            if (!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(subscriptionId) ||
+                /[\s\\?#]/.test(value) || value.includes("${") ||
+                value.split("/").some(segment => segment === "." || segment === "..")) throw new Error("Invalid project ID.");
+            foundryProject.id = value;
+        } catch {
+            foundryProject.error = "FOUNDRY_PROJECT must be a full Microsoft Foundry project ARM resource ID.";
+        }
+    }
+    return { configured: frontends.some(row => row.configured), frontends, revision, foundryProject };
 }
 
 export async function frontendStatus(session) {

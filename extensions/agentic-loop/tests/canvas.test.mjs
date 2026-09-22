@@ -1,11 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { Azure, projectIdentity, trustedEndpoint, foundryPlaygroundUrl } from "../azure.mjs";
-import { Model, validateWorkload, promptFor } from "../model.mjs";
+import { Azure, projectIdentity, trustedEndpoint, foundryPortalUrl, azurePortalUrl } from "../azure.mjs";
+import { Model, links, promptFor } from "../model.mjs";
 import { startServer } from "../server.mjs";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
@@ -57,24 +57,40 @@ test("monitoring does not mistake a same-resource-group resource for a project c
     await assert.rejects(new Azure(async () => { throw new Error("Forbidden"); }).monitoring(project), /Forbidden/);
 });
 
-test("Foundry playground links encode project scope, resource names and agent versions", () => {
+test("Foundry portal links encode project scope, resource names and agent versions", () => {
     const prefix = "https://ai.azure.com/nextgen/r/EREREREREREREREREREREQ,rg-demo,,demo,demo-project/build";
-    assert.equal(foundryPlaygroundUrl(id, "agent", "support-agent", "4"),
+    assert.equal(foundryPortalUrl(id, "agent", "support-agent", "4"),
         `${prefix}/agents/support-agent/build?version=4`);
-    assert.equal(foundryPlaygroundUrl(id, "agent", "support-agent"),
+    assert.equal(foundryPortalUrl(id, "agent", "support-agent"),
         `${prefix}/agents/support-agent/build`);
-    assert.equal(foundryPlaygroundUrl(id, "model", "gpt-4o"),
+    assert.equal(foundryPortalUrl(id, "model", "gpt-4o"),
         `${prefix}/models/deployments/gpt-4o/playground`);
-    const escaped = new URL(foundryPlaygroundUrl(id, "agent", "name /?&#", "1&other=value"));
+    assert.equal(foundryPortalUrl(id, "toolbox", "support-tools"),
+        `${prefix}/toolboxes/support-tools`);
+    assert.equal(foundryPortalUrl(id, "toolbox", "tools /?&#"),
+        `${prefix}/toolboxes/tools%20%2F%3F%26%23`);
+    const escaped = new URL(foundryPortalUrl(id, "agent", "name /?&#", "1&other=value"));
     assert(escaped.pathname.endsWith("/agents/name%20%2F%3F%26%23/build"));
     assert.deepEqual([...escaped.searchParams], [["version", "1&other=value"]]);
-    const scoped = foundryPlaygroundUrl(id.replace("rg-demo", "rg, special").replace("demo-project", "project#one"), "model", "a/b");
+    const scoped = foundryPortalUrl(id.replace("rg-demo", "rg, special").replace("demo-project", "project#one"), "model", "a/b");
     assert(scoped.includes(",rg%2C%20special,,demo,project%23one/"));
     assert(scoped.endsWith("/models/deployments/a%2Fb/playground"));
-    assert.throws(() => foundryPlaygroundUrl(id, "agent", ""));
-    assert.throws(() => foundryPlaygroundUrl(id, "agent", ".."));
-    assert.throws(() => foundryPlaygroundUrl(id, "toolbox", "tools"));
-    assert.throws(() => foundryPlaygroundUrl(id.replace(project.subscriptionId, "bad"), "model", "model"));
+    assert.throws(() => foundryPortalUrl(id, "agent", ""));
+    assert.throws(() => foundryPortalUrl(id, "agent", ".."));
+    assert.throws(() => foundryPortalUrl(id, "unsupported", "tools"));
+    assert.throws(() => foundryPortalUrl(id.replace(project.subscriptionId, "bad"), "model", "model"));
+});
+
+test("Azure portal links use the full resource ID and encode fragment delimiters", () => {
+    const resourceId = `/subscriptions/${project.subscriptionId}/resourceGroups/rg-demo/providers/Microsoft.Insights/components/monitoring`;
+    assert.equal(azurePortalUrl(resourceId), `https://portal.azure.com/#resource${resourceId}/overview`);
+    const nested = `${resourceId}/providers/Microsoft.Insights/diagnosticSettings/logs`;
+    assert.equal(azurePortalUrl(nested), `https://portal.azure.com/#resource${nested}/overview`);
+    assert.equal(azurePortalUrl(resourceId.replace("monitoring", "name #?&%")),
+        `https://portal.azure.com/#resource${resourceId.replace("monitoring", "name%20%23%3F%26%25")}/overview`);
+    for (const invalid of [undefined, "", "https://evil.example", "/subscriptions/bad", `${resourceId}/..`]) {
+        assert.throws(() => azurePortalUrl(invalid), /invalid resource ID/);
+    }
 });
 
 test("inventory exposes structured metadata and per-resource testing links while preserving partial errors", async () => {
@@ -89,7 +105,7 @@ test("inventory exposes structured metadata and per-resource testing links while
             { name: "embedding-production" },
         ] };
         if (url.includes("/toolboxes?")) throw new Error("Toolbox access denied");
-        return [{ name: "monitoring", type: "microsoft.insights/components" }];
+        return [{ id: `${project.accountId}/deployments/chat-production`, name: "chat-production", type: "Microsoft.CognitiveServices/accounts/deployments" }];
     });
     const result = await azure.explore(project);
     assert.equal(result.agents.status, "ready");
@@ -106,22 +122,91 @@ test("inventory exposes structured metadata and per-resource testing links while
     assert.equal(result.tools.status, "error");
     assert.equal(result.tools.error, "Toolbox access denied");
     assert.equal(result.resources.data[0].playgroundUrl, undefined);
+    assert.equal(result.resources.data[0].portalUrl, azurePortalUrl(`${project.accountId}/deployments/chat-production`));
 });
 
-test("estimate requests validate workload without requiring prices", () => {
-    const values = { inputMillions: 2, outputMillions: 1, agentHours: 10 };
-    assert.deepEqual(validateWorkload(values), values);
-    assert.deepEqual(validateWorkload({ ...values, inputRate: 123 }), values);
-    for (const invalid of [undefined, -1, Infinity, NaN, "1"]) assert.throws(() => validateWorkload({ ...values, inputMillions: invalid }));
-    const prompt = promptFor("cost", { project, workload: values });
-    assert(prompt.includes("https://prices.azure.com/api/retail/prices"));
-    assert(prompt.includes("NextPageLink"));
-    assert(prompt.includes("unitOfMeasure"));
-    assert(prompt.includes("2 million input tokens"));
-    assert(prompt.includes("1 million output tokens"));
-    assert(prompt.includes("10 hosted-agent instance-hours"));
-    assert(prompt.includes(id));
-    assert(prompt.includes("rather than inventing a rate"));
+test("toolbox inventory links to the named toolbox in the selected project", async () => {
+    const azure = new Azure(async (_file, args) => {
+        const url = args[args.indexOf("--url") + 1] ?? "";
+        if (url.includes("/toolboxes?")) return { value: [{ name: "support-tools", description: "Customer tools" }] };
+        return args[0] === "resource" ? [] : { value: [] };
+    });
+    const result = await azure.explore(project);
+    assert.equal(result.tools.status, "ready");
+    assert.deepEqual(result.tools.data, [{
+        name: "support-tools", detail: "Customer tools",
+        portalUrl: foundryPortalUrl(project.id, "toolbox", "support-tools"),
+    }]);
+});
+
+test("Optimize prompts include official guidance, selected project and operation-specific safeguards", () => {
+    for (const kind of ["optimizer", "evaluations", "insightsScan"]) {
+        const prompt = promptFor(kind, { project });
+        assert(prompt.startsWith("[Agentic Loop canvas action]"));
+        assert(prompt.includes("microsoft-foundry"));
+        assert(prompt.includes(links[kind]));
+        assert(prompt.includes(id));
+        assert(prompt.includes(project.endpoint));
+        assert(prompt.endsWith("Use resource group rg-demo for additional solution resources."));
+        assert.throws(() => promptFor(kind), /Select a Foundry project/);
+    }
+    const optimizer = promptFor("optimizer", { project });
+    assert(optimizer.includes("prompt or hosted agent"));
+    assert(optimizer.includes("optimizer readiness"));
+    assert(optimizer.includes("tool side effects"));
+    assert(optimizer.includes("Ask before billable runs"));
+    assert(optimizer.includes("do not silently replace the running agent"));
+    const evaluations = promptFor("evaluations", { project });
+    assert(evaluations.includes("CI on changes"));
+    assert(evaluations.includes("scheduled/continuous"));
+    assert(evaluations.includes("acceptance thresholds"));
+    assert(evaluations.includes("enabling recurring execution"));
+    const scan = promptFor("insightsScan", { project });
+    assert(scan.includes("on-demand"));
+    assert(scan.includes("required user/project managed-identity access"));
+    assert(scan.includes("Do not enable sensitive-content capture"));
+    assert(scan.includes("do not enable a recurring schedule"));
+    assert(scan.includes("bounded polling"));
+    assert.throws(() => promptFor("cost", { project }), /valid prompt/);
+    assert(promptFor("insights", { project }).includes("connect it to this Foundry project"));
+});
+
+test("Optimize sends one Chat prompt per action and surfaces missing context or delivery errors", async () => {
+    const sent = [];
+    const model = new Model({ scenarios: [], session: { send: async input => { sent.push(input); return "message-1"; } } });
+    for (const kind of ["optimizer", "evaluations", "insightsScan"]) {
+        await assert.rejects(model.send({ kind }), /Select a Foundry project/);
+    }
+    assert.equal(sent.length, 0);
+    model.projects = [project];
+    model.state.projectId = project.id;
+    for (const kind of ["optimizer", "evaluations", "insightsScan"]) {
+        assert.equal((await model.send({ kind })).messageId, "message-1");
+        assert.equal(sent.at(-1).prompt, promptFor(kind, { project }));
+    }
+    assert.equal(sent.length, 3);
+    model.session.send = async () => { throw new Error("Chat unavailable"); };
+    await assert.rejects(model.send({ kind: "optimizer" }), /Chat unavailable/);
+});
+
+test("saved Cost tab migrates to Optimize and removed estimator state stays removed", async t => {
+    const directory = await mkdtemp(path.join(tmpdir(), "agentic-loop-migration-"));
+    t.after(() => rm(directory, { recursive: true, force: true }));
+    const storage = path.join(directory, "settings.json");
+    for (const tab of ["cost", "explore"]) {
+        await writeFile(storage, JSON.stringify({ tab, scope: "user", projectId: id, draft: "Keep my draft", estimate: { inputMillions: 5 } }));
+        const model = new Model({ storage });
+        await model.load();
+        assert.equal(model.state.tab, tab === "cost" ? "optimize" : tab);
+        assert.equal(model.state.scope, "user");
+        assert.equal(model.state.projectId, id);
+        assert.equal(model.state.draft, "Keep my draft");
+        assert(!Object.hasOwn(model.state, "estimate"));
+        assert.deepEqual(JSON.parse(await readFile(storage, "utf8")), model.state);
+        const restored = new Model({ storage });
+        await restored.load();
+        assert.deepEqual(restored.state, model.state);
+    }
 });
 
 test("prompts preserve scenario content and selected resource context", () => {
@@ -131,6 +216,8 @@ test("prompts preserve scenario content and selected resource context", () => {
     assert(prompt.includes(scenario.prompt));
     assert(prompt.includes(id));
     assert(prompt.includes("rg-demo"));
+    assert(prompt.endsWith("Use resource group rg-demo for additional solution resources."));
+    assert(!prompt.includes("confirm any billable changes first"));
     assert.equal(promptFor("scenario", { scenario }),
         `[Agentic Loop canvas action]\nUse the Agentic Loop skill to build this complete solution.\n\n${scenario.prompt}\n\nIndustry: Manufacturing`);
     assert(promptFor("skills").includes("--scope project"));
@@ -231,9 +318,9 @@ test("project choice persists across panel instances and reloads; prompts use se
     assert.equal((await reloaded.discover()).selected.id, second.id);
     await reloaded.send({ kind: "guided" });
     assert(sent[0].prompt.includes(second.id));
-    await reloaded.send({ kind: "cost", workload: { inputMillions: 2, outputMillions: 1, agentHours: 10 } });
-    assert(sent[1].prompt.includes("https://prices.azure.com/api/retail/prices"));
-    assert(sent[1].prompt.includes("2 million input tokens"));
+    await reloaded.send({ kind: "optimizer" });
+    assert(sent[1].prompt.includes(links.optimizer));
+    assert(sent[1].prompt.includes(second.id));
     await assert.rejects(reloaded.select("not-discovered"), /available/);
     await assert.rejects(reloaded.discover("not-accessible"), /accessible/);
     assert.equal(reloaded.project, null);

@@ -40,7 +40,7 @@ export function trustedEndpoint(endpoint) {
     return url.href.replace(/\/$/, "");
 }
 
-export function foundryPlaygroundUrl(projectId, kind, name, agentVersion) {
+export function foundryPortalUrl(projectId, kind, name, agentVersion) {
     const project = projectIdentity(projectId);
     if (!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(project.subscriptionId)) {
         throw new Error("Cannot link to Foundry: invalid subscription ID.");
@@ -52,10 +52,20 @@ export function foundryPlaygroundUrl(projectId, kind, name, agentVersion) {
     const scope = [subscription, project.resourceGroup, "", project.account, project.name].map(encodeURIComponent).join(",");
     const base = `https://ai.azure.com/nextgen/r/${scope}/build`;
     if (kind === "model") return `${base}/models/deployments/${encodeURIComponent(name)}/playground`;
-    if (kind !== "agent") throw new Error("Unsupported Foundry playground resource type.");
+    if (kind === "toolbox") return `${base}/toolboxes/${encodeURIComponent(name)}`;
+    if (kind !== "agent") throw new Error("Unsupported Foundry portal resource type.");
     const url = new URL(`${base}/agents/${encodeURIComponent(name)}/build`);
     if (agentVersion != null) url.searchParams.set("version", agentVersion);
     return url.href;
+}
+
+export function azurePortalUrl(resourceId) {
+    if (typeof resourceId !== "string" ||
+        !/^\/subscriptions\/[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}\/resourceGroups\/[^/]+\/providers\/[^/]+(?:\/[^/]+\/[^/]+)+$/i.test(resourceId) ||
+        resourceId.split("/").some(segment => segment === "." || segment === "..")) {
+        throw new Error("Cannot link to Azure Portal: missing or invalid resource ID.");
+    }
+    return `https://portal.azure.com/#resource${resourceId.split("/").map(encodeURIComponent).join("/")}/overview`;
 }
 
 export class Azure {
@@ -149,7 +159,7 @@ export class Azure {
             version: row.versions?.latest?.version ?? null,
             detail: row.versions?.latest?.definition?.kind ?? row.object ?? "Agent",
             metadata: row.versions?.latest?.definition?.kind ? [{ label: "Type", value: row.versions.latest.definition.kind }] : [],
-            playgroundUrl: foundryPlaygroundUrl(project.id, "agent", row.name ?? row.id, row.versions?.latest?.version),
+            playgroundUrl: foundryPortalUrl(project.id, "agent", row.name ?? row.id, row.versions?.latest?.version),
         }));
     }
 
@@ -167,14 +177,15 @@ export class Azure {
                     { label: "Version", value: row.properties?.model?.version },
                     { label: "SKU", value: row.sku?.name },
                 ].filter(item => item.value),
-                playgroundUrl: foundryPlaygroundUrl(project.id, "model", row.name),
+                playgroundUrl: foundryPortalUrl(project.id, "model", row.name),
             }))),
             outcome(async () => (await dataList("toolboxes")).map(row => ({
                 name: row.name, detail: row.description ?? "Governed toolbox",
+                portalUrl: foundryPortalUrl(project.id, "toolbox", row.name),
             }))),
             outcome(async () => (await this.run("az", ["resource", "list", "--subscription", project.subscriptionId,
                 "--resource-group", project.resourceGroup, "--only-show-errors", "-o", "json"])).map(row => ({
-                name: row.name, detail: row.type,
+                id: row.id, name: row.name, detail: row.type, portalUrl: azurePortalUrl(row.id),
             }))),
         ]);
         return { agents, models, tools, resources, checkedAt: new Date().toISOString() };

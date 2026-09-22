@@ -59,7 +59,7 @@ The inner development loop is:
 
 1. **Specify** — turn the idea, business process, or problem into explicit requirements.
 2. **Plan** — select the architecture, models, tools, skills, grounding, and Azure services the scenario needs.
-3. **Implement** — build the agent, application, integrations, infrastructure, and reusable skills.
+3. **Implement** — first prove a minimal deployed agent integration, then expand the application, orchestration, infrastructure, and reusable skills.
 4. **Verify** — test behavior, safety, identity, deployment readiness, and scenario-specific quality.
 5. **Deploy** — provision and release the solution to Azure with `azd`.
 
@@ -91,11 +91,21 @@ Open that project in GitHub Copilot App or the CLI, describe the idea or busines
 Use Agentic Loop to guide me through building a complete agentic solution.
 ```
 
-The concise Agentic Loop skill coordinates architecture, implementation, toolbox configuration, agent deployment and local end-to-end testing using the separately installed Microsoft Foundry skill. It defaults to hosted agents, Python 3.13 and the Responses API, with React/FastAPI app services. Frontend/backend deployment to Azure requires a separate approval after local testing succeeds.
+The concise Agentic Loop skill coordinates architecture, an early hosted integration checkpoint, application implementation and local end-to-end testing using the separately installed Microsoft Foundry skill. Before building the full app, it proves the required skill, MCP tool and model request with the deployed agent identity, terminal completion and schema-valid output—not merely HTTP 200, a successful CLI exit or an active agent. It defaults to hosted agents, Python 3.13 and the Responses API, with React/FastAPI app services. Frontend/backend deployment to Azure requires a separate approval after local testing succeeds.
+
+Focused references cover the [hosted integration checkpoint](skills/agentic-loop/references/hosted-integration-checkpoint.md) (actual principals, distinct endpoints, diagnostics and contract tests) and [Copilot SDK with Foundry](skills/agentic-loop/references/copilot-sdk-foundry.md) (versioned configuration, token refresh, request-scoped caller context, host/runtime telemetry and optional bundled dependencies when remote resolution fails). Telemetry is configured before the minimal deployment, and the checkpoint requires correlated hosting, model and required tool spans before expansion. An Application Insights connection or host-only trace is insufficient; any additional collector infrastructure still needs approval.
+
+After the hosted checkpoint passes, the skill parallelizes independent implementation with coding subagents using a shared contract and non-overlapping file ownership. The coordinator integrates their work and verifies the complete solution; shared configuration, Azure mutations and deployment approvals remain coordinated.
+
+The skill immediately persists the confirmed project's full ARM ID as `FOUNDRY_PROJECT` in root `.env` after validation, including after successful creation or a project change; it does not wait for the app build to finish. Existing unrelated settings are preserved.
+
+After recording the verified `LOCAL_FRONTEND` in `.env`, the skill writes root `LOOP.md` with evidence-backed proposals to improve its instructions for future builds. Later builds revisit these lessons and record outcomes; installed skill changes still require an explicit request.
+
+It also checks management-plane and data-plane permissions, reuses named runtime skills, defines shared interfaces in the solution README, and verifies correlated Application Insights traces with sensitive content capture off by default. Placement, SDK compatibility and private-knowledge grounding checks apply only when relevant.
 
 ### Agentic Loop plugin and canvas
 
-The [Agentic Loop plugin](plugins/agentic-loop/README.md) packages the concise skill and a five-tab canvas: **Setup, Resources, Build, Explore, and Cost**. Check prerequisites, choose a Foundry project, start from an illustrated industry scenario, explore deployed resources, and review session usage and Azure costs.
+The [Agentic Loop plugin](plugins/agentic-loop/README.md) packages the concise skill and a five-tab canvas: **Setup, Resources, Build, Explore, and Optimize**. Check prerequisites, choose a Foundry project, start from an illustrated industry scenario, explore deployed resources, and improve agents through project-aware Chat prompts for Foundry Agent Optimizer, automatic evaluations and Insights scans. Optimize also retains session usage and actual Azure costs.
 
 It requires the separately installed [Microsoft Foundry skill](https://github.com/microsoft/azure-skills/tree/main/skills/microsoft-foundry). The existing Foundry canvas is reused through its public APIs for management and testing. Run `npm run plugin:build` to create a self-contained local plugin in `dist/plugin/agentic-loop/`; see the plugin README for installation, permissions, limitations and Awesome Copilot contribution steps. The plugin is not yet published to a marketplace.
 
