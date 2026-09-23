@@ -173,6 +173,33 @@
         "Requires deployed hosting, model and required tool spans in the destination's actual schema, with correct trace relationships and agent/version identification, not mocks or exporter startup messages.",
         "Keeps diagnosis bounded and does not invoke probes, deploy or repeatedly redeploy unchanged artifacts for this plan-only request."
       ]
+    },
+    {
+      "id": 12,
+      "prompt": "We are using Agentic Loop and have not built the frontend or written LOCAL_FRONTEND. A hosted model request failed because our app read an account-only project URL. We switched to the nonreserved full project endpoint variable and reran the same deployed probe: it now completes with schema-valid output. LOOP.md already has a user note and a proposed endpoint-contract check. No time or token savings were measured, and no skill changes have been applied. Return the immediate next action and proposed LOOP.md update only; do not deploy, edit installed skills or implement the UI.",
+      "expected_output": "Immediate lesson capture before further implementation, updating the existing endpoint lesson with the verified fix and evidence while preserving the user note and proposal status.",
+      "files": [],
+      "expectations": [
+        "Calls for updating workspace root LOOP.md now, without waiting for local acceptance, LOCAL_FRONTEND or full application success.",
+        "Records the failure, supported cause, nonreserved endpoint fix and supplied passing deployed-probe evidence without inventing identifiers, commands or measurements.",
+        "Updates the matching endpoint lesson rather than duplicating it and preserves the user-authored note.",
+        "Includes a proposed skill change/section, expected benefit, regression check and status, distinguishing the verified app fix from an unvalidated skill proposal.",
+        "Requires read-back verification of the write and explicit reporting of persistence failures.",
+        "Does not claim all other hosted checkpoint requirements passed or authorize implementation, deployment or installed-skill edits."
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "During an Agentic Loop build, a worker reports that a retry fix was committed and the agent deployed successfully, but the original failing probe still times out. Another worker fixed an independent schema mismatch and reran its failing contract test successfully. Both workers want to edit the shared LOOP.md now, and local acceptance is tomorrow. Explain the immediate lesson-capture decisions only; do not execute anything.",
+      "expected_output": "Keep the timeout unresolved, immediately record the verified schema fix through the coordinator, and preserve shared-file ownership and evidence boundaries.",
+      "files": [],
+      "expectations": [
+        "Does not treat a commit or successful deployment as resolution of the still-failing timeout.",
+        "Requires successful rerun of the failing probe or equivalent boundary verification before marking that failure resolved.",
+        "Captures the independently verified schema fix immediately rather than waiting for local acceptance or every failure to be fixed.",
+        "Has workers report evidence promptly to the coordinator, who serializes shared LOOP.md updates instead of allowing competing edits.",
+        "Preserves existing lessons, excludes secrets and separates application-fix verification from skill-change validation."
+      ]
     }
   ]
 }

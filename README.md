@@ -99,7 +99,7 @@ After the hosted checkpoint passes, the skill parallelizes independent implement
 
 The skill immediately persists the confirmed project's full ARM ID as `FOUNDRY_PROJECT` in root `.env` after validation, including after successful creation or a project change; it does not wait for the app build to finish. Existing unrelated settings are preserved.
 
-After recording the verified `LOCAL_FRONTEND` in `.env`, the skill writes root `LOOP.md` with evidence-backed proposals to improve its instructions for future builds. Later builds revisit these lessons and record outcomes; installed skill changes still require an explicit request.
+Whenever a failure is verified as resolved, at any workflow stage, the skill immediately updates root `LOOP.md` with the failure, fix, verification evidence and a reusable skill-improvement proposal. It does not wait for `LOCAL_FRONTEND` or full-build success. After recording the verified `LOCAL_FRONTEND` in `.env`, it consolidates these lessons without duplicates and adds remaining corrections and successes. Later builds revisit outcomes; installed skill changes still require an explicit request.
 
 It also checks management-plane and data-plane permissions, reuses named runtime skills, defines shared interfaces in the solution README, and verifies correlated Application Insights traces with sensitive content capture off by default. Placement, SDK compatibility and private-knowledge grounding checks apply only when relevant.
 

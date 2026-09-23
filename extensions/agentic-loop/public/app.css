@@ -132,6 +132,7 @@ main { padding: 24px 20px; max-width: 1120px; margin: auto; min-height: 65vh; }
 .inventory-empty p.error { color: var(--error); }
 .inventory-empty button { margin-top: 10px; }
 .frontend-url { display: block; overflow-wrap: anywhere; font-size: 13px; }
+.usage-session-id { overflow-wrap: anywhere; }
 .table-scroll { overflow-x: auto; margin: 10px 0; }
 table { border-collapse: collapse; width: 100%; font-size: 12px; font-variant-numeric: tabular-nums; }
 th, td { text-align: right; padding: 9px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }

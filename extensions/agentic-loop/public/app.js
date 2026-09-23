@@ -319,12 +319,24 @@ async function usage() {
     usageLoading = true;
     try {
         const metrics = await api("usage");
+        if (!snapshot.sessionId || metrics.sessionId !== snapshot.sessionId) {
+            throw new Error("Usage belongs to a different or unidentified session. Reopen this canvas from the intended session.");
+        }
+        const count = value => typeof value === "number" && Number.isFinite(value) ? number(value) : "—";
         const rows = Object.entries(metrics.modelMetrics).filter(([, value]) => value).map(([name, value]) => [
-            name, number(value.usage.inputTokens), number(value.usage.outputTokens), number(value.usage.cacheReadTokens),
-            number(value.usage.cacheWriteTokens), value.usage.reasoningTokens == null ? "—" : number(value.usage.reasoningTokens), number(value.requests.count),
+            name, count(value.usage?.inputTokens), count(value.usage?.outputTokens), count(value.usage?.cacheReadTokens),
+            count(value.usage?.cacheWriteTokens), count(value.usage?.reasoningTokens), count(value.requests?.count),
         ]);
-        $("usage").innerHTML = rows.length ? table(["Model", "Input", "Output", "Cache read", "Cache write", "Reasoning", "Calls"], rows) : '<p class="muted">No usage recorded in this session yet.</p>';
-        $("usage").innerHTML += `<p class="muted">${number(metrics.totalUserRequests)} user requests · ${(metrics.totalApiDurationMs / 1000).toFixed(1)}s model API time${metrics.totalNanoAiu == null ? "" : ` · ${number(metrics.totalNanoAiu / 1e9)} AI credits`}</p><p class="muted">Live Copilot session metrics; not Azure model usage or a USD charge. Cache and reasoning counters are separate API fields and are not added to a potentially overlapping total. Refreshes every 15 seconds while this tab is open.</p>`;
+        const tokens = Object.entries(metrics.tokenDetails ?? {}).filter(([, value]) => value)
+            .map(([kind, value]) => [kind.replaceAll("_", " "), count(value.tokenCount)]);
+        $("usage").innerHTML = `<p class="muted">Copilot session <span class="usage-session-id">${escape(metrics.sessionId)}</span>${metrics.sessionStartTime ? ` · Started ${escape(new Date(metrics.sessionStartTime).toLocaleString())}` : ""}</p>` +
+            `<h4>Session accounting</h4><p>${metrics.totalNanoAiu == null ? "AI credits unavailable" : `${count(metrics.totalNanoAiu / 1e9)} AI credits`}</p>` +
+            (tokens.length ? table(["Token category", "Reported tokens"], tokens) : '<p class="muted">Session token accounting is unavailable from this runtime.</p>') +
+            '<h4>Live model breakdown</h4>' +
+            (rows.length ? table(["Model", "Input", "Output", "Cache read", "Cache write", "Reasoning", "Calls"], rows) : '<p class="muted">No model breakdown returned by the runtime. This does not establish zero session usage.</p>') +
+            `<p class="muted">${count(metrics.totalUserRequests)} runtime-reported user requests · ${metrics.totalApiDurationMs == null ? "API time unavailable" : `${(metrics.totalApiDurationMs / 1000).toFixed(1)}s model API time`}</p>` +
+            '<p class="muted">After resume, token, request and model counters may cover different periods from session credits; they are not guaranteed lifetime totals. Missing history is not treated as zero. Accounting categories and live token counters are separate measures, not additive. Copilot credits are not USD or Azure usage.</p>' +
+            `<p class="muted">Updated ${escape(new Date(metrics.checkedAt).toLocaleTimeString())}. Refreshes every 15 seconds while Optimize is visible.</p>`;
     } catch (error) { failure($("usage"), error); }
     finally { usageLoading = false; }
 }
@@ -345,7 +357,10 @@ async function costs() {
 
 async function loadTab(tab, force = false) {
     if (tab === "build" || tab === "explore" || force) await frontends(force);
-    if (loaded.has(tab) && !force) return;
+    if (loaded.has(tab) && !force) {
+        if (tab === "optimize") await usage();
+        return;
+    }
     loaded.add(tab);
     if (tab === "setup") await setup();
     if (tab === "resources" && (force || !projects.length)) await discover();
@@ -480,6 +495,12 @@ async function start() {
     if (["explore", "optimize"].includes(initialTab)) await selectTab(initialTab);
     setInterval(() => { if (activeTab === "optimize" && !document.hidden) usage(); }, 15_000);
     setInterval(() => { if (!document.hidden) frontends(); }, 5_000);
-    window.addEventListener("focus", () => frontends());
+    const refreshVisible = () => {
+        if (document.hidden) return;
+        frontends();
+        if (activeTab === "optimize") usage();
+    };
+    window.addEventListener("focus", refreshVisible);
+    document.addEventListener("visibilitychange", refreshVisible);
 }
 start().catch(error => notice(`Canvas initialization failed: ${error.message}`, true));

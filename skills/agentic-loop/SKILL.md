@@ -21,11 +21,19 @@ Use this as the solution coordinator and `microsoft-foundry` for platform execut
 Use available coding subagents for substantial, independent work; keep trivial edits and tightly coupled debugging with the coordinator. These are build-time helpers, not additional deployed solution agents.
 
 - **Respect dependencies.** Before the hosted checkpoint, parallelize only independent research or preflight checks. Freeze the README contract and pass the checkpoint before dispatching full implementation, such as separate frontend, backend and agent/tool workstreams.
-- **Assign clear ownership.** Give each subagent a bounded goal, exclusive files/directories, required skill references, verified project/endpoints, contract, dependencies, acceptance checks and stop conditions. Keep shared contracts, `.env`, lockfiles and deployment configuration with one owner; request changes rather than editing another worker's files.
+- **Assign clear ownership.** Give each subagent a bounded goal, exclusive files/directories, required skill references, verified project/endpoints, contract, dependencies, acceptance checks and stop conditions. Keep shared contracts, `.env`, `LOOP.md`, lockfiles and deployment configuration with one owner; request changes rather than editing another worker's files.
 - **Run independent tasks together.** Keep the team small, respect configured model/concurrency limits, and avoid recursive delegation or duplicate work. While workers run, advance a different task. Serialize dependent work and mutations to shared Azure resources; delegation grants no additional provisioning or deployment approval.
 - **Integrate centrally.** Require changed-file summaries, commands/results and blockers. Coordinate contract changes across affected workers, wait for dependencies, then integrate and run cross-component checks. Subagent success is not end-to-end acceptance; retain the hosted proof, local acceptance, `.env`/`LOOP.md` handoff and explicit app-deployment approval gates.
 
 If subagents are unavailable, perform the same dependency-ordered work sequentially and say so; do not claim parallel execution.
+
+## Capture lessons when failures are resolved
+
+At any workflow stage, immediately create/update the workspace root `LOOP.md` after verifying a failure is resolved, before starting unrelated work. Do not wait for local acceptance or a `LOCAL_FRONTEND` write: capture the lesson while its evidence is available. Rerun the failing check or an equivalent boundary-specific probe; a code edit, proposed fix or successful deployment alone is not resolution. If verification is blocked or still fails, keep the failure unresolved.
+
+Use a build/date summary and table: observation/evidence (failure, supported cause or uncertainty, fix and verification result); proposed skill change/section; expected benefit; regression check; status (proposed/adopted/validated/rejected). Distinguish a verified application fix from a proposed skill improvement; fixing the app does not validate an untested skill change. Preserve user edits and prior entries, update the matching lesson rather than duplicating it, and revisit outcomes. Subagents report resolved failures and evidence promptly to the coordinator, who owns the write.
+
+Keep entries concise and reusable; separate measurements from estimates and say when no skill change is supported. Exclude secrets, raw `.env`, sensitive payloads and credential-bearing logs. Read back the changed entry to verify persistence and surface write failures. Lessons do not authorize installed-skill edits or weaker approval gates; apply skill changes only when requested and validate them on later builds.
 
 ## Workflow
 
@@ -52,7 +60,7 @@ For explicitly requested prompt agents, use the equivalent deployed inference/to
    - `FOUNDRY_PROJECT`: recheck the already-persisted project ARM ID; refresh if needed.
    - `RESOURCE_GROUP`: selected resource group name.
    - `LOCAL_FRONTEND`: verified local frontend URL.
-   Immediately create/update root `LOOP.md` with a build/date summary and table: observation/evidence; proposed skill change/section; expected benefit; regression check; status (proposed/adopted/validated/rejected). Preserve prior entries/user edits, revisit their outcomes, and capture reusable lessons from failures, fixes, corrections and successes. Separate measurements from estimates; say when no changes are supported. Exclude secrets, raw `.env` and sensitive data. Proposals do not authorize installed-skill edits or weaker approval gates; apply changes only when requested and validate on later builds.
+   Immediately reconcile root `LOOP.md` using the lesson-capture rules above: preserve lessons already recorded when failures were resolved, revisit their outcomes, and add any remaining corrections and successes without duplicating entries. Create it if absent, even when the build had no failures; say when no skill changes are supported.
    Keep local servers running and report their URLs. **Stop and ask whether to deploy the backend and frontend to Azure; wait for explicit confirmation.** Earlier approval for agents/MCP does not authorize this step.
 
 8. **Optional app deployment.** Only after that confirmation, deploy backend then frontend with `az containerapp up --source <service-directory>`. Configure the deployed backend URL, allowed frontend origin and authenticated service access. Verify the cloud app end to end; only after success upsert `DEPLOYED_FRONTEND` in root `.env` with the actual Container Apps frontend URL. Return that URL and any sign-in requirements. If declined, leave the working local app and do not deploy.

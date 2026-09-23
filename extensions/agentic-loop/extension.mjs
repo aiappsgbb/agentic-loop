@@ -6,6 +6,7 @@ import { Azure } from "./azure.mjs";
 import { Model } from "./model.mjs";
 import { startServer } from "./server.mjs";
 import { openFrontend } from "./frontends.mjs";
+import { assertSession, sessionUsage } from "./usage.mjs";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 let dataRoot = path.join(root, "assets");
@@ -63,7 +64,7 @@ async function perform(action, input) {
         case "setup": return model.setup();
         case "discover": return model.discover(input.subscriptionId);
         case "select": return model.select(input.projectId);
-        case "usage": return model.session.rpc.usage.getMetrics();
+        case "usage": return sessionUsage(model.session, model.session.sessionId);
         case "frontends": return model.frontends(input.retry);
         case "open_frontend": return openFrontend(model.session, input.frontend);
         case "inspect_agent": return model.inspectAgent(input);
@@ -114,24 +115,33 @@ const session = await joinSession({
                 inspect_agent: "Ask Copilot in Chat to launch local Agent Inspector for a verified agent in the selected project; starts a Copilot turn.",
                 frontends: "Read frontend URLs and synchronize changed FOUNDRY_PROJECT from workspace .env; retry failed project discovery on request.",
                 open_frontend: "Open a configured frontend in the integrated browser, rereading its URL from .env.",
-                usage: "Get actual accumulated current-session usage by model.",
+                usage: "Get usage for the bound Copilot session, with its ID, session accounting and runtime model counters.",
                 cost: "Query resource-group month-to-date actual Azure spend.",
                 preferences: "Save the active tab and preferred skill installation scope.",
                 refresh_foundry: "Reuse the existing Foundry canvas public refreshWorkspaceState action.",
                 prompt: "Send a user-reviewed canvas prompt to Chat; this starts a Copilot turn.",
             }[name],
             handler: async ctx => {
-                try { return await dispatch(name, ctx.input ?? {}); }
+                try {
+                    await ready;
+                    assertSession(session, ctx.sessionId);
+                    return await dispatch(name, ctx.input ?? {});
+                }
                 catch (error) { throw new CanvasError("agentic_loop_error", error.message); }
             },
         })),
         open: async ctx => {
             await ready;
+            assertSession(session, ctx.sessionId);
             if (ctx.input?.tab) await dispatch("preferences", { tab: ctx.input.tab });
             let entry = servers.get(ctx.instanceId);
             if (!entry) {
                 entry = await startServer({
-                    assets: path.join(root, "public"), images, scenarios, dispatch,
+                    assets: path.join(root, "public"), images, scenarios,
+                    dispatch: (action, input) => {
+                        assertSession(session, ctx.sessionId);
+                        return dispatch(action, input);
+                    },
                     snapshot: async () => ({
                         state: model.state, scenarios, project: model.project,
                         sessionId: session.sessionId,
