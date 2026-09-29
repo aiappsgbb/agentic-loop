@@ -3813,7 +3813,6 @@
 }
 .astra-showcase-link svg { flex-shrink: 0; }
 .astra-showcase-link:hover { background: color-mix(in srgb, var(--accent) 85%, #000); }
-.astra-showcase-action > span { color: var(--text-dim); font-size: 12px; }
 @media (max-width: 1100px) {
   .astra-showcase { grid-template-columns: 1fr; gap: 18px; }
   .astra-showcase-action { align-items: flex-start; }

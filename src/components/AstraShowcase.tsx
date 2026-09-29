@@ -1,6 +1,9 @@
-import { ExternalLink } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { getAstraUrl } from '../data/astra';
+import { useTheme } from './useTheme';
 
 export default function AstraShowcase() {
+  const { resolved } = useTheme();
   return (
     <section className="astra-showcase" aria-labelledby="astra-title">
       <div className="astra-showcase-copy">
@@ -14,14 +17,10 @@ export default function AstraShowcase() {
       <div className="astra-showcase-action">
         <a
           className="astra-showcase-link"
-          href="https://astra-demo.icyground-ce9cbed9.westeurope.azurecontainerapps.io/"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-describedby="astra-link-note"
+          href={getAstraUrl(resolved)}
         >
-          Explore Astra demos <ExternalLink size={16} aria-hidden="true" />
+          Explore Astra demos <ArrowRight size={16} aria-hidden="true" />
         </a>
-        <span id="astra-link-note">Opens in a new tab</span>
       </div>
     </section>
   );

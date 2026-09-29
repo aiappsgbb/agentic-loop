@@ -62,6 +62,8 @@ jobs:
       # Override the GitHub Pages base (/agentic-loop/) with a root base so the
       # app is served at the Front Door root (https://<endpoint>/...).
       - name: Build (root base)
+        env:
+          VITE_ASTRA_BASE: /astra
         run: npm run build -- --base=/
 
       # Azure Static Web Apps needs an explicit SPA navigation fallback so deep
