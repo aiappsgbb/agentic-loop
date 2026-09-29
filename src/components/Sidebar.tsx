@@ -2,11 +2,12 @@ import { NavLink, Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import {
   Home, BriefcaseBusiness, BookOpen, Sparkles, Bot, Wrench, Workflow,
-  ChevronRight, PanelLeftClose, PanelLeft, Sun, Moon, Monitor, Infinity as InfinityIcon, Library, Cpu, Lightbulb, DraftingCompass, Rocket, Boxes
+  ChevronRight, PanelLeftClose, PanelLeft, Sun, Moon, Monitor, Infinity as InfinityIcon, Library, Cpu, Lightbulb, DraftingCompass, Rocket, Boxes, Presentation, ExternalLink
 } from 'lucide-react';
 import { type ThemePref } from './ThemeContext';
 import { useTheme } from './useTheme';
 import { asset } from '../data/asset';
+import { ASTRA_DEMOS_URL } from '../data/destinations';
 
 interface Props { collapsed: boolean; onToggle: () => void; }
 
@@ -43,6 +44,11 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
           <span className="nav-label">Kratos</span>
           <span className="nav-badge">Live</span>
         </NavLink>
+        <a href={ASTRA_DEMOS_URL} target="_blank" rel="noreferrer" className="nav-item">
+          <Presentation className="icon" size={18} />
+          <span className="nav-label">Astra demos</span>
+          <ExternalLink className="nav-external" size={13} aria-label="Opens in a new tab" />
+        </a>
 
         <div className="nav-section-title">Build &amp; Run</div>
         <NavLink to="/scenarios" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>

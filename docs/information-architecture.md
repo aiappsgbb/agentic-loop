@@ -12,8 +12,9 @@ able to answer **"what do I use, and when?"** in seconds. This IA encodes that a
 
 | Surface | One-line job | Axis / mode |
 | --- | --- | --- |
+| **Astra demos** (external) | Show a customer a polished industry demo, no code | Demo (show it now) |
 | **Home prompt → Make it real** | Build a novel idea from a blank prompt | Greenfield (from scratch) |
-| **Kratos** | Operate a live, prebuilt reference agent — no build required | Experience (try it now) |
+| **Kratos** | Try a live reference agent, then fork it as a production-shaped base | Experience + production template |
 | **Scenarios** | Start from a proven industry **outcome** | WHAT (vertical) |
 | **Playbooks** | Reusable implementation **techniques** selected by the advisors | HOW (horizontal support) |
 | **Skills catalog** | Look up any Build/Run capability | Reference |
@@ -53,22 +54,47 @@ Platform      (live demo)     Scenarios (what)
 Playbooks are not a fourth path. They are the reusable implementation techniques selected by Path 2 and Path 3.
 Each advisor-selected playbook carries two skill bindings: **Build SKILLs** for creating the agentic solution and **Deployment SKILLs** for making it deployable with `azd up`.
 
+## Start here — persona routing
+
+The Home page is the single starting point. Its "Where to start" panel
+(`src/components/WhatToUseWhen.tsx`) routes by persona first:
+
+| Persona | Goal | Primary destination | Secondary |
+| --- | --- | --- | --- |
+| Seller (SSP / AE) | Show a customer an agent today, no code | **Astra demos** (external) | Industry scenarios |
+| Solution engineer / builder | Build or customize, run a technical workshop | **Getting started playbook** | All playbooks, Launchpad (`#prompt`) |
+| Customer / delivery team | Start from something production-shaped | **Kratos** | Idea to production (Threadlight) |
+
+Below the cards, a collapsible comparison table answers "Astra demos vs playbooks vs
+Kratos vs Idea to production". Astra demos are **demos on synthetic data, never
+deployable**; that boundary is stated on Home, on the persona card and on scenario pages.
+
+Destination URLs live in `src/data/destinations.ts`. The Astra demos URL can be
+overridden with `VITE_ASTRA_DEMOS_URL` (e.g. once it is mounted behind Front Door).
+
 ## The "I want to…" contract
 
-This is the decision tree surfaced in the UI (see the "What to use when" panel on Home):
-
+- *"…show a customer an industry demo right now"* → **Astra demos**
 - *"…see a working agent right now, no setup"* → **Kratos**
+- *"…start from a production-shaped app"* → **Kratos** (fork) or **Idea to production**
 - *"…understand the model / platform"* → **Concepts / Platform**
 - *"…build my own idea from a prompt"* → **Production Launchpad**
 - *"…find something for my industry"* → **Scenario Advisor / Scenarios**
 - *"…learn how to do X (grounding, eval, governance, voice)"* → **Playbooks** as advisor-selected HOW guidance
 - *"…look up a specific capability"* → **Skills catalog**
 
+## Scenario ⇄ Astra demo links
+
+Scenarios that have a matching Astra demo (mapped in `ASTRA_DEMOS[].scenarioIds`)
+show an **Astra demo** badge in the gallery, and their detail page swaps the
+"Watch the demo" card for an "Open the Astra demo" card. This closes the loop
+between *show it* (demo) and *build it* (scenario prompt + playbooks).
+
 ## Navigation grouping
 
 The sidebar groups items by intent to mirror the spine:
 
-- **Start here** — Home, Kratos
+- **Start here** — Home, Kratos, Astra demos (external)
 - **Build** — Scenarios, Playbooks, Skills catalog
 - **Learn** — Concepts, Platform
 

@@ -142,7 +142,8 @@ export default function Kratos() {
         <div className="section-eyebrow">Ready to build your own?</div>
         <h2>From experiencing to building</h2>
         <p className="lede">
-          Kratos is the <em>experience</em> lane — try the loop live, no setup. When you're ready to build your own version, take one of the three on-ramps.
+          Kratos is two things: a live app you can try right now, and a production-shaped starting point you can fork
+          (Entra sign-in, Cosmos DB, tracing, one-command <code>azd up</code>). To build your own version instead, take one of these on-ramps.
         </p>
         <div className="kratos-next-grid">
           <Link to="/scenarios" className="kratos-next-card">

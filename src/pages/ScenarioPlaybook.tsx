@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, BookOpen, PlayCircle, ArrowRight, Play } from 'lucide-react';
+import { ArrowLeft, ExternalLink, BookOpen, PlayCircle, ArrowRight, Play, Presentation } from 'lucide-react';
 import ShareButton from '../components/ShareButton';
 import VideoModal from '../components/VideoModal';
 import scenarios from '../data/scenarios.json';
 import { playbooksForScenario, playbookHasDeck, type Scenario } from '../data/links';
+import { ASTRA_DEMOS_URL, astraDemoForScenario } from '../data/destinations';
 import GreenfieldBuilder from '../components/GreenfieldBuilder';
 import { asset } from '../data/asset';
 
@@ -29,6 +30,7 @@ export default function ScenarioPlaybook() {
     );
   }
   const relatedPlaybooks = playbooksForScenario(scenario);
+  const astraDemo = astraDemoForScenario(scenario.id);
 
   return (
     <>
@@ -85,6 +87,33 @@ export default function ScenarioPlaybook() {
             ))}
           </div>
         </div>
+        {astraDemo && !scenario.video ? (
+          <div className="scenario-bridge-card scenario-demo">
+            <div className="scenario-bridge-head">
+              <Presentation size={16} />
+              <div>
+                <h2>Show it: {astraDemo.name} demo</h2>
+                <p>{astraDemo.summary}</p>
+              </div>
+            </div>
+            <a
+              className="scenario-demo-video scenario-demo-link clickable"
+              href={ASTRA_DEMOS_URL}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`Open the ${astraDemo.name} Astra demo in a new tab`}
+            >
+              <img src={resolveImage(scenario.image)} alt="" />
+              <span className="scenario-play-watermark">
+                <ExternalLink size={22} />
+              </span>
+            </a>
+            <a className="scenario-astra-cta" href={ASTRA_DEMOS_URL} target="_blank" rel="noreferrer">
+              Open the Astra demo <ExternalLink size={13} />
+            </a>
+            <p className="scenario-astra-note">Ready to show a customer. Synthetic data, not for deployment.</p>
+          </div>
+        ) : (
         <div className="scenario-bridge-card scenario-demo">
           <div className="scenario-bridge-head">
             <PlayCircle size={16} />
@@ -109,6 +138,7 @@ export default function ScenarioPlaybook() {
             {!scenario.video && <span className="scenario-demo-badge">Coming soon</span>}
           </div>
         </div>
+        )}
       </section>
 
       <VideoModal

@@ -1,33 +1,37 @@
-import { Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Infinity as InfinityIcon } from 'lucide-react';
+import { ASTRA_DEMOS_URL } from '../data/destinations';
 
 export default function HomeHeadline() {
   return (
     <section className="hero">
-      <div className="hero-eyebrow"><Sparkles size={14} /> The agentic production gap</div>
+      <div className="hero-eyebrow"><InfinityIcon size={14} /> Start here</div>
       <h1>
-        Stop shipping agent demos.
-        <span className="gradient-text"> Start running production agents.</span>
+        Build agents with GitHub Copilot.
+        <span className="gradient-text"> Run them on Microsoft Foundry.</span>
         <span className="sparkle" aria-hidden />
       </h1>
       <p className="lede">
-        Copilot made the pilot fast. The hard part is turning that pilot into a governed,
-        observable, evaluated system the business can trust and IT can evolve.
+        Agentic Loop is how Microsoft takes an agent from idea to production on Azure. You describe
+        what the agent should do; GitHub Copilot follows our playbooks and skills to write the agent,
+        its tools and the Azure infrastructure, then deploys it with <code>azd up</code>.
       </p>
-      <div className="hero-statements" aria-label="Problem and solution statement">
-        <div className="hero-statement problem">
-          <span className="hero-statement-kicker">Problem</span>
-          <h2>Pilots are cheap. Ungoverned production is expensive.</h2>
+      <div className="hero-statements" aria-label="What Agentic Loop is and is not">
+        <div className="hero-statement solution">
+          <span className="hero-statement-kicker">What it is</span>
+          <h2>A repeatable way to build your own agent.</h2>
           <p>
-            Agents either stay trapped in developer-led experiments, or spread through the business
-            faster than security, identity, evals, and cost controls can keep up.
+            Playbooks, skills and a reference architecture for Microsoft Foundry and Azure. You end up
+            with code you own, deployed in your tenant, with evaluation and observability built in.
           </p>
         </div>
-        <div className="hero-statement solution">
-          <span className="hero-statement-kicker">Solution</span>
-          <h2>Standardize the path from idea to pilot to production.</h2>
+        <div className="hero-statement problem">
+          <span className="hero-statement-kicker">What it is not</span>
+          <h2>A demo you click through.</h2>
           <p>
-            Agentic Loop combines GitHub Copilot SDK for execution, SKILLs for specialization,
-            and Microsoft Foundry for governed runtime, models, evals, and measurable scale.
+            To show a customer something today, use the{' '}
+            <a href={ASTRA_DEMOS_URL} target="_blank" rel="noreferrer">Astra industry demos</a>. To start
+            from a working, production-shaped app, use <Link to="/reference/kratos">Kratos</Link>.
           </p>
         </div>
       </div>
