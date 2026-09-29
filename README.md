@@ -75,6 +75,8 @@ The deployed solution then enters an outer production loop: observe, evaluate, l
 
 The Launchpad and industry-scenario paths converge on the same playbook-driven workflow. A **scenario** answers *what outcome are we building?* A **playbook** answers *how do we implement a reusable part of it?*
 
+The homepage also features [GPT-6 Astra on Azure](https://astra-demo.icyground-ce9cbed9.westeurope.azurecontainerapps.io/), a separate demo library for relationship management, adaptive lending, and supply chain built with Microsoft Foundry. The demos use synthetic business data; the link opens in a new tab so visitors can keep their place in Agentic Loop.
+
 ## Use the build loop
 
 Install the Agentic Loop skill into the project you want GitHub Copilot to build:
