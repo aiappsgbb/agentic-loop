@@ -65,15 +65,17 @@ The inner development loop is:
 
 The deployed solution then enters an outer production loop: observe, evaluate, learn, improve, and redeploy.
 
-## Three ways to start
+## Showcase → Build → Productionise
 
-| Path | Use it when | Outcome |
-| --- | --- | --- |
-| **Kratos** | You want to experience a production-shaped reference implementation first. | A ready-to-use demonstration of agents, personas, and task skills. |
-| **Agentic Launchpad** | You already have an idea, process, or problem to solve. | A Copilot-ready package of requirements, skills, playbooks, architecture, and deployment guidance. |
-| **Industry scenarios** | You want to begin with a proven vertical use case. | A scenario-seeded package that can be adapted to the customer's requirements. |
+The site routes every visitor to one of three stages:
 
-The Launchpad and industry-scenario paths converge on the same playbook-driven workflow. A **scenario** answers *what outcome are we building?* A **playbook** answers *how do we implement a reusable part of it?*
+| Stage | For | Start with | Outcome |
+| --- | --- | --- | --- |
+| **01 Showcase** | Sellers (SSP / AE) | **Astra industry demos**, Kratos personas | Show a customer a working agent today. Demos run on synthetic data and are not for deployment. |
+| **02 Build** | Solution engineers, builders | **Getting started**, Agentic Launchpad, industry scenarios, playbooks | Build the customer's agent with GitHub Copilot on Foundry, with code you own. |
+| **03 Productionise** | Customers, delivery teams, architects | **Kratos**, Idea to production (Threadlight), governance and evaluation playbooks | Run it in the customer tenant with identity, governance, evals, red-teaming and observability. |
+
+Within Build, the Launchpad and industry-scenario paths converge on the same playbook-driven workflow. A **scenario** answers *what outcome are we building?* A **playbook** answers *how do we implement a reusable part of it?*
 
 ## Use the build loop
 

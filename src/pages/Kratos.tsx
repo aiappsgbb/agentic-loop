@@ -142,7 +142,8 @@ export default function Kratos() {
         <div className="section-eyebrow">Ready to build your own?</div>
         <h2>From experiencing to building</h2>
         <p className="lede">
-          Kratos is the <em>experience</em> lane — try the loop live, no setup. When you're ready to build your own version, take one of the three on-ramps.
+          Kratos is two things: a live app you can try right now, and a production-shaped starting point you can fork
+          (Entra sign-in, Cosmos DB, tracing, one-command <code>azd up</code>). To build your own version instead, take one of these on-ramps.
         </p>
         <div className="kratos-next-grid">
           <Link to="/scenarios" className="kratos-next-card">
@@ -155,7 +156,7 @@ export default function Kratos() {
             <h3>Learn a technique</h3>
             <p>Master grounding, orchestration, governance, or voice step by step. <span className="kratos-next-go">Playbooks <ArrowRight size={13} /></span></p>
           </Link>
-          <Link to="/#prompt" className="kratos-next-card">
+          <Link to="/build#prompt" className="kratos-next-card">
             <Sparkles size={18} />
             <h3>Build from a prompt</h3>
             <p>Describe a novel idea and let Copilot scaffold it from scratch. <span className="kratos-next-go">Home <ArrowRight size={13} /></span></p>

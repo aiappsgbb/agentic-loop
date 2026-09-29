@@ -54,7 +54,7 @@ flowchart TD
 - `GreenfieldBuilder` is now the **Production Launchpad** and produces deterministic package output instead of random skill suggestions.
 - `ScenarioPlaybook` now includes a **Build this scenario with Copilot** advisor card that reuses the same package modal.
 - `MakeItRealModal` now distinguishes Build SKILLs, Deployment SKILLs, playbooks, architecture checklist, Copilot prompt, and the canonical `azd up` hand-off.
-- `WhatToUseWhen` shows exactly three paths and frames Playbooks as supporting implementation guidance.
+- Home routes by stage (Showcase → Build → Productionise) via `StageLoop`; the stage model lives in `src/data/stages.ts` and each stage has a hub page (`StagePage`). The Launchpad (`GreenfieldBuilder`) now lives on `/build#prompt`.
 
 ## Deployment and AZD decision
 

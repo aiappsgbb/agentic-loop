@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   BookOpen, Rocket, ShieldCheck, GitBranch, Database, Eye, ArrowRight, Layers, Wrench, CloudSun,
   Search, X, Brain, Tag, Mic, Castle, Waypoints, Sparkles,
@@ -8,6 +8,13 @@ import { playbooks, playbookHasDeck, scenariosForPlaybook } from '../data/links'
 import { getBuildSkill, getRunSkill } from '../data/skills';
 import CapabilityPicker, { type PickerOption } from '../components/CapabilityPicker';
 import LensSwitcher from '../components/LensSwitcher';
+import { playbookStage, getStage, type StageId } from '../data/stages';
+
+const STAGE_FILTERS: { id: StageId | null; label: string }[] = [
+  { id: null, label: 'All stages' },
+  { id: 'build', label: 'Build' },
+  { id: 'productionise', label: 'Productionise' },
+];
 
 const ICONS: Record<string, typeof Rocket> = {
   Rocket, GitBranch, Database, ShieldCheck, Eye, BookOpen, CloudSun, Mic, Wrench, Castle, Waypoints,
@@ -22,6 +29,14 @@ function toOptions(values: string[]): PickerOption[] {
 }
 
 export default function Playbooks() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const stageParam = searchParams.get('stage');
+  const stage: StageId | null = stageParam === 'build' || stageParam === 'productionise' ? stageParam : null;
+  const setStage = (id: StageId | null) => {
+    const next = new URLSearchParams(searchParams);
+    if (id) next.set('stage', id); else next.delete('stage');
+    setSearchParams(next, { replace: true });
+  };
   const [query, setQuery] = useState('');
   const [levels, setLevels] = useState<string[]>([]);
   const [caps, setCaps] = useState<string[]>([]);
@@ -34,6 +49,7 @@ export default function Playbooks() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return playbooks.filter(p => {
+      if (stage && playbookStage(p.slug) !== stage) return false;
       if (q) {
         const hay = [
           p.name, p.summary, p.use_when,
@@ -47,10 +63,10 @@ export default function Playbooks() {
       if (blocks.length && !blocks.some(b => (p.building_blocks ?? []).includes(b))) return false;
       return true;
     });
-  }, [query, levels, caps, blocks]);
+  }, [query, levels, caps, blocks, stage]);
 
-  const activeCount = levels.length + caps.length + blocks.length + (query.trim() ? 1 : 0);
-  const clearAll = () => { setQuery(''); setLevels([]); setCaps([]); setBlocks([]); };
+  const activeCount = levels.length + caps.length + blocks.length + (query.trim() ? 1 : 0) + (stage ? 1 : 0);
+  const clearAll = () => { setQuery(''); setLevels([]); setCaps([]); setBlocks([]); setStage(null); };
 
   return (
     <>
@@ -59,7 +75,24 @@ export default function Playbooks() {
         <h1>Start from an architecture pattern.</h1>
         <p className="lede">
           Pick the pattern your solution needs, such as grounding, multi-agent orchestration, governance, evaluation or voice, then follow a step-by-step guide to building it on Azure.
+          <strong> Build</strong> playbooks get a working agent; <strong>Productionise</strong> playbooks make it safe to run.
         </p>
+      </div>
+
+      <div className="stage-filter" role="tablist" aria-label="Filter by stage">
+        {STAGE_FILTERS.map(f => (
+          <button
+            key={f.label}
+            type="button"
+            role="tab"
+            aria-selected={stage === f.id}
+            className={`stage-filter-pill ${f.id ? `stage-${f.id}` : ''} ${stage === f.id ? 'active' : ''}`}
+            onClick={() => setStage(f.id)}
+          >
+            {f.label}
+            <span className="facet-count">{f.id ? playbooks.filter(p => playbookStage(p.slug) === f.id).length : playbooks.length}</span>
+          </button>
+        ))}
       </div>
 
       <div className="playbook-filters">
@@ -151,6 +184,7 @@ export default function Playbooks() {
                 </div>
               </div>
               <div className="meta">
+                <span className={`stage-pill stage-${playbookStage(p.slug)}`}>{getStage(playbookStage(p.slug)).name}</span>
                 {p.accelerator && (
                   <span className="playbook-accelerator"><Sparkles size={11} /> Accelerator</span>
                 )}

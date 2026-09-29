@@ -16,6 +16,7 @@ const PlaybookPage = lazy(() => import('./pages/PlaybookPage'));
 const SkillsCatalog = lazy(() => import('./pages/SkillsCatalog'));
 const SkillDetail = lazy(() => import('./pages/SkillDetail'));
 const Kratos = lazy(() => import('./pages/Kratos'));
+const StagePage = lazy(() => import('./pages/StagePage'));
 const AgenticLoopConcept = lazy(() => import('./pages/concepts/AgenticLoop'));
 const Agents = lazy(() => import('./pages/concepts/Agents'));
 const Skills = lazy(() => import('./pages/concepts/Skills'));
@@ -37,6 +38,10 @@ createRoot(document.getElementById('root')!).render(
         <Routes>
           <Route path="/" element={<App />}>
             <Route index element={<Home />} />
+            <Route path="showcase" element={lazyRoute(<StagePage key="showcase" id="showcase" />)} />
+            <Route path="build" element={lazyRoute(<StagePage key="build" id="build" />)} />
+            <Route path="productionise" element={lazyRoute(<StagePage key="productionise" id="productionise" />)} />
+            <Route path="productionize" element={<Navigate to="/productionise" replace />} />
             <Route path="scenarios" element={lazyRoute(<Scenarios />)} />
             <Route path="scenarios/:id" element={lazyRoute(<ScenarioPlaybook />)} />
             <Route path="playbooks" element={lazyRoute(<Playbooks />)} />

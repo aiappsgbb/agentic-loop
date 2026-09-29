@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom';
 import {
   Search, ChevronLeft, ChevronRight, ArrowRight, ExternalLink,
   LayoutGrid, Rows3, X, Video, Play, Sparkles, Boxes,
-  Building2, Brain, Workflow, Rocket, type LucideIcon,
+  Building2, Brain, Workflow, Rocket, Presentation, type LucideIcon,
 } from 'lucide-react';
 import scenarios from '../data/scenarios.json';
 import { asset } from '../data/asset';
+import { astraDemoForScenario } from '../data/destinations';
 import type { Scenario } from '../data/links';
 import { playbooksForScenario } from '../data/links';
 import CapabilityPicker, { type PickerOption } from './CapabilityPicker';
@@ -14,6 +15,11 @@ import VideoModal from './VideoModal';
 
 function resolveImage(src: string) {
   return asset(src);
+}
+
+/** A scenario has a demo when it ships a recorded video or a live Astra demo. */
+function hasDemo(s: Scenario) {
+  return Boolean(s.video || astraDemoForScenario(s.id));
 }
 
 function prettifySkill(slug: string) {
@@ -164,6 +170,9 @@ function ScenarioCard({ s, onPlayClick }: { s: Scenario; onPlayClick?: (scenario
       <div className="scenario-img">
         <span className="scenario-industry">{s.industry}</span>
         {s.video && <span className="scenario-video-badge"><Video size={12} /> Demo</span>}
+        {!s.video && astraDemoForScenario(s.id) && (
+          <span className="scenario-video-badge"><Presentation size={12} /> Astra demo</span>
+        )}
         <img src={resolveImage(s.image)} alt={s.name} loading="lazy" />
         {s.video && (
           <span 
@@ -215,6 +224,9 @@ function ScenarioRow({ s, onPlayClick }: { s: Scenario; onPlayClick?: (scenario:
       <div className="scenario-row-img">
         <img src={resolveImage(s.image)} alt={s.name} loading="lazy" />
         {s.video && <span className="scenario-video-badge"><Video size={11} /></span>}
+        {!s.video && astraDemoForScenario(s.id) && (
+          <span className="scenario-video-badge" title="Astra demo"><Presentation size={11} /></span>
+        )}
         {s.video && (
           <span 
             className="scenario-play-watermark"
@@ -294,7 +306,7 @@ function ScenariosBrowse({ data }: { data: Scenario[] }) {
     if (facets.capabilities.length && !(s.capabilities ?? []).some(t => facets.capabilities.includes(t))) return false;
     if (facets.patterns.length && !(s.patterns ?? []).some(t => facets.patterns.includes(t))) return false;
     if (facets.runSkills.length && !(s.runSkills ?? []).some(t => facets.runSkills.includes(t))) return false;
-    if (hasVideo && !s.video) return false;
+    if (hasVideo && !hasDemo(s)) return false;
     return true;
   }), [data, query, facets, hasVideo]);
 
@@ -320,7 +332,7 @@ function ScenariosBrowse({ data }: { data: Scenario[] }) {
             aria-pressed={hasVideo}
           >
             <Video size={14} /> Demo available
-            <span className="facet-count">{data.filter(s => s.video).length}</span>
+            <span className="facet-count">{data.filter(hasDemo).length}</span>
           </button>
           <div className="view-toggle" role="tablist" aria-label="View">
             <button
