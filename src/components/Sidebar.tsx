@@ -2,11 +2,12 @@ import { NavLink, Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import {
   Home, BriefcaseBusiness, BookOpen, Sparkles, Bot, Wrench, Workflow,
-  ChevronRight, PanelLeftClose, PanelLeft, Sun, Moon, Monitor, Infinity as InfinityIcon, Library, Cpu, Lightbulb, DraftingCompass, Rocket, Boxes
+  ChevronRight, PanelLeftClose, PanelLeft, Sun, Moon, Monitor, Infinity as InfinityIcon, Library, Cpu, Lightbulb, DraftingCompass, Rocket, Boxes, Orbit
 } from 'lucide-react';
 import { type ThemePref } from './ThemeContext';
 import { useTheme } from './useTheme';
 import { asset } from '../data/asset';
+import { getAstraUrl } from '../data/astra';
 
 interface Props { collapsed: boolean; onToggle: () => void; }
 
@@ -18,7 +19,7 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
   const [platformOpen, setPlatformOpen] = useState(true);
   const conceptsExpanded = conceptsOpen || conceptsActive;
   const platformExpanded = platformOpen || platformActive;
-  const { pref, setPref } = useTheme();
+  const { pref, resolved, setPref } = useTheme();
 
   const themeOptions: { value: ThemePref; icon: typeof Sun; label: string }[] = [
     { value: 'light', icon: Sun, label: 'Light' },
@@ -43,6 +44,15 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
           <span className="nav-label">Kratos</span>
           <span className="nav-badge">Live</span>
         </NavLink>
+        <a
+          href={getAstraUrl(resolved)}
+          className="nav-item"
+          aria-label="GPT-6 Astra"
+          title="GPT-6 Astra"
+        >
+          <Orbit className="icon" size={18} aria-hidden="true" />
+          <span className="nav-label">GPT-6 Astra</span>
+        </a>
 
         <div className="nav-section-title">Build &amp; Run</div>
         <NavLink to="/scenarios" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>

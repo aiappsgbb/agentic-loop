@@ -75,6 +75,8 @@ The deployed solution then enters an outer production loop: observe, evaluate, l
 
 The Launchpad and industry-scenario paths converge on the same playbook-driven workflow. A **scenario** answers *what outcome are we building?* A **playbook** answers *how do we implement a reusable part of it?*
 
+The homepage and sidebar also feature GPT-6 Astra on Azure, a demo library for relationship management, adaptive lending, and supply chain built with Microsoft Foundry and synthetic business data. Both entry points use the same-tab `/astra/` Front Door mount and carry the site's light/dark theme. Astra provides a return link to Agentic Loop. The GitHub Pages copy links to the canonical Front Door mount because Pages cannot proxy another application. **Release prerequisite:** deploy the coordinated Astra changes and Front Door add-on before publishing these links; see [the integration and release contract](infra/README.md#astra-isolated-add-on-to-the-existing-front-door). The [standalone demo](https://astra-demo.icyground-ce9cbed9.westeurope.azurecontainerapps.io/) remains supported.
+
 ## Use the build loop
 
 Install the Agentic Loop skill into the project you want GitHub Copilot to build:
