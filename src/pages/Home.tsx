@@ -1,15 +1,15 @@
 import HomeHeadline from '../components/HomeHeadline';
-import WhatToUseWhen from '../components/WhatToUseWhen';
+import StageLoop from '../components/StageLoop';
+import StageCompare from '../components/StageCompare';
 import AgenticBackbone from '../components/AgenticBackbone';
-import GreenfieldBuilder from '../components/GreenfieldBuilder';
 
 export default function Home() {
   return (
     <>
       <HomeHeadline />
-      <WhatToUseWhen />
+      <StageLoop />
+      <StageCompare />
       <AgenticBackbone />
-      <GreenfieldBuilder />
     </>
   );
 }

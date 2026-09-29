@@ -156,7 +156,7 @@ export default function Kratos() {
             <h3>Learn a technique</h3>
             <p>Master grounding, orchestration, governance, or voice step by step. <span className="kratos-next-go">Playbooks <ArrowRight size={13} /></span></p>
           </Link>
-          <Link to="/#prompt" className="kratos-next-card">
+          <Link to="/build#prompt" className="kratos-next-card">
             <Sparkles size={18} />
             <h3>Build from a prompt</h3>
             <p>Describe a novel idea and let Copilot scaffold it from scratch. <span className="kratos-next-go">Home <ArrowRight size={13} /></span></p>

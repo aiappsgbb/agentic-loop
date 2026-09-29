@@ -54,21 +54,32 @@ Platform      (live demo)     Scenarios (what)
 Playbooks are not a fourth path. They are the reusable implementation techniques selected by Path 2 and Path 3.
 Each advisor-selected playbook carries two skill bindings: **Build SKILLs** for creating the agentic solution and **Deployment SKILLs** for making it deployable with `azd up`.
 
-## Start here — persona routing
+## Showcase → Build → Productionise
 
-The Home page is the single starting point. Its "Where to start" panel
-(`src/components/WhatToUseWhen.tsx`) routes by persona first:
+The site is the single starting point, and every destination belongs to one of three
+stages. The model lives in `src/data/stages.ts` (stages, destinations, and the
+playbook → stage mapping) and is rendered on Home (`StageLoop`, `StageCompare`),
+on one hub page per stage (`src/pages/StagePage.tsx`) and in the sidebar.
 
-| Persona | Goal | Primary destination | Secondary |
-| --- | --- | --- | --- |
-| Seller (SSP / AE) | Show a customer an agent today, no code | **Astra demos** (external) | Industry scenarios |
-| Solution engineer / builder | Build or customize, run a technical workshop | **Getting started playbook** | All playbooks, Launchpad (`#prompt`) |
-| Customer / delivery team | Start from something production-shaped | **Kratos** | Idea to production (Threadlight) |
+| Stage | Route | Audience | Outcome | Boundary |
+| --- | --- | --- | --- | --- |
+| **01 Showcase** | `/showcase` | Sellers (SSP / AE) | A customer conversation grounded in a live industry demo, no code | Astra demos run on synthetic data; they are for showing, not deploying |
+| **02 Build** | `/build` | Solution engineers, builders | A working agent on Foundry in the customer's subscription | Built for pilots and workshops; add Productionise controls before real users rely on it |
+| **03 Productionise** | `/productionise` (`/productionize` redirects) | Customers, delivery teams, architects | An agent in the customer tenant with identity, governance, evals, red-teaming and observability | Where production decisions live; Showcase demos never skip it |
 
-Below the cards, a collapsible comparison table answers "Astra demos vs playbooks vs
-Kratos vs Idea to production". Astra demos are **demos on synthetic data, never
-deployable**; that boundary is stated on Home, on the persona card and on scenario pages.
+Where each destination sits:
 
+- **Showcase** — Astra industry demos (external), Kratos personas, scenario demos.
+- **Build** — Getting started, Agentic Launchpad (`/build#prompt`), Industry scenarios,
+  Build playbooks (`/playbooks?stage=build`), Skills catalog.
+- **Productionise** — Kratos (fork the production-shaped app), Idea to production
+  (Threadlight), Citadel governance hub, Governance & safety baseline, Continuous
+  evaluation, Reference architecture.
+
+It is a loop: production telemetry and evals feed the next demo and the next build,
+so the Productionise page links back to Showcase.
+
+Playbooks carry a stage chip, and the Playbooks page filters by `?stage=build|productionise`.
 Destination URLs live in `src/data/destinations.ts`. The Astra demos URL can be
 overridden with `VITE_ASTRA_DEMOS_URL` (e.g. once it is mounted behind Front Door).
 
@@ -92,11 +103,12 @@ between *show it* (demo) and *build it* (scenario prompt + playbooks).
 
 ## Navigation grouping
 
-The sidebar groups items by intent to mirror the spine:
+The sidebar mirrors the three stages:
 
-- **Start here** — Home, Kratos, Astra demos (external)
-- **Build** — Scenarios, Playbooks, Skills catalog
-- **Learn** — Concepts, Platform
+- **Home** — the stage overview
+- **Stages** — Showcase (Astra demos ↗), Build (Industry scenarios, Playbooks, Skills catalog),
+  Productionise (Kratos, Idea to production, Reference architecture)
+- **Learn** — Concepts, Platform (Foundry, Azure)
 
 ## How Scenario ⇄ Playbook links are derived
 
