@@ -1,39 +1,6 @@
-import scenariosData from './scenarios.json';
-import playbooksData from './playbooks.json';
-
-export interface Scenario {
-  id: string;
-  name: string;
-  industry: string;
-  description: string;
-  image: string;
-  tags: string[];
-  prompt?: string;
-  capabilities?: string[];
-  buildingBlocks?: string[];
-  patterns?: string[];
-  runSkills?: string[];
-  video?: string;
-  link?: string;
-}
-
-export interface Playbook {
-  slug: string;
-  name: string;
-  icon: string;
-  level: string;
-  accelerator?: boolean;
-  summary: string;
-  use_when: string;
-  patterns: string[];
-  capabilities?: string[];
-  building_blocks?: string[];
-  buildSkills?: string[];
-  runSkills?: string[];
-}
-
-export const scenarios = scenariosData as Scenario[];
-export const playbooks = playbooksData as Playbook[];
+import { scenarios, type Playbook, type Scenario } from './catalog';
+import { recommendWorkshop } from './workshop';
+export { scenarios, playbooks, type Playbook, type Scenario } from './catalog';
 
 /** Slugs of playbooks that ship a rendered README (and are therefore clickable). */
 const PLAYBOOK_DECKS = new Set(
@@ -53,20 +20,13 @@ export function playbookMatchTags(p: Playbook): string[] {
     .filter(t => t !== '*');
 }
 
-/** Playbooks whose tags intersect a scenario's tags (wildcard playbooks always included). */
+/** Scenario guidance uses the same evidence/coverage model as the workshop. */
 export function playbooksForScenario(scenario: Scenario): Playbook[] {
-  const tags = new Set(scenario.tags);
-  return playbooks.filter(p =>
-    p.patterns.includes('*') || playbookMatchTags(p).some(t => tags.has(t))
-  );
+  return recommendWorkshop(`${scenario.description} ${scenario.prompt ?? ''}`).guides.map(g => g.playbook);
 }
 
-/** Scenarios that exercise a given playbook (wildcard playbooks match all). */
+/** Backlinks reflect documented suitability, not wildcard eligibility. */
 export function scenariosForPlaybook(playbook: Playbook, limit?: number): Scenario[] {
-  if (playbook.patterns.includes('*')) {
-    return typeof limit === 'number' ? scenarios.slice(0, limit) : scenarios;
-  }
-  const tags = new Set(playbookMatchTags(playbook));
-  const matches = scenarios.filter(s => s.tags.some(t => tags.has(t)));
+  const matches = scenarios.filter(s => playbooksForScenario(s).some(p => p.slug === playbook.slug));
   return typeof limit === 'number' ? matches.slice(0, limit) : matches;
 }

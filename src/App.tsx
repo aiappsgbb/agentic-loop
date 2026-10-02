@@ -7,6 +7,7 @@ const BASE_TITLE = 'Agentic Loop';
 const TITLES: Record<string, string> = {
   '/': 'Agentic Loop · Build with Copilot, run with Foundry',
   '/scenarios': 'Industry scenarios',
+  '/workshop': 'Start a technical workshop',
   '/playbooks': 'Playbooks',
   '/skills': 'Skills catalog',
   '/kratos': 'Kratos',
@@ -26,11 +27,17 @@ export default function App() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const [previousPath, setPreviousPath] = useState(location.pathname);
+  if (previousPath !== location.pathname) {
+    setPreviousPath(location.pathname);
+    setMobileOpen(false);
+  }
 
   // Scroll to top on every navigation.
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location.pathname]);
+    if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+    else window.scrollTo(0, 0);
+  }, [location.pathname, location.hash]);
 
   // Set a per-route document title for known static routes. Dynamic detail
   // pages set their own title via useEffect, so we skip unknown paths here.
@@ -39,11 +46,6 @@ export default function App() {
     if (title) {
       document.title = title === TITLES['/'] ? title : `${title} · ${BASE_TITLE}`;
     }
-  }, [location.pathname]);
-
-  // Close the mobile drawer whenever the route changes.
-  useEffect(() => {
-    setMobileOpen(false);
   }, [location.pathname]);
 
   return (

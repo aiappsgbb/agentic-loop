@@ -38,20 +38,24 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
           <Home className="icon" size={18} />
           <span className="nav-label">Home</span>
         </NavLink>
+        <div className="nav-section-title">Customer conversation</div>
+        <NavLink to="/workshop" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <Rocket className="icon" size={18} />
+          <span className="nav-label">Start a technical workshop</span>
+        </NavLink>
+        <NavLink to="/scenarios" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <BriefcaseBusiness className="icon" size={18} />
+          <span className="nav-label">Show an industry demo</span>
+        </NavLink>
+        <div className="nav-section-title">Library &amp; expert access</div>
         <NavLink to="/reference/kratos" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <Rocket className="icon" size={18} />
           <span className="nav-label">Kratos</span>
           <span className="nav-badge">Live</span>
         </NavLink>
-
-        <div className="nav-section-title">Build &amp; Run</div>
-        <NavLink to="/scenarios" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-          <BriefcaseBusiness className="icon" size={18} />
-          <span className="nav-label">Industry scenarios</span>
-        </NavLink>
         <NavLink to="/playbooks" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <BookOpen className="icon" size={18} />
-          <span className="nav-label">Capability playbooks</span>
+          <span className="nav-label">Playbook library</span>
         </NavLink>
         <NavLink to="/skills" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <Library className="icon" size={18} />

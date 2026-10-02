@@ -8,6 +8,7 @@ import { playbooks, playbookHasDeck, scenariosForPlaybook } from '../data/links'
 import { getBuildSkill, getRunSkill } from '../data/skills';
 import CapabilityPicker, { type PickerOption } from '../components/CapabilityPicker';
 import LensSwitcher from '../components/LensSwitcher';
+import { ROLE_LABELS } from '../data/catalog';
 
 const ICONS: Record<string, typeof Rocket> = {
   Rocket, GitBranch, Database, ShieldCheck, Eye, BookOpen, CloudSun, Mic, Wrench, Castle, Waypoints,
@@ -26,6 +27,8 @@ export default function Playbooks() {
   const [levels, setLevels] = useState<string[]>([]);
   const [caps, setCaps] = useState<string[]>([]);
   const [blocks, setBlocks] = useState<string[]>([]);
+  const [roles, setRoles] = useState<string[]>([]);
+  const roleOptions = useMemo(() => toOptions(Object.values(ROLE_LABELS)), []);
 
   const levelOptions = useMemo(() => toOptions(playbooks.map(p => p.level)), []);
   const capOptions = useMemo(() => toOptions(playbooks.flatMap(p => p.capabilities ?? [])), []);
@@ -43,22 +46,24 @@ export default function Playbooks() {
         if (!hay.includes(q)) return false;
       }
       if (levels.length && !levels.includes(p.level)) return false;
+      if (roles.length && !roles.includes(ROLE_LABELS[p.role])) return false;
       if (caps.length && !caps.some(c => (p.capabilities ?? []).includes(c))) return false;
       if (blocks.length && !blocks.some(b => (p.building_blocks ?? []).includes(b))) return false;
       return true;
     });
-  }, [query, levels, caps, blocks]);
+  }, [query, levels, caps, blocks, roles]);
 
-  const activeCount = levels.length + caps.length + blocks.length + (query.trim() ? 1 : 0);
-  const clearAll = () => { setQuery(''); setLevels([]); setCaps([]); setBlocks([]); };
+  const activeCount = levels.length + caps.length + blocks.length + roles.length + (query.trim() ? 1 : 0);
+  const clearAll = () => { setQuery(''); setLevels([]); setCaps([]); setBlocks([]); setRoles([]); };
 
   return (
     <>
       <div className="page-head">
         <LensSwitcher />
-        <h1>Start from an architecture pattern.</h1>
+        <h1>Reuse maintained playbooks.</h1>
         <p className="lede">
-          Pick the pattern your solution needs, such as grounding, multi-agent orchestration, governance, evaluation or voice, then follow a step-by-step guide to building it on Azure.
+          Practice exercises, capability guides, delivery workflows and governance infrastructure serve different roles.
+          Start from the customer's brief in a <Link to="/workshop">technical workshop</Link>, or read the guide you need directly. Skill level is not a required journey stage.
         </p>
       </div>
 
@@ -68,6 +73,7 @@ export default function Playbooks() {
           <input placeholder="Search playbooks" aria-label="Search playbooks" value={query} onChange={e => setQuery(e.target.value)} />
         </div>
         <CapabilityPicker label="Level" options={levelOptions} selected={levels} onChange={setLevels} triggerIcon={Layers} />
+        <CapabilityPicker label="Role" options={roleOptions} selected={roles} onChange={setRoles} triggerIcon={BookOpen} />
         <CapabilityPicker label="Capabilities" options={capOptions} selected={caps} onChange={setCaps} triggerIcon={Brain} />
         <CapabilityPicker label="Building blocks" options={blockOptions} selected={blocks} onChange={setBlocks} triggerIcon={ShieldCheck} />
         {activeCount > 0 && (
@@ -155,8 +161,8 @@ export default function Playbooks() {
                   <span className="playbook-accelerator"><Sparkles size={11} /> Accelerator</span>
                 )}
                 <span className="difficulty">{p.level}</span>
-                <span className="playbook-kind">Guide</span>
-                {interactive && <span className="playbook-open">Open <ArrowRight size={12} /></span>}
+                <span className="playbook-kind">{ROLE_LABELS[p.role]}</span>
+                {interactive && <span className="playbook-open">{p.role === 'onboarding' ? 'Practise this example' : 'Read the guide'} <ArrowRight size={12} /></span>}
               </div>
             </>
           );

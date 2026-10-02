@@ -1,5 +1,22 @@
 # Agentic Loop Portal — Workshop Flow
 
+## Current customer-workshop flow
+
+Use **Start a technical workshop** (`/workshop`) for a customer build conversation and **Show an industry demo** (`/scenarios`) for showcase. The workshop reuses Launchpad and the existing build hand-off.
+
+1. Capture the customer's business outcome and users, or select an editable industry example. Keep approved sample data ready. Technical selectors are optional.
+2. Prepare the workshop. Review documented coverage, roles, reasons, prerequisites and exclusions. Strong matches reuse guidance without AI. Partial/no-match cases preserve covered guidance and optionally use the local Copilot SDK for gaps only.
+3. Edit MVP scope, exclusions, constraints/dependencies, assumptions, testable criteria and required evidence. Review proposed capabilities, blocks and provisional patterns. Record explicit question/gap resolutions; do not treat missing catalog coverage as infeasibility.
+4. Approve the structured specification. Any upstream edit invalidates approval. Drafts survive navigation in memory, not refresh.
+5. Open the existing hand-off, prepare the local environment and review the exact approved spec. Copy the complete prompt. Run the existing workflow manually with Specify/Plan review and permission checkpoints.
+6. Verify MVP behavior, access boundaries, safe data handling and failure paths. Capture evidence and remaining production work. Optional development deployment does not certify production readiness.
+
+The portal cannot verify local CLI/Azure readiness and does not provision or execute commands. Prepare subscription scopes, resource/RBAC rights, model availability and approved data before a live customer session. Public static hosting has no AI runtime; use explicit manual review or the [local SDK companion](workshop-runtime.md).
+
+## Historical framing (not the implemented hand-off)
+
+The following earlier discussion records unresolved persona/export concepts. It is not a requirement to make Kratos the workshop execution target or a claim that its proposed production hand-offs are implemented.
+
 > The end-to-end flow to walk on screen using **only the Agentic Loop web portal**.
 > ⚠ markers flag the steps that still depend on an **outstanding alignment/decision**.
 

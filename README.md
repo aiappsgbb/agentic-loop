@@ -1,6 +1,6 @@
 # Agentic Loop
 
-<p align="center">
+<p align="left">
   <a href="https://aka.ms/agentic-loop"><strong>✨ Explore the live Agentic Loop →</strong></a>
 </p>
 
@@ -65,15 +65,29 @@ The inner development loop is:
 
 The deployed solution then enters an outer production loop: observe, evaluate, learn, improve, and redeploy.
 
-## Three ways to start
+## Start a customer conversation
 
 | Path | Use it when | Outcome |
 | --- | --- | --- |
-| **Kratos** | You want to experience a production-shaped reference implementation first. | A ready-to-use demonstration of agents, personas, and task skills. |
-| **Agentic Launchpad** | You already have an idea, process, or problem to solve. | A Copilot-ready package of requirements, skills, playbooks, architecture, and deployment guidance. |
-| **Industry scenarios** | You want to begin with a proven vertical use case. | A scenario-seeded package that can be adapted to the customer's requirements. |
+| **Start a technical workshop** (`/workshop`) | Bring a customer brief, optionally seeded from an industry example. | Review coverage, adapt maintained guidance, approve editable MVP scope/specification, then copy the complete build prompt. |
+| **Show an industry demo** (`/scenarios`) | Explore existing examples without setup. | Showcase available industry demos; Kratos stays directly accessible. |
 
-The Launchpad and industry-scenario paths converge on the same playbook-driven workflow. A **scenario** answers *what outcome are we building?* A **playbook** answers *how do we implement a reusable part of it?*
+The workshop recomposes the existing Agentic Launchpad. Old playbook/scenario routes and the home `#prompt` anchor remain usable. The library separates practice exercises, capability guides, delivery workflows, operations and shared infrastructure. A playbook is reusable guidance, not prerequisite homework.
+
+**Reuse first; generate only what is missing.** Strong documented coverage does not call AI gap generation. Partial coverage preserves existing guides and analyzes only gaps. No packaged match is not technical infeasibility. SDK suggestions, uncertainties and candidate patterns require review. Editing upstream inputs invalidates scope approval. Essential identity, safe data handling and scenario verification remain in every MVP; a generated or deployed workshop pilot is not production-ready.
+
+## Run the portal and optional local AI companion
+
+```bash
+npm ci
+npm run dev
+```
+
+The static catalog and manually reviewed workshop work without AI. Gap/no-match interpretation uses the **real server-side GitHub Copilot SDK**, never a browser SDK or model-call substitute. For local analysis, sign in with your existing Copilot CLI credentials, run `npm run workshop:service`, then run `VITE_WORKSHOP_AI=local npm run dev`. The companion binds only to `127.0.0.1:4318`; explicit local origins and deny-all tool/session restrictions apply.
+
+See [local SDK setup, contracts and limitations](docs/workshop-runtime.md), [the workshop facilitator guide](docs/workshop-guide.md), and [the preserved approved implementation plan](docs/customer-workshop-plan.md). `npm run workshop:smoke` uses non-sensitive fictional data against the live SDK. Public GitHub Pages/Static Web Apps remain static: they cannot launch the CLI or silently call localhost. A public AI service would need a separately approved hosting, authentication and tenancy design.
+
+Workshop drafts are held only in browser memory. Navigation preserves them; refreshing closes the draft. Customer text is not logged by the adapter or put in browser storage by this feature. Only submit approved workshop data to the signed-in Copilot service.
 
 ## Use the build loop
 

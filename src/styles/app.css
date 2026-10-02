@@ -5117,3 +5117,32 @@ select:focus-visible,
 }
 .persona-builder-cta:hover:not(:disabled) { transform: translateY(-1px); }
 .persona-builder-cta:disabled { opacity: 0.45; cursor: not-allowed; }
+.workshop-entry-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.workshop-entry-grid .wtuw-path-card:first-child { border-color: var(--accent); background: var(--gradient-soft); }
+.workshop-start, .workshop-library-context { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin: 18px 0; }
+.workshop-start label { display: grid; gap: 8px; min-width: 0; max-width: 100%; }
+.workshop-start select { max-width: 100%; }
+.workshop-technical { margin: 20px 0; }
+.workshop-technical summary, .workshop-plan summary { cursor: pointer; padding: 10px 0; }
+.workshop-plan { display: grid; gap: 20px; margin: 22px 0; text-align: left; }
+.workshop-plan .skills-card { min-width: 0; }
+.workshop-guide { margin: 18px 0; padding: 14px 0; border-top: 1px solid var(--border); }
+.workshop-guide label { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.workshop-guide p, .workshop-gaps p { overflow-wrap: anywhere; }
+.workshop-check { display: block; margin: 12px 0; }
+.workshop-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 18px 0; }
+.workshop-field, .workshop-fields label { display: grid; gap: 8px; font-weight: 600; }
+.workshop-fields textarea, .workshop-fields select, .workshop-guide input:not([type=checkbox]), .workshop-start select {
+  width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text); background: var(--surface); font: inherit;
+}
+.workshop-fields textarea { min-height: 90px; resize: vertical; font-weight: 400; }
+.workshop-warning { color: var(--text); border-left: 3px solid #d97706; padding: 10px 14px; background: var(--surface); }
+.workshop-spec { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 450px; overflow: auto; padding: 14px; font-size: 12px; background: var(--surface); border-radius: 10px; }
+.prompt-box > label { display: block; padding: 14px 18px 0; font-weight: 600; }
+.workshop-plan :focus-visible, .workshop-start :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (max-width: 760px) {
+  .workshop-entry-grid, .workshop-fields { grid-template-columns: 1fr; }
+  .workshop-start { display: grid; }
+  .workshop-plan .prompt-actions { flex-wrap: wrap; }
+}

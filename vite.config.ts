@@ -1,4 +1,4 @@
-import { defineConfig, type Plugin } from 'vite'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // Rewrite SPA deep links that end in `.md` (e.g. /skills/<name>/SKILL.md) to
@@ -19,8 +19,21 @@ function mdSpaFallback(): Plugin {
 }
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   // Served from https://aiappsgbb.github.io/agentic-loop/ on GitHub Pages.
   base: '/agentic-loop/',
   plugins: [react(), mdSpaFallback()],
-})
+  server: {
+    host: '127.0.0.1',
+    port: 5173,
+    strictPort: true,
+    proxy: loadEnv(mode, process.cwd(), '').VITE_WORKSHOP_AI === 'local' || process.env.VITE_WORKSHOP_AI === 'local'
+      ? {
+        '/agentic-loop/api/workshop': {
+          target: 'http://127.0.0.1:4318',
+          rewrite: path => path.replace('/agentic-loop/api/workshop', '/api/workshop'),
+          changeOrigin: true,
+        },
+      } : undefined,
+  },
+}))
