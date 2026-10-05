@@ -10,6 +10,7 @@ from playwright.sync_api import sync_playwright, expect
 BASE = os.environ.get("WORKSHOP_UI_URL", "http://127.0.0.1:5173/agentic-loop")
 STATIC = os.environ.get("WORKSHOP_STATIC_URL", "http://127.0.0.1:4173/agentic-loop")
 HR = "Employees need HR policy answers grounded in approved documents with citations."
+EXAMPLES = json.loads(Path("src/data/workshop-briefs.json").read_text())
 
 
 class WorkshopJourneys(unittest.TestCase):
@@ -61,10 +62,57 @@ class WorkshopJourneys(unittest.TestCase):
         self.assertEqual(self.page.locator("html").get_attribute("data-theme"), "dark")
         self.snapshot("home-dark.png")
         self.go()
+        brief = self.page.get_by_label("What should the customer be able to do?")
+        self.assertIn(brief.input_value(), EXAMPLES)
+        expect(self.page.get_by_role("button", name="Prepare workshop", exact=True)).to_be_enabled()
+        brief.fill("")
         expect(self.page.get_by_role("button", name="Prepare workshop", exact=True)).to_be_disabled()
-        expect(self.page.get_by_label("What should the customer be able to do?")).to_have_value("")
+        expect(brief).to_have_value("")
+        expect(brief).to_have_attribute("placeholder", "Enter the customer brief here...")
+        expect(self.page.get_by_label("Use an industry example")).to_have_count(0)
+        for theme in ["Light", "Dark"]:
+            self.page.get_by_role("button", name=theme, exact=True).click()
+            self.page.locator(".prompt-box > label").click()
+            expect(brief).to_be_focused()
+            style = brief.evaluate("""element => {
+                const style = getComputedStyle(element);
+                return {border: parseFloat(style.borderTopWidth), background: style.backgroundColor,
+                        height: element.getBoundingClientRect().height, resize: style.resize,
+                        outline: style.outlineStyle, font: style.fontFamily};
+            }""")
+            self.assertGreaterEqual(style["border"], 2)
+            self.assertNotEqual(style["background"], "rgba(0, 0, 0, 0)")
+            self.assertGreaterEqual(style["height"], 160)
+            self.assertEqual(style["resize"], "vertical")
+            self.assertEqual(style["outline"], "solid")
+            self.assertIn("Inter", style["font"])
+            self.snapshot("brief-" + theme.lower() + ".png")
         self.go("/#prompt")
         self.assertGreater(self.page.evaluate("window.scrollY"), 0)
+
+    def test_random_sample_briefs_preserve_navigation_and_customer_edits(self):
+        for index, expected in enumerate(EXAMPLES):
+            page = self.context.new_page()
+            page.on("pageerror", lambda error: self.errors.append(str(error)))
+            try:
+                page.add_init_script(f"Math.random = () => {(index + 0.5) / len(EXAMPLES)}")
+                page.goto(BASE + "/workshop")
+                page.wait_for_load_state("networkidle")
+                brief = page.get_by_label("What should the customer be able to do?")
+                expect(brief).to_have_value(expected)
+                expect(page.get_by_text("Sample customer brief. Edit or replace it with your own.", exact=True)).to_be_visible()
+                for text in [expected, "My customer's editable brief"]:
+                    brief.fill(text)
+                    page.get_by_role("link", name="Playbook library", exact=True).click()
+                    page.get_by_role("link", name="Start a technical workshop", exact=True).click()
+                    expect(brief).to_have_value(text)
+                expect(page.get_by_text("Sample customer brief. Edit or replace it with your own.", exact=True)).to_have_count(0)
+                brief.fill("")
+                page.get_by_role("button", name="Light", exact=True).click()
+                expect(brief).to_have_value("")
+                expect(page.get_by_role("button", name="Prepare workshop", exact=True)).to_be_disabled()
+            finally:
+                page.close()
 
     def test_strong_reuse_scope_copy_and_stale_approval(self):
         calls = []
@@ -276,14 +324,15 @@ class WorkshopJourneys(unittest.TestCase):
         for label in ["Learn the workflow", "Capability guide", "Delivery workflow", "Governance and operations", "Shared infrastructure"]:
             self.assertGreater(self.page.get_by_text(label, exact=True).count(), 0)
         self.go()
-        self.page.get_by_label("Use an industry example").select_option(index=1)
-        self.assertNotEqual(self.page.get_by_label("What should the customer be able to do?").input_value(), "")
+        expect(self.page.get_by_label("Use an industry example")).to_have_count(0)
         self.page.get_by_role("button", name="Light", exact=True).click()
         self.assertEqual(self.page.locator("html").get_attribute("data-theme"), "light")
         self.context.close()
         self.context = self.browser.new_context(viewport={"width": 390, "height": 844})
         self.page = self.context.new_page()
         self.go()
+        expect(self.page.get_by_label("What should the customer be able to do?")).to_be_visible()
+        self.snapshot("mobile-brief.png")
         self.prepare(HR)
         self.scope()
         width = self.page.evaluate("document.documentElement.scrollWidth")

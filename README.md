@@ -87,7 +87,7 @@ The static catalog and manually reviewed workshop work without AI. Gap/no-match 
 
 See [local SDK setup, contracts and limitations](docs/workshop-runtime.md), [the workshop facilitator guide](docs/workshop-guide.md), and [the preserved approved implementation plan](docs/customer-workshop-plan.md). `npm run workshop:smoke` uses non-sensitive fictional data against the live SDK. Public GitHub Pages/Static Web Apps remain static: they cannot launch the CLI or silently call localhost. A public AI service would need a separately approved hosting, authentication and tenancy design.
 
-Workshop drafts are held only in browser memory. Navigation preserves them; refreshing closes the draft. Customer text is not logged by the adapter or put in browser storage by this feature. Only submit approved workshop data to the signed-in Copilot service.
+New customer workshops start with one of three randomly selected, editable sample briefs. Scenario links retain their own context. Workshop drafts are held only in browser memory. Navigation preserves them; refreshing starts a new sample draft. Customer text is not logged by the adapter or put in browser storage by this feature. Only submit approved workshop data to the signed-in Copilot service.
 
 ## Use the build loop
 

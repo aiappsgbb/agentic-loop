@@ -4,7 +4,7 @@
 
 Use **Start a technical workshop** (`/workshop`) for a customer build conversation and **Show an industry demo** (`/scenarios`) for showcase. The workshop reuses Launchpad and the existing build hand-off.
 
-1. Capture the customer's business outcome and users, or select an editable industry example. Keep approved sample data ready. Technical selectors are optional.
+1. Edit or replace the sample customer brief. Each fresh portal session randomly starts with one of three examples: HR policy answers, maintenance-system troubleshooting, or shared-room scheduling. The sample stays unchanged during navigation unless you edit it; clearing it leaves an empty field. Industry examples stay on the separate showcase route; a scenario's workshop link keeps its own editable context. Keep approved sample data ready. Technical selectors are optional.
 2. Prepare the workshop. Review documented coverage, roles, reasons, prerequisites and exclusions. Strong matches reuse guidance without AI. Partial/no-match cases preserve covered guidance and optionally use the local Copilot SDK for gaps only.
 3. Edit MVP scope, exclusions, constraints/dependencies, assumptions, testable criteria and required evidence. Review proposed capabilities, blocks and provisional patterns. Record explicit question/gap resolutions; do not treat missing catalog coverage as infeasibility.
 4. Approve the structured specification. Any upstream edit invalidates approval. Drafts survive navigation in memory, not refresh.

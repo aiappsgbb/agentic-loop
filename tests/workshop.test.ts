@@ -7,8 +7,22 @@ import {
   approvalIsCurrent, formatWorkshopSpec, canApproveSpec, type WorkshopSpec,
 } from '../src/data/workshop';
 import { buildAdvisorPackage, inferRequirementsFromSelections } from '../src/data/advisor';
+import workshopBriefs from '../src/data/workshop-briefs.json';
+import { newWorkshopDraft } from '../src/components/WorkshopContext';
 
 const hr = 'Employees need HR policy answers grounded in approved documents with citations.';
+test('three sample briefs cover reuse, gaps and a custom outcome without preapproving scope', () => {
+  assert.equal(workshopBriefs.length, 3);
+  assert.equal(new Set(workshopBriefs).size, 3);
+  assert.deepEqual(workshopBriefs.map(brief => recommendWorkshop(brief).state), ['strong', 'partial', 'none']);
+  for (const brief of workshopBriefs) {
+    assert.ok(brief.length < 3000);
+    const draft = newWorkshopDraft(brief);
+    assert.equal(draft.brief, brief);
+    assert.equal(draft.prepared, false);
+    assert.equal(draft.approved, null);
+  }
+});
 test('HR citations reuse maintained grounding, never onboarding or wildcard workflows', () => {
   const result = recommendWorkshop(hr);
   assert.equal(result.state, 'strong');

@@ -13,7 +13,8 @@ import {
   buildAdvisorPackage,
   inferRequirementsFromSelections,
 } from '../data/advisor';
-import { playbooks, scenarios, ROLE_LABELS, type Scenario } from '../data/catalog';
+import { playbooks, ROLE_LABELS, type Scenario } from '../data/catalog';
+import workshopBriefs from '../data/workshop-briefs.json';
 import {
   recommendWorkshop, formatWorkshopSpec, approvalIsCurrent, canApproveSpec,
   type WorkshopSpec,
@@ -199,24 +200,17 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
           {intro ?? 'Turn customer requirements into a tailored MVP or pilot. Reuse maintained guidance first; generate only what is missing. A workshop is not a production-readiness certification.'}
         </p>
       </div>
-      <div className="workshop-start">
-        <span>Starting point: Customer brief</span>
-        <label>Use an industry example
-          <select aria-label="Use an industry example" value="" onChange={event => {
-            const seed = scenarios.find(s => s.id === event.target.value);
-            if (seed) patch({ brief: seed.prompt ?? seed.description }, true);
-          }}>
-            <option value="">Choose an optional example</option>
-            {scenarios.map(s => <option key={s.id} value={s.id}>{s.industry}: {s.name}</option>)}
-          </select>
-        </label>
-      </div>
       <div className="prompt-shell">
         <div className="prompt-box">
           <label htmlFor={`brief-${key}`}>What should the customer be able to do?</label>
+          <p id={`brief-help-${key}`} className="prompt-help">
+            {key === 'customer' && workshopBriefs.includes(draft.brief)
+              ? 'Sample customer brief. Edit or replace it with your own.'
+              : 'Describe their goal, who will use it, and any constraints.'}
+          </p>
           <textarea
-            id={`brief-${key}`} maxLength={3000}
-            placeholder="Business problem, intended users, observable outcome and constraints"
+            id={`brief-${key}`} aria-describedby={`brief-help-${key}`} maxLength={3000}
+            placeholder="Enter the customer brief here..."
             value={draft.brief}
             onChange={e => patch({ brief: e.target.value }, true)}
           />
