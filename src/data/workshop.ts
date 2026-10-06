@@ -7,6 +7,9 @@ export const TAXONOMY = {
 } as const;
 export type SuggestionKind = keyof typeof TAXONOMY | 'requirement';
 export type CoverageState = 'strong' | 'partial' | 'none' | 'clarification' | 'unsupported';
+export function withRequiredCapabilities(ids: readonly string[]): string[] {
+  return [...new Set(['frontier-models', ...ids])];
+}
 export interface RequirementEvidence { id: string; label: string; evidence: string }
 export interface GuideRecommendation { playbook: Playbook; covers: string[]; reasons: string[] }
 export interface Coverage {

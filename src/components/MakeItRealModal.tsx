@@ -13,12 +13,12 @@ interface Props {
 }
 
 const STEPS = [
+  { id: 'loop', title: 'Your build prompt', icon: Sparkles },
   { id: 'prep', title: 'Prepare your environment', icon: Terminal },
   { id: 'project', title: 'Create your project', icon: FolderPlus },
   { id: 'review', title: 'Review approved spec', icon: Check },
   { id: 'skills', title: 'Choose skills', icon: Sparkles },
-  { id: 'loop', title: 'Run the build loop', icon: RefreshCw },
-  { id: 'operate', title: 'Review & operate', icon: Rocket },
+  { id: 'operate', title: 'Verify your pilot', icon: RefreshCw },
 ];
 
 export default function MakeItRealModal({ open, onClose, advisorPackage }: Props) {
@@ -88,34 +88,34 @@ function MakeItRealDialog({ open, onClose, advisorPackage }: Props & { advisorPa
   const specPrompt = `${advisorPackage.copilotPrompt}${runSkillsLine}`;
 
   return createPortal(
-    <div className="modal-backdrop" onClick={closeModal}>
-      <div className="modal" ref={modalRef} tabIndex={-1} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="make-it-real-title">
+    <div className="modal-backdrop build-prompt-backdrop" onClick={closeModal}>
+      <div className="modal build-prompt-modal" ref={modalRef} tabIndex={-1} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="make-it-real-title">
         <header className="modal-head">
           <div>
             <div className="modal-eyebrow">Customer workshop · Agentic Launchpad</div>
-            <h2 id="make-it-real-title">Craft prompt and build hand-off</h2>
-            <p>Review the approved scope, prepare local tools, then run the existing loop with review checkpoints. Optional development deployment is not a production rollout.</p>
+            <h2 id="make-it-real-title">Your build prompt</h2>
+            <p>Your scope is confirmed. Copy the prompt into Copilot when you're ready. Use the setup guidance if needed; this page does not start a build or deployment.</p>
           </div>
           <button className="icon-btn" onClick={closeModal} aria-label="Close"><X size={16} /></button>
         </header>
 
-        <div className="stepper">
+        <nav className="stepper" aria-label="Build prompt and setup guidance">
           {STEPS.map((s, i) => {
             const Icon = s.icon;
-            const state = i < step ? 'done' : i === step ? 'current' : 'todo';
+            const state = i === step ? 'current' : 'todo';
             return (
-              <button key={s.id} className={`step ${state}`} onClick={() => setStep(i)}>
-                <span className="step-bubble">{state === 'done' ? <Check size={14} /> : <Icon size={14} />}</span>
+              <button key={s.id} className={`step ${state}`} aria-current={i === step ? 'page' : undefined} onClick={() => setStep(i)}>
+                <span className="step-bubble"><Icon size={14} /></span>
                 <span className="step-label">{s.title}</span>
               </button>
             );
           })}
-        </div>
+        </nav>
 
         <div className="modal-body">
-          {step === 0 && (
+          {step === 1 && (
             <div className="step-pane">
-              <h3>1 · Prepare your environment</h3>
+              <h3>Prepare your environment</h3>
               <p className="muted">Prepare the Copilot toolchain and a development Azure subscription. Check resource and role-assignment permissions, model/region availability and approved sample data before a live workshop. This portal cannot verify your local CLI or subscription readiness.</p>
               <CodeBlock label="Sign in to GitHub & Azure" code="copilot login; az login" k="prep-auth" copied={copied} onCopy={copy} />
               <CodeBlock label="Install the Spec2Cloud plugin" code="copilot plugin marketplace add Azure-Samples/Spec2Cloud && copilot plugin install lean@Spec2Cloud" k="prep-plugin" copied={copied} onCopy={copy} />
@@ -123,9 +123,9 @@ function MakeItRealDialog({ open, onClose, advisorPackage }: Props & { advisorPa
             </div>
           )}
 
-          {step === 1 && (
+          {step === 2 && (
             <div className="step-pane">
-              <h3>2 · Create your project</h3>
+              <h3>Create your project</h3>
               <p className="muted">Create an empty folder (or a private repo) to hold the loop's artifacts — spec, plan, source, and infra.</p>
               <CodeBlock label="New local folder" code="mkdir my-agentic-app && cd my-agentic-app" k="proj-mkdir" copied={copied} onCopy={copy} />
               <CodeBlock label="…or a private GitHub repo" code="gh repo create my-agentic-app --private --clone && cd my-agentic-app" k="proj-repo" copied={copied} onCopy={copy} />
@@ -133,18 +133,18 @@ function MakeItRealDialog({ open, onClose, advisorPackage }: Props & { advisorPa
             </div>
           )}
 
-          {step === 2 && (
+          {step === 3 && (
             <div className="step-pane">
-              <h3>3 · Review approved brief, scope and specification</h3>
+              <h3>Your confirmed scope</h3>
               <p className="muted">This is the source of truth for the final prompt. Close the hand-off to edit it; any upstream change invalidates approval.</p>
               <pre className="workshop-spec">{advisorPackage.workshopSpec ? formatWorkshopSpec(advisorPackage.workshopSpec) : advisorPackage.intent}</pre>
               {advisorPackage.workshopSpec?.execution === 'threadlight-pipeline' && <div className="modal-hint">The shipped Threadlight variant requires awesome-gbb and threadlight-skills. Follow its maintained guide and validate the opinionated infrastructure and deployment scope before execution.</div>}
             </div>
           )}
-          {step === 3 && (
+          {step === 4 && (
             <div className="step-pane">
-              <h3>4 · Choose skills</h3>
-              <p className="muted"><strong>Build skills</strong> are identified and installed automatically by Copilot while it implements your solution — you don't need to pick them. <strong>Run skills</strong> are reused by the agent at execution time; select the ones you want from the suggestions below and they'll be appended to your prompt.</p>
+              <h3>Choose skills</h3>
+              <p className="muted"><strong>Build skills</strong> are identified and installed automatically by Copilot while it implements your solution — you don't need to pick them. <strong>Run skills</strong> are reused by the agent at execution time; select the ones you want from the suggestions below. Return to <strong>Your build prompt</strong> to copy the updated prompt.</p>
 
               {availableRunSkills.length > 0 ? (
                 <div className="run-skill-checklist">
@@ -169,21 +169,21 @@ function MakeItRealDialog({ open, onClose, advisorPackage }: Props & { advisorPa
             </div>
           )}
 
-          {step === 4 && (
+          {step === 0 && (
             <div className="step-pane">
-              <h3>5 · Run the build loop</h3>
-              <p className="muted">Open Copilot App or CLI in your project. Review Specify and Plan against the approved scope before implementing. The copied prompt uses the chosen maintained workflow: the existing <code>/spec2cloud</code> loop or the shipped <code>threadlight-design</code> skill. Keep permission and review checkpoints enabled; deployment needs separate scope approval.</p>
-              <div className="modal-hint">Launch the standalone GitHub Copilot app, then open your project folder.</div>
-              <CodeBlock label="…or the Copilot CLI (review permissions)" code="copilot" k="loop-open" copied={copied} onCopy={copy} />
-              <PackageBlock icon={<Sparkles size={14} />} title="Initial prompt" action="Copy prompt" copied={copied === 'prompt'} onCopy={() => copy(specPrompt, 'prompt')}>
+              <h3>Copy your prompt into Copilot</h3>
+              <p className="muted">Open your project in Copilot App or CLI and paste this prompt. It includes your confirmed scope, selected guides and build skills. Copilot will use {advisorPackage.workshopSpec?.execution === 'threadlight-pipeline' ? <code>threadlight-design</code> : <code>/spec2cloud</code>}; review Specify and Plan before implementing. Deployment needs separate approval.</p>
+              <PackageBlock icon={<Sparkles size={14} />} title="Build prompt" action="Copy prompt" copied={copied === 'prompt'} onCopy={() => copy(specPrompt, 'prompt')}>
                 {specPrompt}
               </PackageBlock>
+              <p className="muted">Not set up yet? Use <strong>Prepare your environment</strong> and <strong>Create your project</strong> above.</p>
+              <CodeBlock label="Start the Copilot CLI in your project (review permissions)" code="copilot" k="loop-open" copied={copied} onCopy={copy} />
             </div>
           )}
 
           {step === 5 && (
             <div className="step-pane">
-              <h3>6 · Review MVP evidence and next steps</h3>
+              <h3>Verify your pilot</h3>
               <p className="muted">Check the approved success criteria, identity boundaries, safe data handling and scenario-specific failure paths. Record evidence, remaining gaps and production next steps. If development deployment was approved, inspect models, agents, tools and traces. Review the exact development environment before any cleanup.</p>
               <CodeBlock label="Review development resources before cleanup" code="azd env get-values" k="operate-cleanup" copied={copied} onCopy={copy} />
               <div className="success-banner">
@@ -199,11 +199,12 @@ function MakeItRealDialog({ open, onClose, advisorPackage }: Props & { advisorPa
         </div>
 
         <footer className="modal-foot">
-          <button className="ghost-btn" onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}>Back</button>
-          <span className="step-counter">Step {step + 1} of {STEPS.length}</span>
+          {step === 0
+            ? <button className="ghost-btn" onClick={closeModal}>Back to workshop</button>
+            : <button className="ghost-btn" onClick={() => setStep(s => Math.max(0, s - 1))}>Back</button>}
           {step < STEPS.length - 1 ? (
             <button className="primary-btn" onClick={() => setStep(s => Math.min(STEPS.length - 1, s + 1))}>
-              Next <ArrowRight size={14} />
+              {step === 0 ? 'Setup guidance' : 'Next'} <ArrowRight size={14} />
             </button>
           ) : (
             <button className="primary-btn" onClick={closeModal}>Done</button>

@@ -5,9 +5,9 @@ import {
   Sparkles, Brain, ImageIcon, Volume2, Headphones, MessagesSquare,
   FileSearch, BookOpen, Eye, ShieldCheck, Network, Database, Workflow,
   Building2, GraduationCap, Wrench, Rocket,
-  Plug, KeyRound, HardDrive, Users, UserCheck,
+  Plug, KeyRound, HardDrive, Users, UserCheck, ArrowRight,
 } from 'lucide-react';
-import CapabilityPicker, { type PickerOption } from './CapabilityPicker';
+import type { PickerOption } from './CapabilityPicker';
 import MakeItRealModal from './MakeItRealModal';
 import {
   buildAdvisorPackage,
@@ -17,7 +17,7 @@ import { playbooks, ROLE_LABELS, type Scenario } from '../data/catalog';
 import workshopBriefs from '../data/workshop-briefs.json';
 import {
   recommendWorkshop, formatWorkshopSpec, approvalIsCurrent, canApproveSpec,
-  type WorkshopSpec,
+  withRequiredCapabilities, type WorkshopSpec,
 } from '../data/workshop';
 import { WorkshopContext, newWorkshopDraft, type WorkshopDraft } from './WorkshopContext';
 import { localAIEnabled, requestWorkshopAnalysis } from '../lib/workshopAI';
@@ -52,10 +52,10 @@ const THEMES: PickerOption[] = [
 const labelMap = new Map([...CAPABILITIES, ...BUILDING_BLOCKS, ...THEMES].map(o => [o.id, o.label]));
 const lines = (value: string) => value.split('\n').map(line => line.trim()).filter(Boolean);
 const COVERAGE_LABELS = {
-  strong: 'Strong documented match',
-  partial: 'Partial coverage',
-  none: 'No suitable packaged playbook',
-  clarification: 'Needs clarification',
+  strong: 'Reusable starting point',
+  partial: 'Partly covered',
+  none: 'Custom approach needed',
+  clarification: 'Clarify the brief',
   unsupported: 'Unsupported requirement',
 };
 
@@ -72,6 +72,15 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
   const key = scenario?.id ?? (guideSlug ? `guide-${guideSlug}` : 'customer');
   const seed = useMemo(() => {
     const draft = newWorkshopDraft(scenario?.prompt ?? scenario?.description ?? '');
+    if (scenario) {
+      const matchOptions = (values: string[], options: PickerOption[]) => options
+        .filter(option => values.some(value => value === option.id || value.toLowerCase() === option.label.toLowerCase() ||
+          option.id === 'knowledge' && value === 'Knowledge'))
+        .map(option => option.id);
+      draft.capabilities = withRequiredCapabilities(matchOptions(scenario.capabilities ?? [], CAPABILITIES));
+      draft.buildingBlocks = [...new Set([...draft.buildingBlocks, ...matchOptions(scenario.buildingBlocks ?? [], BUILDING_BLOCKS)])];
+      draft.patterns = matchOptions(scenario.patterns ?? [], THEMES);
+    }
     if (guideSlug && playbooks.some(p => p.slug === guideSlug && p.role !== 'onboarding')) {
       draft.manualGuideIds = [guideSlug];
       if (guideSlug === 'threadlight-pipeline') draft.execution = 'threadlight-pipeline';
@@ -98,8 +107,7 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
       next.prepared = false;
       next.proposal = null;
       next.acceptedIds = [];
-      next.resolutions = '';
-      if ('brief' in values) { next.outcome = ''; next.inScope = ''; }
+      if ('brief' in values) { next.outcome = ''; next.inScope = ''; next.resolutions = ''; }
     }
     latestDraft.current = next;
     update(key, next);
@@ -110,7 +118,7 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
   const selectionIds = (kind: 'capabilities' | 'buildingBlocks' | 'patterns') => [
     ...new Set([...draft[kind], ...acceptedSuggestions.filter(s => s.kind === kind && s.source === 'catalog').map(s => s.id)]),
   ];
-  const capabilities = selectionIds('capabilities');
+  const capabilities = withRequiredCapabilities(selectionIds('capabilities'));
   const buildingBlocks = selectionIds('buildingBlocks');
   const patterns = selectionIds('patterns');
   const selectedIds = [...capabilities, ...buildingBlocks, ...patterns];
@@ -120,6 +128,8 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
     ((!draft.removedGuideIds.includes(p.slug) &&
       (draft.manualGuideIds.includes(p.slug) || coverage.guides.some(g => g.playbook.slug === p.slug))) ||
       draft.execution === 'threadlight-pipeline' && p.slug === 'threadlight-pipeline'));
+  const proposedGuides = playbooks.filter(p => chosenGuides.includes(p) || coverage.guides.some(g => g.playbook.slug === p.slug));
+  const otherGuides = playbooks.filter(p => p.role !== 'onboarding' && !proposedGuides.includes(p));
   const spec: WorkshopSpec = {
     brief: draft.brief, outcome: draft.outcome, users: draft.users,
     inScope: lines(draft.inScope), outOfScope: lines(draft.outOfScope),
@@ -141,6 +151,17 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
     resolutions: draft.resolutions,
   };
   const approved = approvalIsCurrent(spec, draft.approved);
+  const canContinue = canApproveSpec(spec) && !busy;
+  const missingDetails = [
+    !spec.users.trim() && 'Add who will use the pilot.',
+    !spec.successCriteria.length && 'Define what success looks like.',
+    (spec.gaps.length || spec.openQuestions.length) && !spec.resolutions.trim() && 'Add scope notes that resolve the remaining gaps and questions.',
+    spec.acceptedSuggestions.some(s => !s.label.trim() || !s.reason.trim()) && 'Complete each selected suggestion.',
+  ].filter(Boolean);
+  const nextStepStatus = busy ? 'Wait for the analysis to finish, or cancel it before continuing.'
+    : missingDetails.length ? missingDetails.join(' ')
+    : approved ? 'Scope confirmed. Your build prompt is ready to reopen.'
+    : 'Your scope is ready to confirm.';
   const advisorPackage = draft.prepared ? buildAdvisorPackage({
     path: scenario ? 'scenario' : 'idea',
     intent: draft.brief, scenario,
@@ -154,6 +175,12 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
       prepared: true, outcome: draft.outcome || draft.brief,
       inScope: draft.inScope || coverage.requirements.map(r => r.label).join('\n') || draft.brief,
     });
+  }
+  function openBuildPrompt() {
+    if (canContinue) {
+      update(key, { ...draft, approved: formatWorkshopSpec(spec) });
+      setModalOpen(true);
+    }
   }
   async function analyzeGaps() {
     const controller = new AbortController();
@@ -177,9 +204,10 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
     }
   }
   function changeSelection(field: 'capabilities' | 'buildingBlocks' | 'patterns', ids: string[]) {
+    const selections = field === 'capabilities' ? withRequiredCapabilities(ids) : ids;
     patch({
-      [field]: ids,
-      acceptedIds: draft.acceptedIds.filter(key => !key.startsWith(`${field}:`) || ids.includes(key.slice(field.length + 1))),
+      [field]: selections,
+      acceptedIds: draft.acceptedIds.filter(key => !key.startsWith(`${field}:`) || selections.includes(key.slice(field.length + 1))),
     }, true);
   }
   function toggleSuggestion(index: number) {
@@ -214,69 +242,107 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
             value={draft.brief}
             onChange={e => patch({ brief: e.target.value }, true)}
           />
-          <div className="prompt-actions">
-            <button className="craft-btn primary" onClick={prepare} disabled={!draft.brief.trim()}>
-              <Sparkles size={15} /> Prepare workshop
-            </button>
-          </div>
         </div>
       </div>
-      <details className="workshop-technical">
-        <summary>Technical requirements (optional expert editing)</summary>
-        <div className="picker-bar">
-          <CapabilityPicker label="Capabilities" options={CAPABILITIES} selected={capabilities} onChange={ids => changeSelection('capabilities', ids)} triggerIcon={Brain} />
-          <CapabilityPicker label="Building blocks" options={BUILDING_BLOCKS} selected={buildingBlocks} onChange={ids => changeSelection('buildingBlocks', ids)} triggerIcon={ShieldCheck} />
-          <CapabilityPicker label="Candidate patterns" options={THEMES} selected={patterns} onChange={ids => changeSelection('patterns', ids)} triggerIcon={Workflow} />
-        </div>
-        <p className="muted">Selections and candidate patterns are provisional. Identity, safe data handling and verification remain essential even when a selector is removed.</p>
-        <div className="workshop-fields">
-          {([['customCapabilities', 'Custom capabilities'], ['customBlocks', 'Custom building blocks'], ['customPatterns', 'Custom candidate patterns']] as const).map(([field, label]) => (
-            <div key={field} className="workshop-field">
-              <label htmlFor={`${key}-${field}`}>{label} (one per line)</label>
-              <textarea id={`${key}-${field}`} value={draft[field]} onChange={e => patch({ [field]: e.target.value }, true)} />
-            </div>
+      <section className="workshop-technical" aria-labelledby={`technical-${key}`}>
+        <h3 id={`technical-${key}`}>Technical requirements</h3>
+        <p className="muted">Adjust the starting selections for your pilot. Patterns are candidates, not a final architecture.</p>
+        <div className="workshop-options-grid">
+          {([
+            ['capabilities', 'Capabilities', CAPABILITIES, capabilities, Brain],
+            ['buildingBlocks', 'Building blocks', BUILDING_BLOCKS, buildingBlocks, ShieldCheck],
+            ['patterns', 'Candidate patterns', THEMES, patterns, Workflow],
+          ] as const).map(([field, label, options, selected, Icon]) => (
+            <fieldset className="workshop-option-column" key={field}>
+              <legend><Icon size={16} /> {label}</legend>
+              {options.map(option => (
+                <label className="workshop-option" key={option.id}>
+                  <input type="checkbox" checked={selected.includes(option.id)} disabled={option.id === 'frontier-models'}
+                    aria-describedby={option.id === 'frontier-models' ? `frontier-help-${key}` : undefined} onChange={e =>
+                    changeSelection(field, e.target.checked ? [...selected, option.id] : selected.filter(id => id !== option.id))
+                  } />
+                  <span><span className="workshop-option-label">{option.label}{option.id === 'frontier-models' && <span className="workshop-required">Required</span>}</span>
+                    <small>{option.description}</small>
+                    {option.id === 'frontier-models' && <small id={`frontier-help-${key}`}>The model foundation for every pilot.</small>}
+                  </span>
+                </label>
+              ))}
+            </fieldset>
           ))}
         </div>
-      </details>
+      </section>
+      <div className="prompt-actions">
+        <button className="craft-btn primary" onClick={prepare} disabled={!draft.brief.trim()}>
+          <Sparkles size={15} /> Prepare workshop
+        </button>
+      </div>
 
-      {!approved && draft.prepared && <p role="status">Scope/specification is not approved. Any edit requires a fresh review.</p>}
       {draft.prepared && (
         <div className="workshop-plan">
-          <section className="skills-card" aria-label="Coverage and reuse">
-            <h3>{COVERAGE_LABELS[coverage.state]}</h3>
+          <section className="workshop-section workshop-proposal" aria-label="Proposed workshop approach">
+            <div className="workshop-section-heading">
+              <h3>Proposed workshop approach</h3>
+              <span className="workshop-match">{COVERAGE_LABELS[coverage.state]}</span>
+            </div>
             <p>{coverage.state === 'strong'
-              ? 'Reuse this maintained guidance. No gap-generation call is needed. Validate prerequisites and adapt only customer scope.'
-              : 'Catalog coverage is not technical feasibility. Review gaps and constraints before building.'}</p>
+              ? 'We found existing implementation guidance for your requirements. Adapt it to your customer instead of starting from scratch.'
+              : 'Use existing guidance where it fits and define a customer-specific approach for the remaining requirements.'}</p>
+            <p className="workshop-proposal-explanation">This is a proposal, not a built or deployed app. Including a guide adds a link to its implementation instructions and recommended build skills to your Copilot prompt; it does not add a new capability automatically.</p>
             {coverage.questions.map(q => <p key={q} className="workshop-warning">{q}</p>)}
             {coverage.unsupported.map(q => <p key={q} className="workshop-warning">{q}</p>)}
-            {coverage.guides.map(g => (
-              <div key={g.playbook.slug} className="workshop-guide">
-                <label><input type="checkbox" checked={chosenGuides.some(p => p.slug === g.playbook.slug)}
-                  disabled={draft.execution === 'threadlight-pipeline' && g.playbook.slug === 'threadlight-pipeline'} onChange={e => patch({
-                  removedGuideIds: e.target.checked ? draft.removedGuideIds.filter(id => id !== g.playbook.slug) : [...draft.removedGuideIds, g.playbook.slug],
-                })} /> {g.playbook.name}</label>
-                <span className="scenario-tag">{ROLE_LABELS[g.playbook.role]}</span>
-                <p>{g.reasons.join('; ')}</p>
-                <p>{g.playbook.adaptation}</p>
-                <p><strong>Prerequisites:</strong> {g.playbook.prerequisites.join('; ')}</p>
-                <p><strong>Exclusions:</strong> {g.playbook.exclusions.join('; ')}</p>
-                <Link to={`/playbooks/${g.playbook.slug}`}>Read the maintained guide</Link>
-              </div>
-            ))}
-            <details>
-              <summary>Expert guide override</summary>
-              {playbooks.filter(p => p.role !== 'onboarding' && !coverage.guides.some(g => g.playbook.slug === p.slug)).map(p => (
-                <label key={p.slug} className="workshop-check"><input type="checkbox" checked={chosenGuides.some(g => g.slug === p.slug)}
-                  disabled={draft.execution === 'threadlight-pipeline' && p.slug === 'threadlight-pipeline'} onChange={e => patch({
-                  manualGuideIds: e.target.checked ? [...draft.manualGuideIds, p.slug] : draft.manualGuideIds.filter(id => id !== p.slug),
-                })} /> {p.name} ({ROLE_LABELS[p.role]})</label>
-              ))}
-              <p>Manual relevance is not proven coverage. Review the guide's prerequisites and exclusions.</p>
-            </details>
+            {proposedGuides.map(guide => {
+              const recommendation = coverage.guides.find(g => g.playbook.slug === guide.slug);
+              const included = chosenGuides.includes(guide);
+              return (
+                <article key={guide.slug} className="workshop-proposed-guide" aria-label={guide.name}>
+                  <div className="workshop-guide-heading">
+                    <div><span className="workshop-guide-type">{guide.role === 'capability' ? 'Reusable implementation guide' : ROLE_LABELS[guide.role]}</span><h4>{guide.name}</h4></div>
+                    <label className="workshop-include">
+                      <input type="checkbox" aria-label={`Include ${guide.name} in build prompt`} checked={included}
+                        disabled={draft.execution === 'threadlight-pipeline' && guide.slug === 'threadlight-pipeline'} onChange={e => patch({
+                        removedGuideIds: e.target.checked ? draft.removedGuideIds.filter(id => id !== guide.slug) : [...draft.removedGuideIds, guide.slug],
+                        manualGuideIds: e.target.checked ? [...new Set([...draft.manualGuideIds, guide.slug])] : draft.manualGuideIds.filter(id => id !== guide.slug),
+                      })} />
+                      {included ? 'Included in build prompt' : 'Include in build prompt'}
+                    </label>
+                  </div>
+                  <dl className="workshop-guide-explanation">
+                    <div><dt>Why it fits your brief</dt><dd>{recommendation
+                      ? coverage.requirements.filter(r => recommendation.covers.includes(r.id)).map(r => r.label).join('; ')
+                      : 'Added manually. Confirm that this guide fits your customer before approving.'}</dd></div>
+                    <div><dt>What you can reuse</dt><dd>{guide.summary}</dd></div>
+                    <div><dt>What needs adapting</dt><dd>{guide.adaptation} The example is a starting point, not your final customer app.</dd></div>
+                  </dl>
+                  <div className="workshop-guide-boundaries">
+                    <p><strong>Confirm before building:</strong> {guide.prerequisites.join('; ')}.</p>
+                    <p><strong>Not included:</strong> {guide.exclusions.join('; ')}.</p>
+                  </div>
+                  <Link className="workshop-guide-link" to={`/playbooks/${guide.slug}`}>Read {guide.name} implementation guide</Link>
+                </article>
+              );
+            })}
+            {otherGuides.length > 0 && <div className="workshop-add-guide">
+              <label htmlFor={`add-guide-${key}`}>Add another guide (optional)</label>
+              <select id={`add-guide-${key}`} aria-describedby={`add-guide-help-${key}`} value="" onChange={e => {
+                const slug = e.target.value;
+                if (otherGuides.some(guide => guide.slug === slug)) patch({
+                  manualGuideIds: [...new Set([...draft.manualGuideIds, slug])],
+                  removedGuideIds: draft.removedGuideIds.filter(id => id !== slug),
+                });
+              }}>
+                <option value="">Choose a guide to review</option>
+                {otherGuides.map(guide => <option key={guide.slug} value={guide.slug}>{guide.name}</option>)}
+              </select>
+              <small id={`add-guide-help-${key}`}>Only add guidance that fits this pilot. A manual choice does not prove technical feasibility.</small>
+            </div>}
+            {spec.gaps.length > 0 && <div className="workshop-remaining">
+              <h4>Still needs a customer-specific decision</h4>
+              <ul>{spec.gaps.map((gap, index) => <li key={index}>{gap}</li>)}</ul>
+              <p>Resolve these in scope notes, choose suitable guidance, or explicitly exclude them from the pilot.</p>
+            </div>}
             {coverage.gaps.length > 0 && (
               <div className="workshop-gaps">
-                <h4>Uncovered requirements</h4>
-                {coverage.gaps.map(g => <p key={g.id}>{g.label}</p>)}
+                <p>Copilot can propose options for the requirements without a matching guide. You decide which suggestions to keep.</p>
                 {!localAIEnabled() && <p role="status">AI analysis is unavailable on this static portal. Use the documented local Copilot SDK companion, or explicitly validate manual scope. No AI proposal has been generated.</p>}
                 <button className="craft-btn" onClick={analyzeGaps} disabled={busy || coverage.state === 'clarification' || coverage.state === 'unsupported'}>
                   <Sparkles size={15} /> {busy ? 'Analyzing only gaps...' : 'Propose only gaps with Copilot SDK'}
@@ -289,7 +355,7 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
             {error && <p role="alert" className="workshop-warning">{error}</p>}
           </section>
           {draft.proposal && (
-            <section className="skills-card" aria-label="Provisional AI suggestions">
+            <section className="workshop-section" aria-label="Provisional AI suggestions">
               <h3>Provisional AI suggestions</h3>
               <p>Accept, edit or remove each suggestion. These are not maintained guidance or validated platform support.</p>
               {draft.proposal.suggestions.map((s, index) => (
@@ -310,39 +376,49 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
               {[...draft.proposal.questions, ...draft.proposal.uncertainties, ...draft.proposal.unsupported].map((q, i) => <p key={i} className="workshop-warning">{q}</p>)}
             </section>
           )}
-          <section className="skills-card">
-            <h3>Review customer scope and specification</h3>
-            <p>One item per line. Record testable criteria and actual evidence. Resolve open questions explicitly; proposals alone do not resolve gaps.</p>
+          <section className="workshop-section workshop-review" aria-label="Review workshop">
+            <h3>Review workshop</h3>
+            <p>Confirm who this pilot is for, what success looks like, and any scope decisions.</p>
+            <div className="workshop-brief-summary">
+              <h4>Pilot brief</h4>
+              <p>{draft.brief}</p>
+              <small>Approved sample data, authorized access and recorded scenario/access tests are required. Production rollout is excluded.</small>
+            </div>
             <div className="workshop-fields">
               {([
-                ['outcome', 'Business outcome'], ['users', 'Intended users'],
-                ['inScope', 'In-scope MVP capabilities'], ['outOfScope', 'Out-of-scope and production exclusions'],
-                ['constraints', 'Constraints and dependencies'], ['assumptions', 'Assumptions'],
-                ['criteria', 'Testable success criteria'], ['evidence', 'Required verification evidence'],
-                ['questions', 'Open questions'], ['resolutions', 'Gap validation and question resolutions'],
-              ] as const).map(([field, label]) => (
+                ['users', 'Who will use the pilot?', 'For example, HR staff testing approved sample policies'],
+                ['criteria', 'What does success look like?', 'For example, answers cite approved sources and refuse unsupported questions'],
+                ['resolutions', 'Scope notes and decisions', 'Add constraints, exclusions, or decisions that resolve the gaps and questions above'],
+              ] as const).map(([field, label, placeholder]) => (
                 <div key={field} className="workshop-field">
                   <label htmlFor={`${key}-${field}`}>{label}</label>
-                  <textarea id={`${key}-${field}`} value={draft[field]} onChange={e => patch({ [field]: e.target.value })} />
+                  <textarea id={`${key}-${field}`} placeholder={placeholder} required={field !== 'resolutions' || Boolean(spec.gaps.length || spec.openQuestions.length)}
+                    value={draft[field]} onChange={e => patch({ [field]: e.target.value })} />
+                  {field === 'resolutions' && <small className="muted">
+                    {spec.gaps.length || spec.openQuestions.length ? 'Required: record how each uncovered requirement or open question will be handled.' : 'Optional for a fully covered pilot.'}
+                  </small>}
                 </div>
               ))}
-              <label>Chosen execution workflow
-                <select value={draft.execution} onChange={e => patch({ execution: e.target.value as WorkshopDraft['execution'] })}>
-                  <option value="agentic-loop">Existing Agentic Loop build hand-off</option>
-                  <option value="threadlight-pipeline">Shipped Threadlight delivery workflow (validate prerequisites)</option>
-                </select>
-              </label>
             </div>
-            <details><summary>Structured specification (source of truth)</summary><pre className="workshop-spec">{formatWorkshopSpec(spec)}</pre></details>
-            <div className="prompt-actions">
-              <button className="craft-btn" disabled={!canApproveSpec(spec)} onClick={() => update(key, { ...draft, approved: formatWorkshopSpec(spec) })}>
-                Approve scope and specification
-              </button>
-              <button className="craft-btn primary" disabled={!approved} onClick={() => setModalOpen(true)}>
-                <Rocket size={15} /> Craft prompt and build hand-off
+            <div className="workshop-workflow">
+              <label htmlFor={`workflow-${key}`}>Build workflow</label>
+              <select id={`workflow-${key}`} value={draft.execution} onChange={e => {
+                if (e.target.value === 'agentic-loop' || e.target.value === 'threadlight-pipeline') patch({ execution: e.target.value });
+              }}>
+                <option value="agentic-loop">Existing Agentic Loop build hand-off</option>
+                <option value="threadlight-pipeline">Shipped Threadlight delivery workflow (validate prerequisites)</option>
+              </select>
+            </div>
+            <div className="workshop-next-step">
+              <div>
+                <h4>Get your build prompt</h4>
+                <p>Confirm this scope, then copy your prompt into Copilot. Nothing runs until you start it there.</p>
+                <p id={`continue-status-${key}`} className="workshop-next-status" role="status">{nextStepStatus}</p>
+              </div>
+              <button className="craft-btn primary" disabled={!canContinue} aria-describedby={`continue-status-${key}`} onClick={openBuildPrompt}>
+                {approved ? 'Open build prompt' : 'Confirm scope & get prompt'} <ArrowRight size={15} />
               </button>
             </div>
-            <p role="status">{approved ? 'Approved specification is current.' : 'Approval requires an outcome, users, scope, criteria, evidence and explicit gap/question resolutions.'}</p>
           </section>
           {advisorPackage && (
             <div className="advisor-package-preview">

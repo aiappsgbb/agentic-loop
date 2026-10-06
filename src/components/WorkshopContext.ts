@@ -1,5 +1,6 @@
 import { createContext } from 'react';
-import type { AIProposal } from '../data/workshop';
+import { withRequiredCapabilities, type AIProposal } from '../data/workshop';
+import workshopBriefs from '../data/workshop-briefs.json';
 
 export interface WorkshopDraft {
   brief: string;
@@ -28,8 +29,13 @@ export interface WorkshopDraft {
   prepared: boolean;
 }
 export function newWorkshopDraft(brief = ''): WorkshopDraft {
+  const sampleIndex = workshopBriefs.indexOf(brief);
+  const groundedSample = sampleIndex === 0 || sampleIndex === 1;
   return {
-    brief, capabilities: [], buildingBlocks: ['identity', 'observability'], patterns: [],
+    brief,
+    capabilities: withRequiredCapabilities(groundedSample ? ['knowledge'] : []),
+    buildingBlocks: ['identity', 'observability'],
+    patterns: groundedSample ? ['knowledge-grounding'] : sampleIndex === 2 ? ['human-in-the-loop'] : [],
     customCapabilities: '', customBlocks: '', customPatterns: '',
     outcome: '', users: '', inScope: '', outOfScope: 'Production rollout and production-readiness certification',
     constraints: 'Use approved sample data. Enforce authorized access and least-privilege identity. Minimize sensitive data.',

@@ -5,6 +5,7 @@ import { playbooks } from '../src/data/catalog';
 import {
   recommendWorkshop, validateAIProposal, validateAnalysisRequest,
   approvalIsCurrent, formatWorkshopSpec, canApproveSpec, type WorkshopSpec,
+  withRequiredCapabilities,
 } from '../src/data/workshop';
 import { buildAdvisorPackage, inferRequirementsFromSelections } from '../src/data/advisor';
 import workshopBriefs from '../src/data/workshop-briefs.json';
@@ -21,7 +22,24 @@ test('three sample briefs cover reuse, gaps and a custom outcome without preappr
     assert.equal(draft.brief, brief);
     assert.equal(draft.prepared, false);
     assert.equal(draft.approved, null);
+    assert.ok(draft.capabilities.includes('frontier-models'));
+    assert.deepEqual(draft.buildingBlocks, ['identity', 'observability']);
+    assert.ok(!draft.patterns.includes('multi-agent'));
   }
+  assert.deepEqual(newWorkshopDraft(workshopBriefs[0]).capabilities, ['frontier-models', 'knowledge']);
+  assert.deepEqual(newWorkshopDraft(workshopBriefs[1]).patterns, ['knowledge-grounding']);
+  assert.deepEqual(newWorkshopDraft(workshopBriefs[2]).patterns, ['human-in-the-loop']);
+  assert.deepEqual(newWorkshopDraft('A customer-authored brief').capabilities, ['frontier-models']);
+  assert.deepEqual(workshopBriefs.map(brief => {
+    const draft = newWorkshopDraft(brief);
+    return recommendWorkshop(brief, [...draft.capabilities, ...draft.buildingBlocks, ...draft.patterns]).state;
+  }), ['strong', 'partial', 'none']);
+});
+test('frontier models are a required capability for fresh, empty and existing selections', () => {
+  assert.deepEqual(newWorkshopDraft().capabilities, ['frontier-models']);
+  assert.deepEqual(withRequiredCapabilities([]), ['frontier-models']);
+  assert.deepEqual(withRequiredCapabilities(['knowledge']), ['frontier-models', 'knowledge']);
+  assert.deepEqual(withRequiredCapabilities(['frontier-models', 'knowledge', 'frontier-models']), ['frontier-models', 'knowledge']);
 });
 test('HR citations reuse maintained grounding, never onboarding or wildcard workflows', () => {
   const result = recommendWorkshop(hr);
