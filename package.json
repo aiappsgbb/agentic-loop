@@ -9,12 +9,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "tsx --test tests/*.test.ts",
-    "workshop:service": "tsx server/workshop.ts",
-    "workshop:smoke": "tsx server/smoke.ts",
     "test:ui": "python3 tests/workshop_ui.py"
   },
   "dependencies": {
-    "@github/copilot-sdk": "1.0.16",
     "highlight.js": "^11.11.1",
     "lucide-react": "^1.16.0",
     "mermaid": "^11.16.0",

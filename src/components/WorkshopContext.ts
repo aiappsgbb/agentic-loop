@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import { withRequiredCapabilities, type AIProposal } from '../data/workshop';
+import { withRequiredCapabilities } from '../data/workshop';
 import workshopBriefs from '../data/workshop-briefs.json';
 
 export interface WorkshopDraft {
@@ -23,8 +23,6 @@ export interface WorkshopDraft {
   execution: 'agentic-loop' | 'threadlight-pipeline';
   manualGuideIds: string[];
   removedGuideIds: string[];
-  proposal: AIProposal | null;
-  acceptedIds: string[];
   approved: string | null;
   prepared: boolean;
 }
@@ -41,7 +39,7 @@ export function newWorkshopDraft(brief = ''): WorkshopDraft {
     constraints: 'Use approved sample data. Enforce authorized access and least-privilege identity. Minimize sensitive data.',
     assumptions: '', criteria: '', evidence: 'Scenario tests, access/refusal tests and failure-path results',
     questions: '', resolutions: '', execution: 'agentic-loop',
-    manualGuideIds: [], removedGuideIds: [], proposal: null, acceptedIds: [], approved: null, prepared: false,
+    manualGuideIds: [], removedGuideIds: [], approved: null, prepared: false,
   };
 }
 export const WorkshopContext = createContext<{

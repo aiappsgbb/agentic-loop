@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { playbooks } from '../src/data/catalog';
 import {
-  recommendWorkshop, validateAIProposal, validateAnalysisRequest,
-  approvalIsCurrent, formatWorkshopSpec, canApproveSpec, type WorkshopSpec,
+  recommendWorkshop,
+  approvalIsCurrent, formatWorkshopSpec, formatWorkshopSpecMarkdown, canApproveSpec, type WorkshopSpec,
   withRequiredCapabilities,
 } from '../src/data/workshop';
 import { buildAdvisorPackage, inferRequirementsFromSelections } from '../src/data/advisor';
@@ -94,32 +94,9 @@ test('all original playbook slugs and decks remain, with explicit roles and suit
   }
 });
 
-const request = {
-  brief: 'Schedule shared telescopes for volunteers.',
-  gaps: [{ id: 'schedule', label: 'Fair scheduling', evidence: 'schedule' }],
-  coveredRequirementIds: ['knowledge-grounding'],
-};
-const proposal = {
-  suggestions: [{ kind: 'patterns', source: 'catalog', id: 'workflow', label: 'Candidate workflow', reason: 'Review fairness rules', addresses: ['schedule'] }],
-  guideIds: [], questions: ['What are the fairness rules?'], uncertainties: ['No integration validated.'], unsupported: [],
-};
-test('typed AI contracts reject fabricated IDs, extra fields and covered regeneration', () => {
-  assert.equal(validateAIProposal(proposal, request).suggestions[0].id, 'workflow');
-  assert.throws(() => validateAIProposal({ ...proposal, guideIds: ['fake-playbook'] }, request), /Fabricated/);
-  assert.throws(() => validateAIProposal({ ...proposal, guideIds: ['getting-started'] }, request), /unsuitable/);
-  assert.throws(() => validateAIProposal({ ...proposal, suggestions: [{ ...proposal.suggestions[0], id: 'magic-workflow' }] }, request), /Fabricated/);
-  assert.throws(() => validateAIProposal({ ...proposal, suggestions: [{ ...proposal.suggestions[0], addresses: ['knowledge-grounding'] }] }, request), /only requested gaps/);
-  assert.throws(() => validateAIProposal({ ...proposal, tools: ['bash'] }, request), /Unexpected/);
-  assert.throws(() => validateAIProposal({ ...proposal, suggestions: [{ ...proposal.suggestions[0], source: 'custom', kind: 'toString', id: 'custom-invalid' }] }, request), /Unknown suggestion kind/);
-  assert.throws(() => validateAIProposal({ ...proposal, suggestions: [{ ...proposal.suggestions[0], source: 'custom', id: 'scheduler' }] }, request), /namespaced/);
-});
-test('custom proposals remain distinct and request validation is fail-closed', () => {
-  const custom = validateAIProposal({ ...proposal, suggestions: [{ ...proposal.suggestions[0], source: 'custom', id: 'custom-scheduler' }] }, request);
-  assert.equal(custom.suggestions[0].source, 'custom');
-  assert.throws(() => validateAnalysisRequest({ ...request, coveredRequirementIds: ['schedule'] }), /Covered/);
-  assert.throws(() => validateAnalysisRequest({ ...request, gaps: [] }), /uncovered/);
-  assert.throws(() => validateAnalysisRequest({ ...request, brief: '' }), /nonempty/);
-  assert.throws(() => validateAnalysisRequest({ ...request, gaps: [request.gaps[0], request.gaps[0]] }), /Duplicate/);
+test('curated workshop preparation is deterministic for the same brief and selections', () => {
+  const selections = ['frontier-models', 'knowledge', 'identity', 'observability'];
+  assert.deepEqual(recommendWorkshop(hr, selections), recommendWorkshop(hr, selections));
 });
 test('manually authored technical selections remain explicit uncovered requirements', () => {
   const result = recommendWorkshop(hr, [], ['Custom HR adapter']);
@@ -137,7 +114,7 @@ const spec: WorkshopSpec = {
   capabilities: ['Foundry IQ'], buildingBlocks: ['Identity & Access', 'Observability'],
   candidatePatterns: ['Knowledge Grounding'], execution: 'agentic-loop',
   guides: [{ slug: 'enterprise-knowledge-grounding', reason: 'Citations required by the brief' }],
-  acceptedSuggestions: [], gaps: [], openQuestions: [], resolutions: '',
+  gaps: [], openQuestions: [], resolutions: '',
 };
 test('approval snapshots invalidate when any upstream source of truth changes', () => {
   const approved = formatWorkshopSpec(spec);
@@ -149,11 +126,15 @@ test('approval snapshots invalidate when any upstream source of truth changes', 
   ]) assert.ok(!approvalIsCurrent(changed, approved));
   assert.ok(!canApproveSpec({ ...spec, users: '' }));
   assert.ok(!canApproveSpec({ ...spec, openQuestions: ['Unresolved access?'] }));
+  assert.ok(!canApproveSpec({ ...spec, gaps: ['Customer integration'] }));
+  assert.ok(canApproveSpec({ ...spec, gaps: ['Customer integration'], resolutions: 'Use approved sample data; exclude the live integration.' }));
 });
 test('full approved scope, selections, criteria and constraints survive the copied build prompt', () => {
   const result = buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [], workshopSpec: spec });
-  assert.ok(result.copilotPrompt.includes(formatWorkshopSpec(spec)));
-  assert.ok(result.copilotPrompt.startsWith(`/spec2cloud ${hr}`));
+  assert.ok(result.copilotPrompt.includes(formatWorkshopSpecMarkdown(spec)));
+  assert.ok(!result.copilotPrompt.includes(formatWorkshopSpec(spec)));
+  assert.ok(!result.copilotPrompt.includes('GitHub Copilot App'));
+  assert.ok(result.copilotPrompt.startsWith('/spec2cloud Build the pilot described in the confirmed specification below.\n\n## Required Agentic Loop build policy'));
   assert.deepEqual(result.playbooks.map(p => p.slug), spec.guides.map(g => g.slug));
   assert.ok(!result.copilotPrompt.includes('Weather'));
   assert.match(result.copilotPrompt, /not production-ready/);
@@ -162,4 +143,103 @@ test('full approved scope, selections, criteria and constraints survive the copi
     workshopSpec: { ...spec, execution: 'threadlight-pipeline' },
   });
   assert.match(threadlight.copilotPrompt, /^Use the threadlight-design skill/);
+});
+test('Markdown specification preserves every customer decision without JSON', () => {
+  const complete = {
+    ...spec, gaps: ['Customer API contract'], openQuestions: ['Who owns the API?'],
+    resolutions: 'Customer owns the API.\nUse read-only sample responses.',
+  };
+  const markdown = formatWorkshopSpecMarkdown(complete);
+  for (const value of Object.values(complete)) {
+    if (typeof value === 'string' && value !== complete.execution) assert.ok(markdown.includes(value));
+    if (Array.isArray(value)) for (const item of value) {
+      if (typeof item === 'string') assert.ok(markdown.includes(item));
+      else {
+        assert.ok(markdown.includes(item.slug));
+        assert.ok(markdown.includes(item.reason));
+      }
+    }
+  }
+  assert.match(markdown, /### Build workflow\n\nAgentic Loop \/spec2cloud/);
+  assert.match(markdown, /### Success criteria\n\n- Every supported answer cites a source/);
+  assert.match(formatWorkshopSpecMarkdown(spec), /### Remaining gaps\n\n- None specified\./);
+  assert.match(formatWorkshopSpecMarkdown({ ...spec, execution: 'threadlight-pipeline' }), /### Build workflow\n\nThreadlight pipeline/);
+  assert.ok(!markdown.includes('"brief":'));
+});
+test('build prompts include the customer brief only once for both workflows', () => {
+  for (const execution of ['agentic-loop', 'threadlight-pipeline'] as const) {
+    for (const workshopSpec of [
+      { ...spec, execution },
+      { ...spec, execution, outcome: hr, inScope: [hr], gaps: [hr], resolutions: 'Use a manual pilot.' },
+    ]) {
+      const result = buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [], workshopSpec });
+      assert.equal(result.copilotPrompt.split(hr).length - 1, 1);
+      assert.ok(!result.copilotPrompt.includes('GitHub Copilot App'));
+      assert.ok(result.copilotPrompt.includes(`### Customer brief\n\n${hr}`));
+      assert.ok(result.copilotPrompt.includes(formatWorkshopSpecMarkdown(workshopSpec)));
+    }
+  }
+  const markdown = formatWorkshopSpecMarkdown({ ...spec, outcome: hr, inScope: [hr] });
+  assert.match(markdown, /### Expected outcome\n\nSee Customer brief\./);
+  assert.match(markdown, /### In scope\n\n- See Customer brief\./);
+});
+test('build prompts contain execution instructions, not App setup directions', () => {
+  const result = buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [] });
+  assert.ok(result.copilotPrompt.startsWith(`/spec2cloud ${hr}\n\n## Required Agentic Loop build policy`));
+  assert.ok(!result.copilotPrompt.includes('GitHub Copilot App'));
+});
+test('playbooks retain teaching context and repeatable customer-specific build guidance', () => {
+  for (const execution of ['agentic-loop', 'threadlight-pipeline'] as const) {
+    const result = buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [], workshopSpec: { ...spec, execution } });
+    assert.match(result.copilotPrompt, /## Learn while building/);
+    assert.match(result.copilotPrompt, /Solution Engineer can teach the customer/);
+    assert.match(result.copilotPrompt, /Platform focus: Foundry IQ; Agentic Retrieval; Storage/);
+    assert.match(result.copilotPrompt, /connect each chosen platform capability to a confirmed customer requirement/);
+    assert.match(result.copilotPrompt, /without repeating every tutorial step/);
+    assert.match(result.copilotPrompt, /Preserve scope and permission reviews on every build/);
+    assert.ok(!result.copilotPrompt.includes('getting-started'));
+  }
+  const custom = buildAdvisorPackage({ path: 'idea', intent: 'Schedule telescopes fairly.', requirementIds: [], workshopSpec: { ...spec, guides: [] } });
+  assert.match(custom.copilotPrompt, /No maintained playbook covers this scope/);
+  assert.match(custom.copilotPrompt, /do not substitute an unrelated tutorial/);
+  assert.ok(!custom.copilotPrompt.includes('Platform focus:'));
+  assert.ok(!custom.copilotPrompt.includes('Weather'));
+});
+test('all workshop paths share Getting Started skill invocation and readiness gates', () => {
+  const gettingStarted = readFileSync(new URL('../playbooks/getting-started/README.md', import.meta.url), 'utf8');
+  const invocationContract = [
+    'Do not rely on Specify embedding or transitively referencing it.',
+    'If the skill is missing or cannot be invoked, stop and report the blocker rather than continuing with generic defaults.',
+    'Run the skill-owned RBAC pre-flight before step 1.',
+    'Report all permission gaps together and stop on BLOCKED or ERROR; do not create resources or grant permissions to bypass this gate.',
+    'Immediately after Specify writes ./docs/spec.md and before Plan starts, invoke the installed agentic-loop skill as the mandatory policy layer.',
+    "Apply the skill's defaults and implementation contracts to the concrete specification before planning, then carry them through Implement, Verify and Deploy.",
+    "Record the invoked skill's path, the pre-flight verdict and the resulting architecture decisions in ./docs/spec.md, then carry those decisions into ./docs/plan.md.",
+    'Installation alone is not evidence of invocation.',
+  ];
+  const packages = [
+    buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [], workshopSpec: spec }),
+    buildAdvisorPackage({ path: 'scenario', intent: hr, requirementIds: [], workshopSpec: spec }),
+    buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [], workshopSpec: { ...spec, execution: 'threadlight-pipeline' } }),
+    buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [] }),
+    buildAdvisorPackage({ path: 'scenario', intent: hr, requirementIds: [] }),
+  ];
+  for (const sentence of invocationContract) {
+    assert.ok(gettingStarted.includes(sentence));
+    for (const result of packages) assert.equal(result.copilotPrompt.split(sentence).length - 1, 1);
+  }
+  for (const result of packages) {
+    assert.ok(!result.copilotPrompt.includes('policy layer before Specify'));
+    assert.ok(!result.copilotPrompt.includes('reapply agentic-loop'));
+    assert.ok(result.copilotPrompt.indexOf('Run the skill-owned RBAC pre-flight') <
+      result.copilotPrompt.indexOf('invoke the installed agentic-loop skill'));
+    assert.ok(result.buildSkills.includes('agentic-loop'));
+    assert.match(result.copilotPrompt, /skills\/agentic-loop\/references\/reference-architecture\.md/);
+    assert.match(result.copilotPrompt, /add complementary services only when the confirmed scope needs them/);
+    assert.ok(!result.copilotPrompt.includes('GitHub Copilot App'));
+    if (result.workshopSpec) {
+      assert.ok(result.copilotPrompt.indexOf('## Required Agentic Loop build policy') <
+        result.copilotPrompt.indexOf('## Confirmed customer workshop specification'));
+    }
+  }
 });

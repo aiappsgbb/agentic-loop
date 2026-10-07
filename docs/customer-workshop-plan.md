@@ -2,7 +2,9 @@
 
 Date: 2026-10-02
 Repository: aiappsgbb/agentic-loop
-Status: User-approved direction; implementation handover
+Status: Historical implementation handover; workshop preparation requirements superseded on 2026-10-07
+
+> **Current scope:** Workshop preparation is entirely client-side, using curated catalog matching and manual gap decisions. The local companion, GitHub Copilot SDK preparation runtime, AI proposals and analysis endpoint have been removed. The SDK section, adapter phases, AI acceptance criteria and runtime validation below are historical records, not current requirements. Use [the current specification](spec.md#47-client-side-customer-workshop-preparation) and [facilitator guide](workshop-guide.md) for implementation. SDK guidance for the apps built from the prompt is unchanged.
 
 ## Objective
 

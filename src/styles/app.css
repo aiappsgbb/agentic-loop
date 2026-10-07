@@ -5155,14 +5155,10 @@ select:focus-visible,
 .workshop-remaining { margin: 24px 0; }
 .workshop-remaining h4 { margin: 0; font-size: 15px; }
 .workshop-remaining ul { padding-left: 20px; font-size: 14px; line-height: 1.6; }
-.workshop-remaining p, .workshop-gaps p { color: var(--text-dim); font-size: 13px; line-height: 1.6; }
-.workshop-guide { margin: 18px 0; padding: 14px 0; border-top: 1px solid var(--border); }
-.workshop-guide label { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-.workshop-guide p, .workshop-gaps p { overflow-wrap: anywhere; }
-.workshop-check { display: block; margin: 12px 0; }
+.workshop-remaining p { color: var(--text-dim); font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
 .workshop-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 18px 0; }
 .workshop-field, .workshop-fields label { display: grid; gap: 8px; font-weight: 600; }
-.workshop-fields textarea, .workshop-workflow select, .workshop-add-guide select, .workshop-guide input:not([type=checkbox]) {
+.workshop-fields textarea, .workshop-workflow select, .workshop-add-guide select {
   width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid var(--border);
   border-radius: 10px; color: var(--text); background: var(--surface); font: inherit;
 }

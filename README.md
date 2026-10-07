@@ -69,25 +69,25 @@ The deployed solution then enters an outer production loop: observe, evaluate, l
 
 | Path | Use it when | Outcome |
 | --- | --- | --- |
-| **Start a technical workshop** (`/workshop`) | Bring a customer brief, optionally seeded from an industry example. | Review coverage, adapt maintained guidance, approve editable MVP scope/specification, then copy the complete build prompt. |
+| **Start a technical workshop** (`/workshop`) | Bring a customer brief, optionally seeded from an industry example. | Review coverage, adapt maintained guidance, then confirm scope and copy the complete build prompt. |
 | **Show an industry demo** (`/scenarios`) | Explore existing examples without setup. | Showcase available industry demos; Kratos stays directly accessible. |
 
 The workshop recomposes the existing Agentic Launchpad. Old playbook/scenario routes and the home `#prompt` anchor remain usable. The library separates practice exercises, capability guides, delivery workflows, operations and shared infrastructure. A playbook is reusable guidance, not prerequisite homework.
 
-**Reuse first; generate only what is missing.** Strong documented coverage does not call AI gap generation. Partial coverage preserves existing guides and analyzes only gaps. No packaged match is not technical infeasibility. SDK suggestions, uncertainties and candidate patterns require review. Editing upstream inputs invalidates scope approval. Essential identity, safe data handling and scenario verification remain in every MVP; a generated or deployed workshop pilot is not production-ready.
+**Reuse first; build only what is missing.** Workshop preparation uses curated, deterministic rules entirely in your browser. Partial coverage preserves existing guides and surfaces gaps for manual decisions in scope notes. No packaged match is not technical infeasibility. Candidate patterns require review. Editing upstream inputs invalidates scope confirmation. Essential identity, safe data handling and scenario verification remain in every MVP; a generated or deployed workshop pilot is not production-ready.
 
-## Run the portal and optional local AI companion
+## Run the portal
 
 ```bash
 npm ci
 npm run dev
 ```
 
-The static catalog and manually reviewed workshop work without AI. Gap/no-match interpretation uses the **real server-side GitHub Copilot SDK**, never a browser SDK or model-call substitute. For local analysis, sign in with your existing Copilot CLI credentials, run `npm run workshop:service`, then run `VITE_WORKSHOP_AI=local npm run dev`. The companion binds only to `127.0.0.1:4318`; explicit local origins and deny-all tool/session restrictions apply.
+Open `http://127.0.0.1:5173/agentic-loop/workshop`. Preparation, guide matching, scope review and prompt assembly are client-side. There is no local AI companion, SDK runtime, analysis endpoint or Copilot sign-in requirement to prepare a workshop. Development and public static hosting use the same flow.
 
-See [local SDK setup, contracts and limitations](docs/workshop-runtime.md), [the workshop facilitator guide](docs/workshop-guide.md), and [the preserved approved implementation plan](docs/customer-workshop-plan.md). `npm run workshop:smoke` uses non-sensitive fictional data against the live SDK. Public GitHub Pages/Static Web Apps remain static: they cannot launch the CLI or silently call localhost. A public AI service would need a separately approved hosting, authentication and tenancy design.
+See [the workshop specification](docs/spec.md#47-client-side-customer-workshop-preparation) and [the workshop facilitator guide](docs/workshop-guide.md). The [original implementation plan](docs/customer-workshop-plan.md) is historical; its SDK preparation requirements have been superseded.
 
-New customer workshops start with one of three randomly selected, editable sample briefs. Scenario links retain their own context. Workshop drafts are held only in browser memory. Navigation preserves them; refreshing starts a new sample draft. Customer text is not logged by the adapter or put in browser storage by this feature. Only submit approved workshop data to the signed-in Copilot service.
+New customer workshops start with one of three randomly selected, editable sample briefs. Scenario links retain their own context. Workshop drafts are held only in browser memory. Navigation preserves them; refreshing starts a new sample draft. Preparation does not transmit customer text to a service or put it in browser storage. Copying the prompt is explicit; submitting it to Copilot happens separately in your project.
 
 ## Use the build loop
 

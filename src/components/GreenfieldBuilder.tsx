@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -20,7 +20,6 @@ import {
   withRequiredCapabilities, type WorkshopSpec,
 } from '../data/workshop';
 import { WorkshopContext, newWorkshopDraft, type WorkshopDraft } from './WorkshopContext';
-import { localAIEnabled, requestWorkshopAnalysis } from '../lib/workshopAI';
 
 const CAPABILITIES: PickerOption[] = [
   { id: 'frontier-models', label: 'Frontier Models', description: 'GPT, Claude, Llama, Phi', icon: Brain, link: '/concepts/platform/foundry#frontier-models' },
@@ -89,38 +88,19 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
   }, [scenario, guideSlug]);
   const draft = drafts[key] ?? seed;
   const [modalOpen, setModalOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const requestRef = useRef<AbortController | null>(null);
-  const latestDraft = useRef(draft);
-  useEffect(() => { latestDraft.current = draft; }, [draft]);
-  useEffect(() => () => requestRef.current?.abort(), []);
 
   function patch(values: Partial<WorkshopDraft>, upstream = false) {
-    if (requestRef.current) {
-      requestRef.current.abort();
-      requestRef.current = null;
-      setBusy(false);
-    }
     const next = { ...draft, ...values, approved: null };
     if (upstream) {
       next.prepared = false;
-      next.proposal = null;
-      next.acceptedIds = [];
       if ('brief' in values) { next.outcome = ''; next.inScope = ''; next.resolutions = ''; }
     }
-    latestDraft.current = next;
     update(key, next);
-    setError('');
   }
 
-  const acceptedSuggestions = draft.proposal?.suggestions.filter(s => draft.acceptedIds.includes(`${s.kind}:${s.id}`)) ?? [];
-  const selectionIds = (kind: 'capabilities' | 'buildingBlocks' | 'patterns') => [
-    ...new Set([...draft[kind], ...acceptedSuggestions.filter(s => s.kind === kind && s.source === 'catalog').map(s => s.id)]),
-  ];
-  const capabilities = withRequiredCapabilities(selectionIds('capabilities'));
-  const buildingBlocks = selectionIds('buildingBlocks');
-  const patterns = selectionIds('patterns');
+  const capabilities = withRequiredCapabilities(draft.capabilities);
+  const buildingBlocks = draft.buildingBlocks;
+  const patterns = draft.patterns;
   const selectedIds = [...capabilities, ...buildingBlocks, ...patterns];
   const coverage = recommendWorkshop(draft.brief, selectedIds,
     [...lines(draft.customCapabilities), ...lines(draft.customBlocks), ...lines(draft.customPatterns)]);
@@ -135,31 +115,27 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
     inScope: lines(draft.inScope), outOfScope: lines(draft.outOfScope),
     constraints: lines(draft.constraints), assumptions: lines(draft.assumptions),
     successCriteria: lines(draft.criteria), evidence: lines(draft.evidence),
-    capabilities: [...capabilities.map(id => labelMap.get(id) ?? id), ...lines(draft.customCapabilities), ...acceptedSuggestions.filter(s => s.kind === 'capabilities' && s.source === 'custom').map(s => s.label)],
-    buildingBlocks: [...buildingBlocks.map(id => labelMap.get(id) ?? id), ...lines(draft.customBlocks), ...acceptedSuggestions.filter(s => s.kind === 'buildingBlocks' && s.source === 'custom').map(s => s.label)],
-    candidatePatterns: [...patterns.map(id => labelMap.get(id) ?? id), ...lines(draft.customPatterns), ...acceptedSuggestions.filter(s => s.kind === 'patterns' && s.source === 'custom').map(s => s.label)],
+    capabilities: [...capabilities.map(id => labelMap.get(id) ?? id), ...lines(draft.customCapabilities)],
+    buildingBlocks: [...buildingBlocks.map(id => labelMap.get(id) ?? id), ...lines(draft.customBlocks)],
+    candidatePatterns: [...patterns.map(id => labelMap.get(id) ?? id), ...lines(draft.customPatterns)],
     execution: draft.execution,
     guides: chosenGuides.map(p => ({
       slug: p.slug,
       reason: coverage.guides.find(g => g.playbook.slug === p.slug)?.reasons.join('; ') ?? 'Explicit expert selection; suitability must be validated.',
     })),
-    acceptedSuggestions,
     gaps: coverage.requirements.filter(r => !chosenGuides.some(p => p.addresses.includes(r.id))).map(r => r.label),
     openQuestions: [...coverage.questions, ...coverage.unsupported, ...lines(draft.questions),
-      ...(draft.execution === 'threadlight-pipeline' ? ['Validate the shipped Threadlight prerequisites, opinionated scope and customer deployment boundaries.'] : []),
-      ...(draft.proposal?.questions ?? []), ...(draft.proposal?.uncertainties ?? []), ...(draft.proposal?.unsupported ?? [])],
+      ...(draft.execution === 'threadlight-pipeline' ? ['Validate the shipped Threadlight prerequisites, opinionated scope and customer deployment boundaries.'] : [])],
     resolutions: draft.resolutions,
   };
   const approved = approvalIsCurrent(spec, draft.approved);
-  const canContinue = canApproveSpec(spec) && !busy;
+  const canContinue = canApproveSpec(spec);
   const missingDetails = [
     !spec.users.trim() && 'Add who will use the pilot.',
     !spec.successCriteria.length && 'Define what success looks like.',
     (spec.gaps.length || spec.openQuestions.length) && !spec.resolutions.trim() && 'Add scope notes that resolve the remaining gaps and questions.',
-    spec.acceptedSuggestions.some(s => !s.label.trim() || !s.reason.trim()) && 'Complete each selected suggestion.',
   ].filter(Boolean);
-  const nextStepStatus = busy ? 'Wait for the analysis to finish, or cancel it before continuing.'
-    : missingDetails.length ? missingDetails.join(' ')
+  const nextStepStatus = missingDetails.length ? missingDetails.join(' ')
     : approved ? 'Scope confirmed. Your build prompt is ready to reopen.'
     : 'Your scope is ready to confirm.';
   const advisorPackage = draft.prepared ? buildAdvisorPackage({
@@ -182,41 +158,9 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
       setModalOpen(true);
     }
   }
-  async function analyzeGaps() {
-    const controller = new AbortController();
-    requestRef.current?.abort();
-    requestRef.current = controller;
-    setBusy(true); setError('');
-    const request = {
-      brief: draft.brief, gaps: coverage.gaps,
-      coveredRequirementIds: coverage.requirements.filter(r => !coverage.gaps.includes(r)).map(r => r.id),
-    };
-    try {
-      const proposal = await requestWorkshopAnalysis(request, controller.signal);
-      if (requestRef.current !== controller || controller.signal.aborted) return;
-      const next = { ...latestDraft.current, proposal, acceptedIds: [], approved: null };
-      update(key, next);
-    } catch (failure) {
-      if (controller.signal.aborted || requestRef.current !== controller) return;
-      setError(failure instanceof Error ? failure.message : 'SDK analysis failed. Nothing was applied.');
-    } finally {
-      if (requestRef.current === controller) { requestRef.current = null; setBusy(false); }
-    }
-  }
   function changeSelection(field: 'capabilities' | 'buildingBlocks' | 'patterns', ids: string[]) {
     const selections = field === 'capabilities' ? withRequiredCapabilities(ids) : ids;
-    patch({
-      [field]: selections,
-      acceptedIds: draft.acceptedIds.filter(key => !key.startsWith(`${field}:`) || selections.includes(key.slice(field.length + 1))),
-    }, true);
-  }
-  function toggleSuggestion(index: number) {
-    const suggestion = draft.proposal!.suggestions[index];
-    const id = `${suggestion.kind}:${suggestion.id}`;
-    const isAccepted = draft.acceptedIds.includes(id);
-    patch({
-      acceptedIds: isAccepted ? draft.acceptedIds.filter(s => s !== id) : [...draft.acceptedIds, id],
-    });
+    patch({ [field]: selections }, true);
   }
 
   return (
@@ -225,7 +169,7 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
         <div className="section-eyebrow">{eyebrow ?? 'Customer workshop · Agentic Launchpad'}</div>
         <h2>{heading ?? 'Start a technical workshop'}</h2>
         <p>
-          {intro ?? 'Turn customer requirements into a tailored MVP or pilot. Reuse maintained guidance first; generate only what is missing. A workshop is not a production-readiness certification.'}
+          {intro ?? 'Turn customer requirements into a tailored MVP or pilot. Match maintained guidance, review scope, and prepare a build prompt in your browser. A workshop is not a production-readiness certification.'}
         </p>
       </div>
       <div className="prompt-shell">
@@ -287,7 +231,8 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
             <p>{coverage.state === 'strong'
               ? 'We found existing implementation guidance for your requirements. Adapt it to your customer instead of starting from scratch.'
               : 'Use existing guidance where it fits and define a customer-specific approach for the remaining requirements.'}</p>
-            <p className="workshop-proposal-explanation">This is a proposal, not a built or deployed app. Including a guide adds a link to its implementation instructions and recommended build skills to your Copilot prompt; it does not add a new capability automatically.</p>
+            <p className="workshop-proposal-explanation">This is a proposal, not a built or deployed app. Recommendations use curated rules in your browser, not AI analysis. Including a guide adds a link to its implementation instructions and recommended build skills to your Copilot prompt; it does not add a new capability automatically.</p>
+            <p className="workshop-proposal-explanation"><strong>Learn while building.</strong> Playbooks provide context and a guided example so the Solution Engineer can explain the approach and teach the customer. On your first build, follow the relevant playbook; on later workshops, reuse the approach through a customer-specific prompt without repeating every step. Curated examples help demonstrate meaningful platform capabilities, not generic apps.</p>
             {coverage.questions.map(q => <p key={q} className="workshop-warning">{q}</p>)}
             {coverage.unsupported.map(q => <p key={q} className="workshop-warning">{q}</p>)}
             {proposedGuides.map(guide => {
@@ -311,6 +256,7 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
                       ? coverage.requirements.filter(r => recommendation.covers.includes(r.id)).map(r => r.label).join('; ')
                       : 'Added manually. Confirm that this guide fits your customer before approving.'}</dd></div>
                     <div><dt>What you can reuse</dt><dd>{guide.summary}</dd></div>
+                    <div><dt>What you'll explore</dt><dd>{[...(guide.capabilities ?? []), ...(guide.building_blocks ?? [])].map(label => label === 'Knowledge' ? 'Foundry IQ' : label).join('; ') || guide.use_when}. Use the playbook's context and guided example to explain how these apply to your customer.</dd></div>
                     <div><dt>What needs adapting</dt><dd>{guide.adaptation} The example is a starting point, not your final customer app.</dd></div>
                   </dl>
                   <div className="workshop-guide-boundaries">
@@ -340,42 +286,7 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
               <ul>{spec.gaps.map((gap, index) => <li key={index}>{gap}</li>)}</ul>
               <p>Resolve these in scope notes, choose suitable guidance, or explicitly exclude them from the pilot.</p>
             </div>}
-            {coverage.gaps.length > 0 && (
-              <div className="workshop-gaps">
-                <p>Copilot can propose options for the requirements without a matching guide. You decide which suggestions to keep.</p>
-                {!localAIEnabled() && <p role="status">AI analysis is unavailable on this static portal. Use the documented local Copilot SDK companion, or explicitly validate manual scope. No AI proposal has been generated.</p>}
-                <button className="craft-btn" onClick={analyzeGaps} disabled={busy || coverage.state === 'clarification' || coverage.state === 'unsupported'}>
-                  <Sparkles size={15} /> {busy ? 'Analyzing only gaps...' : 'Propose only gaps with Copilot SDK'}
-                </button>
-                {busy && <button className="ghost-btn" onClick={() => {
-                  requestRef.current?.abort(); requestRef.current = null; setBusy(false); setError('Analysis cancelled. Nothing was applied.');
-                }}>Cancel analysis</button>}
-              </div>
-            )}
-            {error && <p role="alert" className="workshop-warning">{error}</p>}
           </section>
-          {draft.proposal && (
-            <section className="workshop-section" aria-label="Provisional AI suggestions">
-              <h3>Provisional AI suggestions</h3>
-              <p>Accept, edit or remove each suggestion. These are not maintained guidance or validated platform support.</p>
-              {draft.proposal.suggestions.map((s, index) => (
-                <div className="workshop-guide" key={`${s.kind}:${s.id}`}>
-                  <label><input type="checkbox" aria-label={`Accept suggestion ${index + 1}: ${s.label}`} checked={draft.acceptedIds.includes(`${s.kind}:${s.id}`)} onChange={() => toggleSuggestion(index)} /> Accept {s.source} {s.kind}</label>
-                  <input aria-label={`Suggestion ${index + 1}`} value={s.label} onChange={e => patch({
-                    proposal: { ...draft.proposal!, suggestions: draft.proposal!.suggestions.map((item, i) => i === index ? { ...item, label: e.target.value } : item) },
-                  })} />
-                  <p>{s.reason}</p>
-                </div>
-              ))}
-              {draft.proposal.guideIds.map(id => <label key={id} className="workshop-check">
-                <input type="checkbox" checked={draft.manualGuideIds.includes(id)} onChange={e => patch({
-                  manualGuideIds: e.target.checked ? [...draft.manualGuideIds, id] : draft.manualGuideIds.filter(value => value !== id),
-                  removedGuideIds: draft.removedGuideIds.filter(value => value !== id),
-                })} /> Review proposed guide: {playbooks.find(p => p.slug === id)?.name}
-              </label>)}
-              {[...draft.proposal.questions, ...draft.proposal.uncertainties, ...draft.proposal.unsupported].map((q, i) => <p key={i} className="workshop-warning">{q}</p>)}
-            </section>
-          )}
           <section className="workshop-section workshop-review" aria-label="Review workshop">
             <h3>Review workshop</h3>
             <p>Confirm who this pilot is for, what success looks like, and any scope decisions.</p>
@@ -399,6 +310,11 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
                   </small>}
                 </div>
               ))}
+            </div>
+            <div className="workshop-remaining" aria-label="Required Agentic Loop build skill">
+              <h4>Why the Agentic Loop skill is required</h4>
+              <p>The <Link to="/skills/agentic-loop">agentic-loop build skill</Link> turns the <Link to="/concepts/platform">reference architecture</Link> into implementation rules: Foundry hosted agents and models, governed skills and tools, keyless identity, observability and azd deployment. It adds supporting services only where your scope needs them.</p>
+              <p>The build runs a readiness pre-flight first, then Specify. The prompt explicitly invokes agentic-loop after the spec is written, before Plan, and carries its decisions through the remaining stages. This is a build-time policy skill for Copilot, not a run skill for the customer's agent. The portal prepares the instructions but cannot verify external invocation.</p>
             </div>
             <div className="workshop-workflow">
               <label htmlFor={`workflow-${key}`}>Build workflow</label>

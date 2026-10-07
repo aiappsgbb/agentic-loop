@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import { X, Check, Copy, Terminal, Sparkles, Rocket, ArrowRight, FolderPlus, RefreshCw } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { AdvisorPackage } from '../data/advisor';
 import { getRunSkill } from '../data/skills';
-import { formatWorkshopSpec } from '../data/workshop';
+import { formatWorkshopSpecMarkdown } from '../data/workshop';
 
 interface Props {
   open: boolean;
@@ -13,9 +14,9 @@ interface Props {
 }
 
 const STEPS = [
-  { id: 'loop', title: 'Your build prompt', icon: Sparkles },
   { id: 'prep', title: 'Prepare your environment', icon: Terminal },
   { id: 'project', title: 'Create your project', icon: FolderPlus },
+  { id: 'loop', title: 'Your build prompt', icon: Sparkles },
   { id: 'review', title: 'Review approved spec', icon: Check },
   { id: 'skills', title: 'Choose skills', icon: Sparkles },
   { id: 'operate', title: 'Verify your pilot', icon: RefreshCw },
@@ -86,6 +87,7 @@ function MakeItRealDialog({ open, onClose, advisorPackage }: Props & { advisorPa
     ? `\n\nUse the following skills when running the agent(s): ${chosenRunSkills.join(', ')}.`
     : '';
   const specPrompt = `${advisorPackage.copilotPrompt}${runSkillsLine}`;
+  const currentStep = STEPS[step].id;
 
   return createPortal(
     <div className="modal-backdrop build-prompt-backdrop" onClick={closeModal}>
@@ -94,7 +96,7 @@ function MakeItRealDialog({ open, onClose, advisorPackage }: Props & { advisorPa
           <div>
             <div className="modal-eyebrow">Customer workshop · Agentic Launchpad</div>
             <h2 id="make-it-real-title">Your build prompt</h2>
-            <p>Your scope is confirmed. Copy the prompt into Copilot when you're ready. Use the setup guidance if needed; this page does not start a build or deployment.</p>
+            <p>Your scope is confirmed. Prepare your environment, create your project, then paste the Markdown prompt into GitHub Copilot App. If you're already set up, go straight to Your build prompt; this page does not start a build or deployment.</p>
           </div>
           <button className="icon-btn" onClick={closeModal} aria-label="Close"><X size={16} /></button>
         </header>
@@ -113,38 +115,42 @@ function MakeItRealDialog({ open, onClose, advisorPackage }: Props & { advisorPa
         </nav>
 
         <div className="modal-body">
-          {step === 1 && (
+          {currentStep === 'prep' && (
             <div className="step-pane">
               <h3>Prepare your environment</h3>
-              <p className="muted">Prepare the Copilot toolchain and a development Azure subscription. Check resource and role-assignment permissions, model/region availability and approved sample data before a live workshop. This portal cannot verify your local CLI or subscription readiness.</p>
-              <CodeBlock label="Sign in to GitHub & Azure" code="copilot login; az login" k="prep-auth" copied={copied} onCopy={copy} />
-              <CodeBlock label="Install the Spec2Cloud plugin" code="copilot plugin marketplace add Azure-Samples/Spec2Cloud && copilot plugin install lean@Spec2Cloud" k="prep-plugin" copied={copied} onCopy={copy} />
-              <CodeBlock label="Verify prerequisites" code="gh --version && gh skill --help && az account show && azd auth login --check-status && copilot plugin list" k="prep-check" copied={copied} onCopy={copy} />
+              <p className="muted">Use <a href="https://gh.io/app" target="_blank" rel="noopener noreferrer">GitHub Copilot App</a> for this build. Install it and sign in with your Copilot-enabled GitHub account. Install GitHub CLI (gh), Azure CLI (az) and Azure Developer CLI (azd) for the commands below. Check resource and role-assignment permissions, model/region availability and approved sample data before a live workshop. This portal cannot verify your tools or subscription readiness.</p>
+              <p className="muted">In Copilot App, <a href="https://github.com/copilot/app/launch?open=ghapp%3A%2F%2Fplugins%2Fmarketplace%2Fadd%3Fsource%3DAzure-Samples%2FSpec2Cloud" target="_blank" rel="noopener noreferrer">add the Spec2Cloud marketplace</a>, then <a href="https://github.com/copilot/app/launch?open=ghapp%3A%2F%2Fplugins%2Finstall%3Fsource%3Dlean%2540Spec2Cloud" target="_blank" rel="noopener noreferrer">install the lean plugin</a>. Confirm lean@Spec2Cloud is installed and enabled in the App's plugin settings.</p>
+              <CodeBlock label="Sign in to GitHub CLI and Azure in your terminal" code={'gh auth login\naz login\nazd auth login'} k="prep-auth" copied={copied} onCopy={copy} />
+              <CodeBlock label="Verify command-line prerequisites and Azure subscription" code="gh --version && gh skill --help && gh auth status && az account show && azd auth login --check-status" k="prep-check" copied={copied} onCopy={copy} />
             </div>
           )}
 
-          {step === 2 && (
+          {currentStep === 'project' && (
             <div className="step-pane">
               <h3>Create your project</h3>
               <p className="muted">Create an empty folder (or a private repo) to hold the loop's artifacts — spec, plan, source, and infra.</p>
               <CodeBlock label="New local folder" code="mkdir my-agentic-app && cd my-agentic-app" k="proj-mkdir" copied={copied} onCopy={copy} />
               <CodeBlock label="…or a private GitHub repo" code="gh repo create my-agentic-app --private --clone && cd my-agentic-app" k="proj-repo" copied={copied} onCopy={copy} />
               <CodeBlock label="Install the required Agentic Loop skill" code="gh skill install aiappsgbb/agentic-loop agentic-loop --agent github-copilot --scope project && gh skill list" k="proj-agentic-loop" copied={copied} onCopy={copy} />
+              <p className="muted"><strong>Why this skill?</strong> <Link to="/skills/agentic-loop" onClick={closeModal}>agentic-loop</Link> is the build-time policy layer that translates the <Link to="/concepts/platform" onClick={closeModal}>reference architecture</Link> into your specification and plan. It governs hosting, models, skills/tools, identity, observability and deployment; optional services stay tied to customer requirements.</p>
+              <CodeBlock label="Verify the skill source and check for updates (GitHub CLI 2.90+)" code="gh skill list --json skillName,sourceURL,scope,version,pinned,path && gh skill update --dry-run" k="proj-skill-check" copied={copied} onCopy={copy} />
+              <p className="muted">Check that agentic-loop is listed for this project and review any available update before building; respect pinned versions. Installing the skill is not invoking it. The copied prompt runs the readiness pre-flight before the build, then explicitly invokes agentic-loop after Specify and before Plan. Its decisions are recorded and carried through implementation, verification and deployment. If the skill cannot be invoked, stop before Plan.</p>
+              <p className="muted">Run these commands in your terminal inside the project folder. In GitHub Copilot App, choose <strong>+ → Add project from → Local folder or repository</strong> and select that folder. Start a session in the project using Plan mode to review the specification and implementation plan before approving execution.</p>
             </div>
           )}
 
-          {step === 3 && (
+          {currentStep === 'review' && (
             <div className="step-pane">
               <h3>Your confirmed scope</h3>
               <p className="muted">This is the source of truth for the final prompt. Close the hand-off to edit it; any upstream change invalidates approval.</p>
-              <pre className="workshop-spec">{advisorPackage.workshopSpec ? formatWorkshopSpec(advisorPackage.workshopSpec) : advisorPackage.intent}</pre>
+              <pre className="workshop-spec">{advisorPackage.workshopSpec ? formatWorkshopSpecMarkdown(advisorPackage.workshopSpec) : advisorPackage.intent}</pre>
               {advisorPackage.workshopSpec?.execution === 'threadlight-pipeline' && <div className="modal-hint">The shipped Threadlight variant requires awesome-gbb and threadlight-skills. Follow its maintained guide and validate the opinionated infrastructure and deployment scope before execution.</div>}
             </div>
           )}
-          {step === 4 && (
+          {currentStep === 'skills' && (
             <div className="step-pane">
               <h3>Choose skills</h3>
-              <p className="muted"><strong>Build skills</strong> are identified and installed automatically by Copilot while it implements your solution — you don't need to pick them. <strong>Run skills</strong> are reused by the agent at execution time; select the ones you want from the suggestions below. Return to <strong>Your build prompt</strong> to copy the updated prompt.</p>
+              <p className="muted">The mandatory <strong>agentic-loop build skill</strong> is installed during project setup and explicitly invoked by the prompt. Copilot identifies additional <strong>build skills</strong> from the specification and checks their availability and freshness; review any installation or update approvals. <strong>Run skills</strong> are reused by the customer agent at execution time; select the ones you want below. Return to <strong>Your build prompt</strong> to copy the updated prompt.</p>
 
               {availableRunSkills.length > 0 ? (
                 <div className="run-skill-checklist">
@@ -169,19 +175,21 @@ function MakeItRealDialog({ open, onClose, advisorPackage }: Props & { advisorPa
             </div>
           )}
 
-          {step === 0 && (
+          {currentStep === 'loop' && (
             <div className="step-pane">
-              <h3>Copy your prompt into Copilot</h3>
-              <p className="muted">Open your project in Copilot App or CLI and paste this prompt. It includes your confirmed scope, selected guides and build skills. Copilot will use {advisorPackage.workshopSpec?.execution === 'threadlight-pipeline' ? <code>threadlight-design</code> : <code>/spec2cloud</code>}; review Specify and Plan before implementing. Deployment needs separate approval.</p>
+              <h3>Copy your prompt into GitHub Copilot App</h3>
+              <p className="muted">Open a session in your project in GitHub Copilot App and paste this Markdown prompt into Chat. It includes your confirmed scope and selected guides. Copilot will use {advisorPackage.workshopSpec?.execution === 'threadlight-pipeline' ? <code>threadlight-design</code> : <code>/spec2cloud</code>}; review Specify and Plan before approving implementation. Deployment needs separate approval.</p>
+              {advisorPackage.playbooks.length > 0 && <>
+                <p className="muted"><strong>First build on this topic?</strong> Explore the selected playbooks to understand the capability and guide the customer through it. <strong>Already familiar?</strong> Reuse the approach through the prompt below; you don't need to repeat every playbook step.</p>
+                <ul>{advisorPackage.playbooks.map(guide => <li key={guide.slug}><Link to={`/playbooks/${guide.slug}`} onClick={closeModal}>Explore {guide.name} playbook</Link></li>)}</ul>
+              </>}
               <PackageBlock icon={<Sparkles size={14} />} title="Build prompt" action="Copy prompt" copied={copied === 'prompt'} onCopy={() => copy(specPrompt, 'prompt')}>
                 {specPrompt}
               </PackageBlock>
-              <p className="muted">Not set up yet? Use <strong>Prepare your environment</strong> and <strong>Create your project</strong> above.</p>
-              <CodeBlock label="Start the Copilot CLI in your project (review permissions)" code="copilot" k="loop-open" copied={copied} onCopy={copy} />
             </div>
           )}
 
-          {step === 5 && (
+          {currentStep === 'operate' && (
             <div className="step-pane">
               <h3>Verify your pilot</h3>
               <p className="muted">Check the approved success criteria, identity boundaries, safe data handling and scenario-specific failure paths. Record evidence, remaining gaps and production next steps. If development deployment was approved, inspect models, agents, tools and traces. Review the exact development environment before any cleanup.</p>
@@ -204,7 +212,7 @@ function MakeItRealDialog({ open, onClose, advisorPackage }: Props & { advisorPa
             : <button className="ghost-btn" onClick={() => setStep(s => Math.max(0, s - 1))}>Back</button>}
           {step < STEPS.length - 1 ? (
             <button className="primary-btn" onClick={() => setStep(s => Math.min(STEPS.length - 1, s + 1))}>
-              {step === 0 ? 'Setup guidance' : 'Next'} <ArrowRight size={14} />
+              {STEPS[step + 1].title} <ArrowRight size={14} />
             </button>
           ) : (
             <button className="primary-btn" onClick={closeModal}>Done</button>

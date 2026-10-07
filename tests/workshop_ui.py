@@ -28,11 +28,15 @@ class WorkshopJourneys(unittest.TestCase):
         self.context = self.browser.new_context()
         self.page = self.context.new_page()
         self.errors = []
+        self.preparation_requests = []
         self.page.on("pageerror", lambda error: self.errors.append(str(error)))
+        self.page.on("request", lambda request: self.preparation_requests.append(request.url)
+                     if "/api/workshop/" in request.url or ":4318" in request.url else None)
 
     def tearDown(self):
         self.context.close()
         self.assertEqual(self.errors, [])
+        self.assertEqual(self.preparation_requests, [], "Workshop preparation must not call a service")
 
     def go(self, path="/workshop", base=BASE):
         self.page.goto(base + path)
@@ -60,13 +64,34 @@ class WorkshopJourneys(unittest.TestCase):
         self.continue_button().click()
         dialog = self.page.get_by_role("dialog")
         expect(dialog).to_be_visible()
+        steps = dialog.locator(".step-label").all_text_contents()
+        self.assertEqual(steps[:3], ["Prepare your environment", "Create your project", "Your build prompt"])
+        expect(dialog.get_by_role("heading", name="Prepare your environment", exact=True)).to_be_visible()
+        expect(dialog.get_by_role("link", name="GitHub Copilot App", exact=True)).to_have_attribute("href", "https://gh.io/app")
+        expect(dialog.get_by_role("link", name="install the lean plugin", exact=True)).to_have_attribute(
+            "href", "https://github.com/copilot/app/launch?open=ghapp%3A%2F%2Fplugins%2Finstall%3Fsource%3Dlean%2540Spec2Cloud")
+        self.assertNotIn("copilot login", dialog.inner_text())
+        self.assertNotIn("copilot plugin", dialog.inner_text())
+        dialog.locator(".modal-foot").get_by_role("button", name="Create your project", exact=True).click()
+        expect(dialog.get_by_role("heading", name="Create your project", exact=True)).to_be_visible()
+        expect(dialog.get_by_text("Add project from", exact=False)).to_be_visible()
+        expect(dialog.get_by_text("Why this skill?", exact=True)).to_be_visible()
+        expect(dialog.get_by_role("link", name="agentic-loop", exact=True)).to_have_attribute("href", "/agentic-loop/skills/agentic-loop")
+        expect(dialog.get_by_role("link", name="reference architecture", exact=True)).to_have_attribute("href", "/agentic-loop/concepts/platform")
+        expect(dialog.get_by_text("Installing the skill is not invoking it.", exact=False)).to_be_visible()
+        self.assertIn("gh skill update --dry-run", dialog.inner_text())
+        dialog.locator(".modal-foot").get_by_role("button", name="Your build prompt", exact=True).click()
         expect(dialog.get_by_role("button", name="Copy prompt", exact=True)).to_be_visible()
+        expect(dialog.get_by_role("heading", name="Copy your prompt into GitHub Copilot App", exact=True)).to_be_visible()
+        self.assertNotIn("Start the Copilot CLI", dialog.inner_text())
+        self.assertNotIn('"brief":', dialog.locator(".prompt-preview pre").inner_text())
         return dialog
 
     def approved_spec(self):
         dialog = self.open_prompt()
-        dialog.get_by_role("button", name="Review approved spec", exact=True).click()
-        data = json.loads(dialog.locator(".workshop-spec").inner_text())
+        dialog.get_by_role("navigation").get_by_role("button", name="Review approved spec", exact=True).click()
+        data = dialog.locator(".workshop-spec").inner_text()
+        self.assertTrue(data.startswith("## Confirmed customer workshop specification"))
         self.page.keyboard.press("Escape")
         return data
 
@@ -160,6 +185,9 @@ class WorkshopJourneys(unittest.TestCase):
         expect(guide.get_by_role("heading", name="Enterprise Knowledge Grounding", exact=True)).to_be_visible()
         expect(guide.get_by_text("Grounded answers with citations", exact=True)).to_be_visible()
         expect(guide.get_by_text("What you can reuse", exact=True)).to_be_visible()
+        expect(proposal.get_by_text("Learn while building.", exact=True)).to_be_visible()
+        expect(guide.get_by_text("What you'll explore", exact=True)).to_be_visible()
+        expect(guide.get_by_text("Foundry IQ; Agentic Retrieval; Storage.", exact=False)).to_be_visible()
         expect(guide.get_by_text("What needs adapting", exact=True)).to_be_visible()
         expect(guide.get_by_text("Confirm before building:", exact=True)).to_be_visible()
         expect(guide.get_by_text("Not included:", exact=True)).to_be_visible()
@@ -192,14 +220,23 @@ class WorkshopJourneys(unittest.TestCase):
         dialog.get_by_role("button", name="Copy prompt", exact=True).click()
         expect(dialog.get_by_role("alert")).to_have_count(0)
         copied = self.page.evaluate("window.copiedWorkshopPrompt")
+        self.assertEqual(copied.count(HR), 1)
         for text in [HR, "Customer HR staff", "EU region; no payroll writes", "Foundry IQ",
                      "Frontier Models", "Every supported answer cites the approved source", "Corpus owner provides approved policy samples"]:
             self.assertIn(text, copied)
         self.assertNotIn("Weather", copied)
+        self.assertIn("## Learn while building", copied)
+        self.assertIn("Solution Engineer can teach the customer", copied)
+        self.assertIn("without repeating every tutorial step", copied)
+        self.assertIn("## Required Agentic Loop build policy", copied)
+        self.assertIn("Installation alone is not evidence of invocation.", copied)
+        self.assertIn("after Specify writes ./docs/spec.md and before Plan starts, invoke the installed agentic-loop skill", copied)
+        self.assertNotIn("policy layer before Specify", copied)
         self.page.keyboard.press("Escape")
         expect(dialog).to_have_count(0)
         expect(self.page.get_by_role("button", name="Open build prompt", exact=True)).to_be_focused()
-        self.open_prompt().get_by_role("button", name="Back to workshop", exact=True).click()
+        self.open_prompt().get_by_role("button", name="Prepare your environment", exact=True).click()
+        self.page.get_by_role("dialog").get_by_role("button", name="Back to workshop", exact=True).click()
         expect(self.page.get_by_role("button", name="Open build prompt", exact=True)).to_be_focused()
         self.page.get_by_label("Scope notes and decisions", exact=True).fill("Changed customer constraint")
         expect(self.page.get_by_role("button", name="Open build prompt", exact=True)).to_have_count(0)
@@ -207,7 +244,7 @@ class WorkshopJourneys(unittest.TestCase):
         self.page.get_by_role("link", name="Playbook library", exact=True).click()
         self.page.get_by_role("link", name="Start a technical workshop", exact=True).click()
         expect(self.page.get_by_label("Scope notes and decisions", exact=True)).to_have_value("Changed customer constraint")
-        self.assertIn("Changed customer constraint", self.approved_spec()["resolutions"])
+        self.assertIn("Changed customer constraint", self.approved_spec())
         self.page.get_by_role("checkbox", name="Storage", exact=False).check()
         expect(self.page.get_by_label("Review workshop")).to_have_count(0)
         self.page.get_by_role("button", name="Prepare workshop", exact=True).click()
@@ -230,7 +267,30 @@ class WorkshopJourneys(unittest.TestCase):
         expect(self.page.get_by_role("button", name="Open build prompt", exact=True)).to_have_count(0)
         expect(self.continue_button()).to_be_disabled()
         self.page.get_by_label("What does success look like?", exact=True).fill("Changed criterion: unsupported questions are refused")
-        self.assertEqual(self.approved_spec()["successCriteria"], ["Changed criterion: unsupported questions are refused"])
+        self.assertIn("### Success criteria\n\n- Changed criterion: unsupported questions are refused", self.approved_spec())
+
+    def test_learning_playbook_is_accessible_without_losing_confirmed_scope(self):
+        self.go()
+        self.prepare(HR)
+        self.scope("Teach citations using approved policy samples.")
+        policy = self.page.get_by_label("Required Agentic Loop build skill", exact=True)
+        expect(policy.get_by_role("heading", name="Why the Agentic Loop skill is required")).to_be_visible()
+        policy.get_by_role("link", name="reference architecture", exact=True).click()
+        self.page.wait_for_url("**/concepts/platform")
+        expect(self.page.get_by_role("heading", name="The reference architecture for the Agentic Loop.", exact=True)).to_be_visible()
+        self.page.get_by_role("link", name="Start a technical workshop", exact=True).first.click()
+        expect(self.page.get_by_label("Scope notes and decisions", exact=True)).to_have_value("Teach citations using approved policy samples.")
+        dialog = self.open_prompt()
+        expect(dialog.get_by_text("First build on this topic?", exact=True)).to_be_visible()
+        expect(dialog.get_by_text("Already familiar?", exact=True)).to_be_visible()
+        dialog.get_by_role("link", name="Explore Enterprise Knowledge Grounding playbook", exact=True).click()
+        expect(self.page.get_by_role("dialog")).to_have_count(0)
+        self.page.wait_for_url("**/playbooks/enterprise-knowledge-grounding")
+        self.page.get_by_role("link", name="Start a technical workshop", exact=True).first.click()
+        expect(self.page.get_by_label("What should the customer be able to do?")).to_have_value(HR)
+        expect(self.page.get_by_label("Scope notes and decisions", exact=True)).to_have_value("Teach citations using approved policy samples.")
+        expect(self.page.get_by_role("button", name="Open build prompt", exact=True)).to_be_enabled()
+        self.open_prompt()
 
     def test_guide_inclusion_manual_choices_and_workflow_are_explicit(self):
         self.go()
@@ -245,13 +305,13 @@ class WorkshopJourneys(unittest.TestCase):
         expect(self.page.get_by_text("Add scope notes that resolve the remaining gaps and questions.", exact=True)).to_be_visible()
         include.check()
         expect(self.continue_button()).to_be_enabled()
-        self.assertEqual([guide["slug"] for guide in self.approved_spec()["guides"]], ["enterprise-knowledge-grounding"])
+        self.assertIn("### Selected guides\n\n- enterprise-knowledge-grounding:", self.approved_spec())
 
         self.page.get_by_label("Add another guide (optional)", exact=False).select_option("governance-safety-baseline")
         added = self.page.get_by_role("article", name="Governance & Safety Baseline", exact=True)
         expect(added.get_by_text("Added manually.", exact=False)).to_be_visible()
         expect(self.page.get_by_role("button", name="Open build prompt", exact=True)).to_have_count(0)
-        self.assertIn("governance-safety-baseline", [guide["slug"] for guide in self.approved_spec()["guides"]])
+        self.assertIn("- governance-safety-baseline:", self.approved_spec())
         added.get_by_role("checkbox", name="Include Governance & Safety Baseline in build prompt", exact=True).click()
         expect(added).to_have_count(0)
 
@@ -267,101 +327,42 @@ class WorkshopJourneys(unittest.TestCase):
         self.page.get_by_role("button", name="Dark", exact=True).click()
         self.snapshot("proposal-dark.png")
 
-    def test_partial_uses_only_missing_integration_and_accepts_edited_suggestion(self):
-        received = []
-
-        def analyze(route):
-            request = route.request.post_data_json
-            received.append(request)
-            route.fulfill(json={
-                "suggestions": [{"kind": "requirement", "source": "custom", "id": "custom-payroll",
-                                 "label": "Payroll adapter", "reason": "Validate an approved read-only API",
-                                 "addresses": [request["gaps"][0]["id"]]}],
-                "guideIds": [], "questions": ["Which approved payroll API?"], "uncertainties": [], "unsupported": []
-            })
-
-        self.page.route("**/api/workshop/analyze", analyze)
+    def test_partial_preserves_guidance_and_requires_manual_gap_decisions(self):
         self.go()
         self.prepare(HR + " Integrate with a custom payroll system.")
         expect(self.page.get_by_text("Partly covered", exact=True)).to_be_visible()
-        self.page.get_by_role("button", name="Propose only gaps with Copilot SDK").click()
-        expect(self.page.get_by_role("heading", name="Provisional AI suggestions")).to_be_visible()
-        self.assertEqual([g["id"] for g in received[0]["gaps"]], ["integration"])
-        self.assertIn("knowledge-grounding", received[0]["coveredRequirementIds"])
-        self.page.get_by_label("Suggestion 1", exact=True).fill("Read-only customer payroll adapter")
-        self.page.get_by_role("checkbox", name=re.compile(r"^Accept suggestion 1:")).check()
+        expect(self.page.get_by_role("article", name="Enterprise Knowledge Grounding", exact=True)).to_be_visible()
+        expect(self.page.get_by_text("Customer-specific system integration", exact=True)).to_be_visible()
+        self.scope()
         expect(self.continue_button()).to_be_disabled()
         self.scope("Use the customer-approved read-only payroll API; verified sample contract. No payroll writes.")
         data = self.approved_spec()
-        self.assertEqual(data["acceptedSuggestions"][0]["label"], "Read-only customer payroll adapter")
-        self.assertIn("enterprise-knowledge-grounding", [g["slug"] for g in data["guides"]])
+        self.assertIn("read-only payroll API", data)
+        self.assertIn("### Remaining gaps\n\n- Customer-specific system integration", data)
+        self.assertIn("- enterprise-knowledge-grounding:", data)
+        self.assertNotIn("acceptedSuggestions", data)
 
-    def test_no_match_accept_edit_remove_and_sdk_validation_failure(self):
-        def proposal(route):
-            gap = route.request.post_data_json["gaps"][0]["id"]
-            route.fulfill(json={
-                "suggestions": [
-                    {"kind": "capabilities", "source": "catalog", "id": "frontier-models", "label": "Candidate model", "reason": "Validate scheduling approach", "addresses": [gap]},
-                    {"kind": "buildingBlocks", "source": "custom", "id": "custom-scheduler", "label": "Scheduling adapter", "reason": "No packaged adapter", "addresses": [gap]},
-                    {"kind": "patterns", "source": "catalog", "id": "workflow", "label": "Candidate workflow", "reason": "Review fairness rules", "addresses": [gap]},
-                    {"kind": "buildingBlocks", "source": "catalog", "id": "identity", "label": "Existing identity baseline", "reason": "Preserve approved access boundaries", "addresses": [gap]},
-                ], "guideIds": [], "questions": [], "uncertainties": ["Fairness not validated"], "unsupported": []
-            })
-        self.page.route("**/api/workshop/analyze", proposal)
+    def test_custom_workshop_is_prepared_without_any_network_requests(self):
         self.go()
+        requests = []
+        self.page.route("**/*", lambda route: requests.append(route.request.url) or route.abort())
         self.prepare("Schedule telescopes fairly for volunteer teams.")
         expect(self.page.get_by_text("Custom approach needed", exact=True)).to_be_visible()
-        self.page.get_by_role("button", name="Propose only gaps with Copilot SDK").click()
-        self.page.get_by_role("checkbox", name=re.compile(r"^Accept suggestion 1:")).check()
-        self.page.get_by_role("checkbox", name=re.compile(r"^Accept suggestion 2:")).check()
-        self.page.get_by_role("checkbox", name=re.compile(r"^Accept suggestion 3:")).check()
-        self.page.get_by_role("checkbox", name=re.compile(r"^Accept suggestion 4:")).check()
-        self.page.get_by_role("checkbox", name=re.compile(r"^Accept suggestion 4:")).uncheck()
-        self.page.get_by_label("Suggestion 2", exact=True).fill("Customer scheduling integration")
-        self.page.get_by_role("checkbox", name=re.compile(r"^Accept suggestion 1:")).uncheck()
+        expect(self.page.get_by_role("button", name="Propose only gaps with Copilot SDK")).to_have_count(0)
+        expect(self.page.get_by_role("heading", name="Provisional AI suggestions")).to_have_count(0)
+        self.scope()
+        expect(self.continue_button()).to_be_disabled()
         self.scope("Validated a manual scheduling pilot with synthetic data; customer approved fairness rules. No live integration yet.")
         data = self.approved_spec()
-        self.assertEqual(data["capabilities"], ["Frontier Models"])
-        self.assertIn("Customer scheduling integration", data["buildingBlocks"])
-        self.assertIn("Identity & Access", data["buildingBlocks"])
-        self.assertIn("Workflow Automation", data["candidatePatterns"])
-        self.assertEqual(len(data["acceptedSuggestions"]), 2)
-
-        self.page.unroute("**/api/workshop/analyze")
-        self.page.route("**/api/workshop/analyze", lambda route: route.fulfill(json={
-            "suggestions": [], "guideIds": ["fake-playbook"], "questions": [], "uncertainties": [], "unsupported": []
-        }))
-        self.page.get_by_label("What should the customer be able to do?").fill("Schedule volunteer telescope access differently.")
-        self.page.get_by_role("button", name="Prepare workshop", exact=True).click()
-        self.page.get_by_role("button", name="Propose only gaps with Copilot SDK").click()
-        expect(self.page.get_by_role("alert")).to_contain_text("Fabricated")
-        expect(self.page.get_by_role("heading", name="Provisional AI suggestions")).to_have_count(0)
-
-    def test_auth_timeout_cancel_and_stale_responses(self):
-        self.go()
-        self.prepare("Schedule shared telescopes for volunteer teams.")
-        for code, message in [("AUTH_REQUIRED", "Sign in with the Copilot CLI"), ("TIMEOUT", "Copilot analysis timed out")]:
-            self.page.route("**/api/workshop/analyze", lambda route: route.fulfill(status=503, json={"code": code, "message": message}))
-            self.page.get_by_role("button", name="Propose only gaps with Copilot SDK").click()
-            expect(self.page.get_by_role("alert")).to_contain_text(message)
-            self.page.unroute("**/api/workshop/analyze")
-        pending = []
-        self.page.route("**/api/workshop/analyze", lambda route: pending.append(route))
-        self.page.get_by_role("button", name="Propose only gaps with Copilot SDK").click()
-        expect(self.page.get_by_role("button", name="Cancel analysis")).to_be_visible()
-        self.page.get_by_role("button", name="Cancel analysis").click()
-        expect(self.page.get_by_role("alert")).to_contain_text("cancelled")
-        for route in pending:
-            route.abort()
-        pending.clear()
-        self.page.get_by_role("button", name="Propose only gaps with Copilot SDK").click()
-        expect(self.page.get_by_role("button", name="Cancel analysis")).to_be_visible()
-        self.page.get_by_label("What should the customer be able to do?").fill(HR)
-        self.page.get_by_role("button", name="Prepare workshop", exact=True).click()
-        for route in pending:
-            route.fulfill(json={"suggestions": [], "guideIds": [], "questions": ["Stale question"], "uncertainties": [], "unsupported": []})
-        expect(self.page.get_by_text("Reusable starting point", exact=True)).to_be_visible()
-        expect(self.page.get_by_role("heading", name="Provisional AI suggestions")).to_have_count(0)
+        self.assertIn("### Capabilities\n\n- Frontier Models", data)
+        self.assertIn("Identity & Access", data)
+        self.assertIn("### Selected guides\n\n- None specified.", data)
+        self.assertNotIn("acceptedSuggestions", data)
+        dialog = self.open_prompt()
+        self.page.evaluate("Object.defineProperty(navigator, 'clipboard', {value:{writeText:async text => window.copiedWorkshopPrompt = text}})")
+        dialog.get_by_role("button", name="Copy prompt", exact=True).click()
+        self.assertIn(data, self.page.evaluate("window.copiedWorkshopPrompt"))
+        self.assertEqual(requests, [])
 
     def test_vague_unsupported_and_static_manual_path(self):
         self.go()
@@ -371,34 +372,17 @@ class WorkshopJourneys(unittest.TestCase):
         expect(self.page.get_by_text("Unsupported requirement", exact=True)).to_be_visible()
         self.go(base=STATIC)
         self.prepare("Schedule telescope usage fairly for volunteer teams.")
-        expect(self.page.get_by_text("AI analysis is unavailable on this static portal.", exact=False)).to_be_visible()
-        self.page.get_by_role("button", name="Propose only gaps with Copilot SDK").click()
-        expect(self.page.get_by_role("alert")).to_contain_text("unavailable")
+        expect(self.page.get_by_text("Recommendations use curated rules in your browser, not AI analysis.", exact=False)).to_be_visible()
+        expect(self.page.get_by_role("button", name="Propose only gaps with Copilot SDK")).to_have_count(0)
         self.page.get_by_role("checkbox", name="Frontier Models", exact=False).check()
         self.page.get_by_role("checkbox", name="Human-in-the-Loop", exact=False).check()
         self.page.get_by_role("button", name="Prepare workshop", exact=True).click()
         self.scope("Customer validated a manual MVP with synthetic scheduling data; live integrations excluded. Fair telescope allocation with manual approval.")
         expect(self.continue_button()).to_be_enabled()
         data = self.approved_spec()
-        self.assertIn("Frontier Models", data["capabilities"])
-        self.assertIn("Human-in-the-Loop", data["candidatePatterns"])
-        self.assertIn("Fair telescope allocation", data["resolutions"])
-
-    @unittest.skipUnless(os.environ.get("WORKSHOP_LIVE_SDK") == "1", "Live SDK explicitly opt-in")
-    def test_live_sdk_browser_adapter(self):
-        self.go()
-        health = self.page.request.get(BASE + "/api/workshop/health")
-        self.assertEqual(health.status, 200)
-        self.assertEqual(health.json()["authentication"], "checked-per-analysis")
-        self.prepare("Help a fictional community center schedule shared telescopes fairly across volunteer teams.")
-        with self.page.expect_response("**/api/workshop/analyze", timeout=120000) as pending:
-            self.page.get_by_role("button", name="Propose only gaps with Copilot SDK").click()
-        self.assertEqual(pending.value.status, 200, pending.value.text())
-        data = pending.value.json()
-        self.assertIn("suggestions", data)
-        expect(self.page.get_by_role("heading", name="Provisional AI suggestions")).to_be_visible()
-        self.assertGreater(len(data["suggestions"]) + len(data["questions"]), 0)
-        self.snapshot("live-sdk-workshop.png")
+        self.assertIn("Frontier Models", data)
+        self.assertIn("Human-in-the-Loop", data)
+        self.assertIn("Fair telescope allocation", data)
 
     def test_deep_links_library_roles_examples_theme_and_mobile(self):
         slugs = [
@@ -454,7 +438,7 @@ class WorkshopJourneys(unittest.TestCase):
         footer_bounds = dialog.locator(".modal-foot").bounding_box()
         self.assertLessEqual(footer_bounds["y"] + footer_bounds["height"], 844)
         self.assertLessEqual(self.page.evaluate("document.documentElement.scrollWidth"), 390)
-        dialog.get_by_role("button", name="Back to workshop", exact=True).click()
+        self.page.keyboard.press("Escape")
         self.page.get_by_role("button", name="Open menu").click()
         self.page.get_by_role("link", name="Show an industry demo", exact=True).click()
         expect(self.page.locator(".app-shell")).not_to_have_class(re.compile(r".*is-mobile-open.*"))

@@ -23,7 +23,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-/.workshop-runtime/
 /test-results/
 /playwright-report/
 /.workshop-ui-env/

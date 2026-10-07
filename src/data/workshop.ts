@@ -1,11 +1,5 @@
 import { playbooks, type Playbook } from './catalog';
 
-export const TAXONOMY = {
-  capabilities: ['frontier-models', 'image-generation', 'text-to-speech', 'speech-to-text', 'realtime', 'forms', 'knowledge'],
-  buildingBlocks: ['observability', 'ai-gateway', 'identity', 'private-net', 'data', 'storage'],
-  patterns: ['workflow', 'domain', 'knowledge-grounding', 'multi-agent', 'human-in-the-loop'],
-} as const;
-export type SuggestionKind = keyof typeof TAXONOMY | 'requirement';
 export type CoverageState = 'strong' | 'partial' | 'none' | 'clarification' | 'unsupported';
 export function withRequiredCapabilities(ids: readonly string[]): string[] {
   return [...new Set(['frontier-models', ...ids])];
@@ -87,26 +81,6 @@ export function recommendWorkshop(brief: string, selections: string[] = [], cust
   return { state, requirements, guides, gaps, questions, unsupported };
 }
 
-export interface AISuggestion {
-  kind: SuggestionKind;
-  source: 'catalog' | 'custom';
-  id: string;
-  label: string;
-  reason: string;
-  addresses: string[];
-}
-export interface AIProposal {
-  suggestions: AISuggestion[];
-  guideIds: string[];
-  questions: string[];
-  uncertainties: string[];
-  unsupported: string[];
-}
-export interface AnalysisRequest {
-  brief: string;
-  gaps: RequirementEvidence[];
-  coveredRequirementIds: string[];
-}
 export interface WorkshopSpec {
   brief: string;
   outcome: string;
@@ -122,7 +96,6 @@ export interface WorkshopSpec {
   candidatePatterns: string[];
   execution: 'agentic-loop' | 'threadlight-pipeline';
   guides: Array<{ slug: string; reason: string }>;
-  acceptedSuggestions: AISuggestion[];
   gaps: string[];
   openQuestions: string[];
   resolutions: string;
@@ -135,69 +108,39 @@ export const ESSENTIAL_SAFEGUARDS = [
 export function formatWorkshopSpec(spec: WorkshopSpec): string {
   return JSON.stringify(spec, null, 2);
 }
+export function formatWorkshopSpecMarkdown(spec: WorkshopSpec): string {
+  const referenceBrief = (text: string) =>
+    spec.brief.trim() && text.trim() === spec.brief.trim() ? 'See Customer brief.' : text;
+  const section = (title: string, content: string | string[]) =>
+    `### ${title}\n\n${Array.isArray(content)
+      ? content.length ? content.map(item => `- ${referenceBrief(item).replace(/\n/g, '\n  ')}`).join('\n') : '- None specified.'
+      : (title === 'Customer brief' ? content : referenceBrief(content)).trim() || 'None specified.'}`;
+  return [
+    '## Confirmed customer workshop specification',
+    section('Customer brief', spec.brief),
+    section('Expected outcome', spec.outcome),
+    section('Intended users', spec.users),
+    section('In scope', spec.inScope),
+    section('Out of scope', spec.outOfScope),
+    section('Constraints', spec.constraints),
+    section('Assumptions', spec.assumptions),
+    section('Success criteria', spec.successCriteria),
+    section('Verification evidence', spec.evidence),
+    section('Capabilities', spec.capabilities),
+    section('Building blocks', spec.buildingBlocks),
+    section('Candidate patterns', spec.candidatePatterns),
+    section('Build workflow', spec.execution === 'threadlight-pipeline' ? 'Threadlight pipeline' : 'Agentic Loop /spec2cloud'),
+    section('Selected guides', spec.guides.map(guide => `${guide.slug}: ${guide.reason}`)),
+    section('Remaining gaps', spec.gaps),
+    section('Open questions', spec.openQuestions),
+    section('Scope notes and decisions', spec.resolutions),
+  ].join('\n\n');
+}
 export function approvalIsCurrent(spec: WorkshopSpec, approved: string | null): boolean {
   return approved !== null && approved === formatWorkshopSpec(spec);
 }
 export function canApproveSpec(spec: WorkshopSpec): boolean {
   return Boolean(spec.brief.trim() && spec.outcome.trim() && spec.users.trim() && spec.inScope.length &&
     spec.successCriteria.length && spec.evidence.length &&
-    spec.acceptedSuggestions.every(s => s.label.trim() && s.reason.trim()) &&
     ((!spec.gaps.length && !spec.openQuestions.length) || spec.resolutions.trim()));
-}
-
-function record(value: unknown): Record<string, unknown> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Expected an object.');
-  return value as Record<string, unknown>;
-}
-function keys(value: Record<string, unknown>, allowed: string[]) {
-  if (Object.keys(value).some(key => !allowed.includes(key))) throw new Error('Unexpected response field.');
-}
-function string(value: unknown): string {
-  if (typeof value !== 'string' || !value.trim() || value.length > 3000) throw new Error('Expected nonempty bounded text.');
-  return value.trim();
-}
-export function stringList(value: unknown): string[] {
-  if (!Array.isArray(value) || value.length > 30) throw new Error('Expected a bounded text array.');
-  return value.map(string);
-}
-export function validateAnalysisRequest(value: unknown): AnalysisRequest {
-  const obj = record(value);
-  keys(obj, ['brief', 'gaps', 'coveredRequirementIds']);
-  const brief = string(obj.brief);
-  if (!Array.isArray(obj.gaps) || !obj.gaps.length || obj.gaps.length > 20) throw new Error('Only explicit uncovered requirements may be analyzed.');
-  const gaps = obj.gaps.map(value => {
-    const gap = record(value);
-    keys(gap, ['id', 'label', 'evidence']);
-    return { id: string(gap.id), label: string(gap.label), evidence: string(gap.evidence) };
-  });
-  const coveredRequirementIds = stringList(obj.coveredRequirementIds);
-  if (new Set(gaps.map(g => g.id)).size !== gaps.length) throw new Error('Duplicate gap IDs.');
-  if (gaps.some(g => coveredRequirementIds.includes(g.id))) throw new Error('Covered requirements cannot be regenerated.');
-  return { brief, gaps, coveredRequirementIds };
-}
-export function validateAIProposal(value: unknown, request: AnalysisRequest): AIProposal {
-  const obj = record(value);
-  keys(obj, ['suggestions', 'guideIds', 'questions', 'uncertainties', 'unsupported']);
-  if (!Array.isArray(obj.suggestions) || obj.suggestions.length > 20) throw new Error('Invalid suggestions.');
-  const suggestions = obj.suggestions.map((value): AISuggestion => {
-    const s = record(value);
-    keys(s, ['kind', 'source', 'id', 'label', 'reason', 'addresses']);
-    const kind = string(s.kind);
-    if (!Object.hasOwn(TAXONOMY, kind) && kind !== 'requirement') throw new Error('Unknown suggestion kind.');
-    const source = string(s.source);
-    if (source !== 'catalog' && source !== 'custom') throw new Error('Unknown suggestion source.');
-    const id = string(s.id);
-    if (source === 'catalog' && (kind === 'requirement' || !TAXONOMY[kind as keyof typeof TAXONOMY].some(item => item === id))) {
-      throw new Error('Fabricated taxonomy ID.');
-    }
-    if (source === 'custom' && !/^custom-[a-z0-9-]+$/.test(id)) throw new Error('Custom IDs must be explicitly namespaced.');
-    const addresses = stringList(s.addresses);
-    if (!addresses.length || addresses.some(id => !request.gaps.some(g => g.id === id))) throw new Error('Suggestions must address only requested gaps.');
-    return { kind: kind as SuggestionKind, source, id, label: string(s.label), reason: string(s.reason), addresses };
-  });
-  const guideIds = stringList(obj.guideIds);
-  if (new Set(guideIds).size !== guideIds.length) throw new Error('Duplicate guide IDs.');
-  if (guideIds.some(id => !playbooks.some(p => p.slug === id && p.role !== 'onboarding'))) throw new Error('Fabricated or unsuitable playbook ID.');
-  if (new Set(suggestions.map(s => `${s.kind}:${s.id}`)).size !== suggestions.length) throw new Error('Duplicate suggestions.');
-  return { suggestions, guideIds, questions: stringList(obj.questions), uncertainties: stringList(obj.uncertainties), unsupported: stringList(obj.unsupported) };
 }

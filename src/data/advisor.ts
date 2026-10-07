@@ -1,5 +1,5 @@
 import { playbooks, type Playbook, type Scenario } from './catalog';
-import { recommendWorkshop, formatWorkshopSpec, ESSENTIAL_SAFEGUARDS, type WorkshopSpec } from './workshop';
+import { recommendWorkshop, formatWorkshopSpecMarkdown, ESSENTIAL_SAFEGUARDS, type WorkshopSpec } from './workshop';
 
 export type AdvisorPath = 'idea' | 'scenario';
 
@@ -301,6 +301,17 @@ export function buildAdvisorPackage(args: {
   const buildSkillList = buildSkills.map(s => `- ${s}`).join('\n');
   const deploymentSkillList = deploymentSkills.map(s => `- ${s}`).join('\n');
   const architectureList = runArchitecture.map(a => `- ${a}`).join('\n');
+  const buildPolicy = `## Required Agentic Loop build policy\n\n` +
+    `Run the skill-owned RBAC pre-flight before step 1. Report all permission gaps together and stop on BLOCKED or ERROR; do not create resources or grant permissions to bypass this gate.\n\n` +
+    `Immediately after Specify writes ./docs/spec.md and before Plan starts, invoke the installed agentic-loop skill as the mandatory policy layer. Do not rely on Specify embedding or transitively referencing it. If the skill is missing or cannot be invoked, stop and report the blocker rather than continuing with generic defaults.\n\n` +
+    `Apply the skill's defaults and implementation contracts to the concrete specification before planning, then carry them through Implement, Verify and Deploy. Record the invoked skill's path, the pre-flight verdict and the resulting architecture decisions in ./docs/spec.md, then carry those decisions into ./docs/plan.md. Installation alone is not evidence of invocation.\n\n` +
+    `Use the skill's [reference architecture service map](https://github.com/aiappsgbb/agentic-loop/blob/main/skills/agentic-loop/references/reference-architecture.md) to connect requirements to the implementation: Foundry hosted agents and models, Copilot SDK with governed Foundry skills and toolbox MCP, keyless identity, end-to-end observability and azd deployment. Apply the skill's conditional defaults; add complementary services only when the confirmed scope needs them, not every box in the architecture. Explain these choices to the Solution Engineer and customer.\n\n`;
+  const teachingInstructions = `## Learn while building\n\n` +
+    (selectedPlaybooks.length
+      ? `Use the selected playbooks as teaching material as well as implementation guidance. Explain their context and guided examples so the Solution Engineer can teach the customer what is being built and why.\n\n`
+      : `No maintained playbook covers this scope. Explain the customer-specific design and its limitations; do not substitute an unrelated tutorial or claim packaged guidance exists.\n\n`) +
+    `During Specify and Plan, connect each chosen platform capability to a confirmed customer requirement and explain the key design decisions. Use curated starting points where they fit, not generic scaffolding or extra capabilities unrelated to the scope.\n\n` +
+    `Leave a concise walkthrough of the implemented capability, verification evidence and repeatable build approach. This should help the Solution Engineer lead a first guided workshop and use the customer-specific prompt on later builds without repeating every tutorial step. Preserve scope and permission reviews on every build.\n\n`;
 
   return {
     path: args.path,
@@ -317,27 +328,33 @@ export function buildAdvisorPackage(args: {
     workshopSpec: args.workshopSpec,
     copilotPrompt: args.workshopSpec
       ? (args.workshopSpec.execution === 'threadlight-pipeline'
-        ? `Use the threadlight-design skill to design a pilot agent end-to-end from this approved brief:\n${args.workshopSpec.brief}\n\n`
-        : `/spec2cloud ${args.workshopSpec.brief}\n\n`) +
-        `Approved customer workshop specification (source of truth):\n${formatWorkshopSpec(args.workshopSpec)}\n\n` +
-        `Maintained guidance to reuse:\n${selectedPlaybooks.map(p =>
+        ? `Use the threadlight-design skill to design a pilot agent end-to-end from the confirmed specification below.\n\n`
+        : `/spec2cloud Build the pilot described in the confirmed specification below.\n\n`) +
+        buildPolicy +
+        `${formatWorkshopSpecMarkdown(args.workshopSpec)}\n\n` +
+        `## Maintained guidance to reuse\n\n${selectedPlaybooks.map(p =>
           `- ${p.name} (${p.role}): https://github.com/aiappsgbb/agentic-loop/blob/main/playbooks/${p.slug}/README.md\n` +
+          `  Context: ${p.use_when}\n` +
+          `  Platform focus: ${[...(p.capabilities ?? []), ...(p.building_blocks ?? [])].map(label => label === 'Knowledge' ? 'Foundry IQ' : label).join('; ') || 'Validate against the confirmed customer scope.'}\n` +
           `  Adaptation: ${p.adaptation}\n  Prerequisites: ${p.prerequisites.join('; ')}\n  Exclusions: ${p.exclusions.join('; ')}`
         ).join('\n') || '- No packaged guidance chosen. Use the approved custom scope, not a random catalog default.'}\n\n` +
+        teachingInstructions +
         `Reuse the chosen maintained guidance and preserve covered requirements. Generate only approved gaps. Candidate patterns remain provisional until validated against these constraints. Do not substitute canned examples for the customer brief.\n\n` +
-        `Invoke the installed agentic-loop skill as the mandatory policy layer, including immediately after Specify and before Plan. Respect the existing repository. Review Specify and Plan against this approved scope before implementation. Stop for unresolved questions or unsupported requirements, rather than fabricating support.\n\n` +
-        `MVP safeguards:\n${ESSENTIAL_SAFEGUARDS.map(s => `- ${s}`).join('\n')}\n\n` +
+        `Respect the existing repository. Review Specify and Plan against this approved scope before implementation. Stop for unresolved questions or unsupported requirements, rather than fabricating support.\n\n` +
+        `## MVP safeguards\n\n${ESSENTIAL_SAFEGUARDS.map(s => `- ${s}`).join('\n')}\n\n` +
         `Optional development deployment only after explicit scope/permission/model/data readiness review. Use the existing supported build loop; no automatic production rollout. Capture verification evidence and production next steps. A generated or deployed pilot is not production-ready.\n` +
         (args.workshopSpec.execution === 'threadlight-pipeline'
           ? `The customer chose the shipped Threadlight workflow. Reconcile its declared prerequisites and stages with the approved specification before proceeding; do not silently replace it with default execution.\n`
           : '')
       :
       `/spec2cloud ${args.intent.trim()}\n\n` +
-      `Respect the existing repository. Invoke the installed agentic-loop skill as the mandatory policy layer for every stage, including immediately after Specify and before Plan. Produce an azd-deployable package.\n\n` +
+      buildPolicy +
+      `Respect the existing repository. Produce an azd-deployable package.\n\n` +
       `Path: ${args.path === 'scenario' ? 'Scenario workshop' : 'Customer workshop'}\n` +
       (args.scenario ? `Scenario: ${args.scenario.name} (${args.scenario.industry})\n` : '') +
       `\nRequirements:\n${requirementList || '- Validate customer-specific scope and constraints'}\n\n` +
       `Supporting playbooks:\n${playbookList || '- No packaged coverage; validate a customer-specific approach'}\n\n` +
+      teachingInstructions +
       `Build SKILLs to use:\n${buildSkillList}\n\n` +
       `Deployment SKILLs to use:\n${deploymentSkillList}\n\n` +
       `Run architecture recommendations:\n${architectureList}\n\n` +
