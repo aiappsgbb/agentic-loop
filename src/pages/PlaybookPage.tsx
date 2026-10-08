@@ -7,6 +7,7 @@ import rehypeHighlight from 'rehype-highlight';
 import { ArrowLeft, ArrowRight, Copy, Check, Info, Lightbulb, AlertTriangle, ListOrdered, X, Pin, PinOff } from 'lucide-react';
 import Mermaid from '../components/Mermaid';
 import ShareButton from '../components/ShareButton';
+import { playbooks, ROLE_LABELS } from '../data/catalog';
 
 const PLAYBOOK_FILES = import.meta.glob('/playbooks/*/README.md', {
   query: '?raw',
@@ -322,6 +323,11 @@ export default function PlaybookPage() {
         </Link>
         <div className="playbook-title-strip">
           <span className="playbook-crumb">{parsed.title}</span>
+        </div>
+        <div className="workshop-library-context">
+          <span>{ROLE_LABELS[playbooks.find(p => p.slug === slug)?.role ?? 'capability']}</span>
+          {playbooks.find(p => p.slug === slug)?.role !== 'onboarding' && <Link to={`/workshop?guide=${slug}`}>Use in my workshop</Link>}
+          {playbooks.find(p => p.slug === slug)?.role === 'onboarding' && <span>Practise this example; it is not an automatic customer default.</span>}
         </div>
         <ShareButton title={parsed.title} />
         <button

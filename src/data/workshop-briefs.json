@@ -1,0 +1,5 @@
+[
+  "Employees at a regional retailer need HR policy answers grounded in approved documents with citations. The pilot is for HR staff using approved sample policies, with no employee records or payroll changes.",
+  "Service desk staff at a manufacturing company need troubleshooting answers grounded in approved documents with citations. Integrate with the customer's maintenance system through an approved read-only interface. Use synthetic equipment records for the pilot; exclude live work orders and production writes.",
+  "Help a fictional community center schedule shared rooms fairly across volunteer teams. The pilot is for center coordinators using synthetic bookings, with human approval before any booking changes. Exclude live calendar access and payments."
+]

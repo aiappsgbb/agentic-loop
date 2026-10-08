@@ -23,4 +23,9 @@ export default defineConfig({
   // Served from https://aiappsgbb.github.io/agentic-loop/ on GitHub Pages.
   base: '/agentic-loop/',
   plugins: [react(), mdSpaFallback()],
+  server: {
+    host: '127.0.0.1',
+    port: 5173,
+    strictPort: true,
+  },
 })

@@ -67,11 +67,12 @@ export default function ScenarioPlaybook() {
           <div className="scenario-bridge-head">
             <BookOpen size={16} />
             <div>
-              <h2>Built from these playbooks</h2>
-              <p>This vertical outcome is assembled from horizontal patterns. Master each one on its own.</p>
+              <h2>Supporting maintained guidance</h2>
+              <p>Reuse relevant guidance inside the workshop. No need to master every guide first; validate coverage and adapt the customer scope.</p>
             </div>
           </div>
           <div className="scenario-bridge-links">
+            <Link to={`/workshop?scenario=${scenario.id}`} className="scenario-bridge-pill">Start a technical workshop <ArrowRight size={13} /></Link>
             {relatedPlaybooks.map(p => (
               playbookHasDeck(p.slug) ? (
                 <Link key={p.slug} to={`/playbooks/${p.slug}`} className="scenario-bridge-pill">
@@ -95,6 +96,10 @@ export default function ScenarioPlaybook() {
           </div>
           <div 
             className={`scenario-demo-video ${scenario.video ? 'clickable' : ''}`}
+            role={scenario.video ? 'button' : undefined}
+            tabIndex={scenario.video ? 0 : undefined}
+            aria-label={scenario.video ? `Play ${scenario.name} demo` : undefined}
+            onKeyDown={e => { if (scenario.video && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setVideoModalOpen(true); } }}
             onClick={() => scenario.video && setVideoModalOpen(true)}
           >
             <img 
@@ -121,12 +126,12 @@ export default function ScenarioPlaybook() {
       <GreenfieldBuilder
         key={scenario.id}
         scenario={scenario}
-        eyebrow="Agentic Launchpad"
-        heading={`Build "${scenario.name}" with Copilot.`}
+        eyebrow="Customer workshop · Agentic Launchpad"
+        heading={`Adapt "${scenario.name}" in a technical workshop`}
         intro={
           <>
-            Your prompt is pre-seeded from this scenario — adjust the capabilities and building blocks,
-            then click <strong>Make it real</strong> to go from idea to a deployed agentic solution.
+            This optional industry example seeds editable customer context. Prepare the workshop,
+            review coverage and approve scope before crafting the build prompt for an MVP or pilot.
           </>
         }
       />

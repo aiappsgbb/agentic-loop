@@ -46,23 +46,27 @@ Artifacts produced in your workspace mirror the five build stages:
 You will need:
 
 - Azure subscription with Contributor permissions, plus a GitHub Copilot plan.
-- GitHub Copilot installed and logged in — use the [Copilot App](http://gh.io/app) (recommended), the [Copilot CLI](https://github.com/features/copilot/cli/), or [Visual Studio Code](https://code.visualstudio.com/download).
+- [GitHub Copilot App](https://gh.io/app) installed and signed in with your Copilot-enabled GitHub account. Use the App as the build tool throughout this guide.
 - [GitHub CLI (`gh`)](https://cli.github.com/) installed and logged in.
 - [Azure CLI (`az`)](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) and [Azure Developer CLI (`azd`)](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/install-azd) installed and authenticated to your Azure subscription.
 - GitHub CLI `v2.90.0+` with the agent skills preview available (`gh skill --help`).
 - The `lean-spec2cloud` Copilot plugin installed and updated. Click [here](https://github.com/copilot/app/launch?open=ghapp%3A%2F%2Fplugins%2Fmarketplace%2Fadd%3Fsource%3DAzure-Samples%2FSpec2Cloud)
-to add the marketplace and [here](https://github.com/copilot/app/launch?open=ghapp%3A%2F%2Fplugins%2Finstall%3Fsource%3Dlean%2540Spec2Cloud) to install the plugin. Or install in the CLI with:
+to add the marketplace and [here](https://github.com/copilot/app/launch?open=ghapp%3A%2F%2Fplugins%2Finstall%3Fsource%3Dlean%2540Spec2Cloud) to install the plugin in the App. Confirm `lean@Spec2Cloud` is installed and enabled in the App's plugin settings.
 
-   ```bash
-   copilot plugin marketplace add Azure-Samples/Spec2Cloud && copilot plugin install lean@Spec2Cloud
-   ```
+Sign in to the supporting tools in your terminal before you go further. These commands are identical on Windows, macOS, and Linux:
 
-Sanity check before you go further. These commands are identical on Windows, macOS, and Linux:
+```bash
+gh auth login
+az login
+azd auth login
+```
+
+Check the correct account and subscription:
 
 ```bash
 az account show       # confirm the correct tenant and subscription
 azd auth login --check-status   # confirm you are signed in to azd
-copilot plugin list   # expect to see lean@Spec2Cloud
+gh auth status       # confirm GitHub CLI authentication
 ```
 
 > **Heads up on cost.** This playbook provisions billable Azure resources (Container Apps, a Foundry/AI Services account, and Application Insights). Leaving them running incurs charges — see [Clean up](#clean-up) to remove everything when you are done.
@@ -94,17 +98,22 @@ gh skill install aiappsgbb/agentic-loop agentic-loop --agent github-copilot --sc
 gh skill list   # expect agentic-loop
 ```
 
+The `agentic-loop` skill is the **build-time policy layer**, not a run skill for the weather agent. It translates the [reference architecture service map](../../skills/agentic-loop/references/reference-architecture.md) into specification and implementation decisions: Foundry hosted agents and models, Copilot SDK with governed Foundry skills and toolbox MCP, keyless identity, observability and `azd` deployment. The map adds complementary services only when the scope needs them, not every box in the architecture.
+
+Check the installed source, version and pin state, and review available updates before relying on it:
+
+```bash
+gh skill list --json skillName,sourceURL,scope,version,pinned,path
+gh skill update --dry-run
+```
+
+Installation is not invocation. The starter prompt below runs the readiness pre-flight before the build, then explicitly invokes the skill after Specify writes the spec and before Plan. Its decisions carry through the remaining stages. Do not depend on a nested copy inside `specify`.
+
 ---
 
 ### Open GitHub Copilot
 
-This playbook uses the **GitHub Copilot App**, but the same prompts work in the Copilot CLI and in VS Code.
-
-> **Using the CLI instead?** Run 
-> ```bash
-> copilot --allow-all
-> ```
-> to launch with all permissions pre-approved, so the loop can read/write files, run commands, and fetch URLs without prompting at every step. `--allow-all` is shorthand for `--allow-all-tools --allow-all-paths --allow-all-urls` — use it only on a sandbox workspace, and drop it if you want to approve each action manually.
+Open **GitHub Copilot App**. The terminal commands above only prepare supporting tools and project files; the build prompt runs in App Chat. Review tool and deployment permissions before approving execution.
 
 **1. Open the Spec2Cloud canvas** to watch the build loop execute. In the review panel on the right, click **+**, then pick **Spec2Cloud Cockpit** from the installed extensions. If it isn't listed, choose **Discover more → Import canvas from gist/URL → User scope**, then paste:
 
@@ -133,14 +142,18 @@ Paste the following starter prompt:
 ```text
 /spec2cloud A polished, modern weather app that provides weather information and forecasts through two interfaces: a visual SVG map of Europe or a chat interface. The app retrieves data from a custom MCP server, processes it through an integrated agent skill for specialized forecasting, and offers multiple forecasting styles—optimistic, pessimistic, and others—that users can select based on their preference. All features are fully functional except for the weather data, which is randomly generated for demonstration. The app includes a trace toggle that displays agent event information, such as the tools (input/output) and skills (skill.md content) used during forecasting.
 
-Invoke the installed agentic-loop skill as the mandatory policy layer for every stage, including immediately after Specify and before Plan.
+Run the skill-owned RBAC pre-flight before step 1. Report all permission gaps together and stop on BLOCKED or ERROR; do not create resources or grant permissions to bypass this gate.
+
+Immediately after Specify writes ./docs/spec.md and before Plan starts, invoke the installed agentic-loop skill as the mandatory policy layer. Do not rely on Specify embedding or transitively referencing it. If the skill is missing or cannot be invoked, stop and report the blocker rather than continuing with generic defaults.
+
+Apply the skill's defaults and implementation contracts to the concrete specification before planning, then carry them through Implement, Verify and Deploy. Record the invoked skill's path, the pre-flight verdict and the resulting architecture decisions in ./docs/spec.md, then carry those decisions into ./docs/plan.md. Installation alone is not evidence of invocation.
 ```
 
 ![Run](./images/run.png)
 
 > Tip: GitHub Copilot App supports voice dictation using a local modal to make it easier to write your prompts.
 
-> `/spec2cloud` runs the whole loop with the opinionated `agentic-loop` defaults baked in. That's why the prompt never mentions Foundry hosted agents, Copilot SDK, or Container Apps — the skill supplies those automatically.
+> `/spec2cloud` runs the build loop; the explicitly invoked `agentic-loop` skill applies the architecture defaults and readiness gates. Review its recorded decisions in the spec and plan rather than assuming the command or plugin loaded the policy automatically.
 
 > Tip: **Prefer to run the loop one stage at a time?** Use the same prompt with `/specify` first, then advance through each stage, reviewing the artifact it produces before moving on:
 >
@@ -166,7 +179,7 @@ On the canvas, click the **Azure** icon to see the deployed resources, and the *
 
 | Symptom | Likely cause | Fix |
 |---------|--------------|-----|
-| `copilot plugin list` doesn't show `lean@Spec2Cloud` | Plugin not installed | Re-run the marketplace install command in [Setup](#build-setup) |
+| Copilot App's plugin settings don't show an enabled `lean@Spec2Cloud` | Plugin not installed or enabled | Use the App marketplace and plugin links in [Setup](#build-setup), then enable the plugin |
 | `gh skill list` doesn't show `agentic-loop` | Required project skill not installed | Run the project-scoped install command in [Create a new project](#build-create-a-new-project) |
 | The **Spec2Cloud** tab never appears | Canvas extension not imported | Re-import via **Discover more → Import canvas from gist/URL → User scope** with the URL above |
 | `azd` fails with an auth or subscription error | Wrong tenant or subscription selected | Run `azd auth login`, then `az account set --subscription <id>` |
@@ -230,4 +243,3 @@ azd down --purge --force
 ```
 
 `--purge` also removes soft-deleted resources (such as the Foundry/AI Services account and Key Vault) so their names are immediately reusable.
-

@@ -37,7 +37,7 @@ export default function CapabilityPicker({ label, options, selected, onChange, t
 
   return (
     <div className="picker" ref={ref}>
-      <button className="picker-btn" onClick={() => setOpen(v => !v)}>
+      <button className="picker-btn" onClick={() => setOpen(v => !v)} aria-expanded={open} aria-haspopup="listbox" onKeyDown={e => { if (e.key === 'Escape') setOpen(false); }}>
         {TriggerIcon && <TriggerIcon size={15} />}
         <span>{label}</span>
         {selected.length > 0 ? (
@@ -48,7 +48,7 @@ export default function CapabilityPicker({ label, options, selected, onChange, t
         <ChevronDown size={14} style={{ opacity: 0.7 }} />
       </button>
       {open && (
-        <div className="picker-menu" role="listbox">
+        <div className="picker-menu" role="listbox" aria-label={label} aria-multiselectable="true">
           {options.map(opt => {
             const isSel = selected.includes(opt.id);
             const Icon = opt.icon;
@@ -58,6 +58,11 @@ export default function CapabilityPicker({ label, options, selected, onChange, t
                 className={`picker-option ${isSel ? 'selected' : ''}`}
                 onClick={() => toggle(opt.id)}
                 role="option"
+                tabIndex={0}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(opt.id); }
+                  if (e.key === 'Escape') { setOpen(false); ref.current?.querySelector('button')?.focus(); }
+                }}
                 aria-selected={isSel}
               >
                 <div className="opt-icon"><Icon size={16} /></div>

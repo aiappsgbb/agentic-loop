@@ -1,5 +1,38 @@
 # Agentic Loop Portal — Workshop Flow
 
+## Current customer-workshop flow
+
+Use **Start a technical workshop** (`/workshop`) for a customer build conversation and **Show an industry demo** (`/scenarios`) for showcase. The workshop reuses Launchpad and the existing build hand-off.
+
+1. Edit or replace the sample customer brief. Each fresh portal session randomly starts with one of three examples: HR policy answers, maintenance-system troubleshooting, or shared-room scheduling. The sample stays unchanged during navigation unless you edit it; clearing it leaves an empty field. Industry examples stay on the separate showcase route; a scenario's workshop link keeps its own editable context. Keep approved sample data ready. Technical requirements are three checkbox columns: capabilities, building blocks and candidate patterns, with relevant defaults selected for samples and industry scenarios. **Frontier Models is always selected and cannot be removed**, including for custom briefs and guide links. Adjust the other selections as needed; describe custom requirements in the brief instead of separate technical inputs.
+2. Prepare the workshop entirely in your browser using curated matching rules. **Proposed workshop approach** explains why each guide fits, what implementation material it provides, what needs adapting, and its prerequisites and exclusions, all visible without expandable panels. Including a guide adds a link to its implementation instructions and recommended build skills to the Copilot prompt; it does not deploy an app or automatically implement a capability. Partial/no-match cases preserve covered guidance and surface gaps for explicit manual decisions in scope notes. There are no AI proposals, companion service or SDK calls in preparation. Add other guides through **Add another guide (optional)**; manual selection still needs customer validation.
+3. Use the compact **Review workshop** section: confirm who will use the pilot, define testable success criteria, and add scope notes or decisions. The brief supplies the pilot scope; approved sample data, authorized access, verification evidence and production exclusions remain baseline requirements. Scope notes are optional for fully covered pilots but required to explicitly resolve gaps and open questions. Do not treat missing catalog coverage as infeasibility. The build workflow is a visible selector, not an expandable panel.
+4. Select **Confirm scope & get prompt**. This single action confirms the current scope and opens the hand-off in this order: **Prepare your environment → Create your project → Your build prompt**. Already set up? Select **Your build prompt** directly. The button explains any missing users, success criteria or gap decisions. It does not run Copilot or deploy resources. Any edit invalidates confirmation and requires confirming again; unchanged scope can be reopened with **Open build prompt**. The confirmed scope and copied prompt use Markdown headings, prose and lists, not JSON. All specification fields and decisions remain included. Drafts survive navigation in memory, not refresh.
+5. Use **GitHub Copilot App**: sign in, add the Spec2Cloud marketplace and install its lean plugin with the provided App links, then add your local project folder or repository. Supporting terminal commands authenticate GitHub/Azure and install the required project skill; they do not launch Copilot CLI. Paste the complete Markdown prompt into App Chat. Confirmed-spec review and optional run-skill guidance remain available in the dialog. Return to **Your build prompt** after choosing run skills to copy the updated version. Run the existing workflow with Specify/Plan review and permission checkpoints.
+6. Verify MVP behavior, access boundaries, safe data handling and failure paths. Capture evidence and remaining production work. Optional development deployment does not certify production readiness.
+
+The portal cannot verify local CLI/Azure readiness and does not provision or execute commands. Workshop preparation needs only the portal; no Copilot authentication or companion setup is required. Prepare subscription scopes, resource/RBAC rights, model availability and approved data before running the copied prompt in your project. Public static hosting and local development have the same preparation behavior. Copilot SDK build guidance remains available for the application being built, not as a portal runtime dependency.
+
+## Required Agentic Loop build policy
+
+Workshop and Getting Started use the same project-scoped `agentic-loop` skill. It translates the [reference architecture service map](../skills/agentic-loop/references/reference-architecture.md) into concrete specification and implementation rules: Foundry hosted agents and models, governed skills and toolbox MCP, keyless identity, observability and `azd` deployment. Complementary services are selected only when the customer scope needs them.
+
+This is a build-time policy skill for Copilot, not a run skill for the customer's agent. Project setup installs it and exposes source/version/pin and dry-run update checks. Installation is not invocation. The sequence is **readiness pre-flight → Specify → invoke agentic-loop → Plan**: run the RBAC pre-flight before step 1, then invoke the policy after Specify writes the concrete spec and before Plan. Carry its decisions through Implement, Verify and Deploy; no separate full policy invocation before Specify is required. Missing/failed invocation stops progression to Plan; a BLOCKED/ERROR pre-flight stops the build before step 1.
+
+Review the invoked skill path, pre-flight verdict and resulting architecture decisions recorded in `docs/spec.md` and carried into `docs/plan.md`. These make policy application reviewable by the SE; they are not proof supplied by the portal. Preparation remains client-side and cannot verify external build execution.
+
+## Learn while building
+
+Playbooks are teaching material, not just implementation links. They give the Solution Engineer context, a guided example and a concrete platform capability to explain to the customer. The proposal shows what each selected guide explores; the prompt hand-off links back to those playbooks.
+
+For a first workshop on a topic, use the relevant playbook to walk through the approach, explain the design choices and demonstrate verification evidence. After learning it once, use the tailored prompt for subsequent builds without following every tutorial step again. Scope, permission and verification reviews still apply.
+
+Curated starting points keep the workshop specific: connect the chosen capabilities to the customer's requirements instead of producing a generic app. The build prompt asks Copilot to explain these choices and leave a concise, repeatable walkthrough. If no playbook fits, teach the custom design and its limitations rather than substituting an unrelated example.
+
+## Historical framing (not the implemented hand-off)
+
+The following earlier discussion records unresolved persona/export concepts. It is not a requirement to make Kratos the workshop execution target or a claim that its proposed production hand-offs are implemented.
+
 > The end-to-end flow to walk on screen using **only the Agentic Loop web portal**.
 > ⚠ markers flag the steps that still depend on an **outstanding alignment/decision**.
 

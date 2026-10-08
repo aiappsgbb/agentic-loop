@@ -1,6 +1,6 @@
 # Agentic Loop
 
-<p align="center">
+<p align="left">
   <a href="https://aka.ms/agentic-loop"><strong>✨ Explore the live Agentic Loop →</strong></a>
 </p>
 
@@ -65,15 +65,29 @@ The inner development loop is:
 
 The deployed solution then enters an outer production loop: observe, evaluate, learn, improve, and redeploy.
 
-## Three ways to start
+## Start a customer conversation
 
 | Path | Use it when | Outcome |
 | --- | --- | --- |
-| **Kratos** | You want to experience a production-shaped reference implementation first. | A ready-to-use demonstration of agents, personas, and task skills. |
-| **Agentic Launchpad** | You already have an idea, process, or problem to solve. | A Copilot-ready package of requirements, skills, playbooks, architecture, and deployment guidance. |
-| **Industry scenarios** | You want to begin with a proven vertical use case. | A scenario-seeded package that can be adapted to the customer's requirements. |
+| **Start a technical workshop** (`/workshop`) | Bring a customer brief, optionally seeded from an industry example. | Review coverage, adapt maintained guidance, then confirm scope and copy the complete build prompt. |
+| **Show an industry demo** (`/scenarios`) | Explore existing examples without setup. | Showcase available industry demos; Kratos stays directly accessible. |
 
-The Launchpad and industry-scenario paths converge on the same playbook-driven workflow. A **scenario** answers *what outcome are we building?* A **playbook** answers *how do we implement a reusable part of it?*
+The workshop recomposes the existing Agentic Launchpad. Old playbook/scenario routes and the home `#prompt` anchor remain usable. The library separates practice exercises, capability guides, delivery workflows, operations and shared infrastructure. A playbook is reusable guidance, not prerequisite homework.
+
+**Reuse first; build only what is missing.** Workshop preparation uses curated, deterministic rules entirely in your browser. Partial coverage preserves existing guides and surfaces gaps for manual decisions in scope notes. No packaged match is not technical infeasibility. Candidate patterns require review. Editing upstream inputs invalidates scope confirmation. Essential identity, safe data handling and scenario verification remain in every MVP; a generated or deployed workshop pilot is not production-ready.
+
+## Run the portal
+
+```bash
+npm ci
+npm run dev
+```
+
+Open `http://127.0.0.1:5173/agentic-loop/workshop`. Preparation, guide matching, scope review and prompt assembly are client-side. There is no local AI companion, SDK runtime, analysis endpoint or Copilot sign-in requirement to prepare a workshop. Development and public static hosting use the same flow.
+
+See [the workshop specification](docs/spec.md#47-client-side-customer-workshop-preparation) and [the workshop facilitator guide](docs/workshop-guide.md). The [original implementation plan](docs/customer-workshop-plan.md) is historical; its SDK preparation requirements have been superseded.
+
+New customer workshops start with one of three randomly selected, editable sample briefs. Scenario links retain their own context. Workshop drafts are held only in browser memory. Navigation preserves them; refreshing starts a new sample draft. Preparation does not transmit customer text to a service or put it in browser storage. Copying the prompt is explicit; submitting it to Copilot happens separately in your project.
 
 ## Use the build loop
 

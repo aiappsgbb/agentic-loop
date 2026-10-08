@@ -28,10 +28,9 @@ The rules that decide **which skills to build vs. run** must stay synced with th
 
 ## Linking scenarios &harr; playbooks
 
-Matching is by scenario `tags` &harr; a playbook's combined `patterns` + `capabilities` + `building_blocks` (see `playbookMatchTags` in `src/data/links.ts`): a playbook shows for a scenario when any of those values intersect the scenario `tags`, or when `patterns` is `["*"]`. Keep the strings consistent across both files.
+Customer/scenario recommendations use the shared requirement coverage model in `src/data/workshop.ts`, consumed by `links.ts`, advisor packages and Launchpad. Add `role`, `addresses`, `prerequisites`, `exclusions` and `adaptation` metadata when adding a playbook. Historical wildcard patterns indicate eligibility, not universal recommendation. Keep catalog roles/coverage and evidence rules consistent; preserve existing slugs. Never infer multi-agent architecture from a multi-step business process alone.
 
 ## Build
 
 - Editing existing `.md`/`.json`: `npm run dev` hot-reloads — just save.
 - For production: `npm run build`, then deploy `dist/`.
-

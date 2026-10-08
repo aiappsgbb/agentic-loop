@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import { X, Check, Copy, Terminal, Sparkles, Rocket, ArrowRight, FolderPlus, RefreshCw } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { AdvisorPackage } from '../data/advisor';
 import { getRunSkill } from '../data/skills';
+import { formatWorkshopSpecMarkdown } from '../data/workshop';
 
 interface Props {
   open: boolean;
@@ -14,15 +16,22 @@ interface Props {
 const STEPS = [
   { id: 'prep', title: 'Prepare your environment', icon: Terminal },
   { id: 'project', title: 'Create your project', icon: FolderPlus },
+  { id: 'loop', title: 'Your build prompt', icon: Sparkles },
+  { id: 'review', title: 'Review approved spec', icon: Check },
   { id: 'skills', title: 'Choose skills', icon: Sparkles },
-  { id: 'loop', title: 'Run the build loop', icon: RefreshCw },
-  { id: 'operate', title: 'Review & operate', icon: Rocket },
+  { id: 'operate', title: 'Verify your pilot', icon: RefreshCw },
 ];
 
 export default function MakeItRealModal({ open, onClose, advisorPackage }: Props) {
+  if (!open || !advisorPackage) return null;
+  return <MakeItRealDialog key={advisorPackage.copilotPrompt} open={open} onClose={onClose} advisorPackage={advisorPackage} />;
+}
+
+function MakeItRealDialog({ open, onClose, advisorPackage }: Props & { advisorPackage: AdvisorPackage }) {
   const [step, setStep] = useState(0);
   const [copied, setCopied] = useState<string | null>(null);
   const [selectedRunSkills, setSelectedRunSkills] = useState<string[]>([]);
+  const [copyError, setCopyError] = useState('');
   const modalRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
 
@@ -30,7 +39,16 @@ export default function MakeItRealModal({ open, onClose, advisorPackage }: Props
     if (!open) return;
     // Remember what had focus so we can restore it when the modal closes.
     triggerRef.current = document.activeElement as HTMLElement | null;
-    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose(); }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'Tab') {
+        const nodes = modalRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input, textarea, select, a[href]');
+        if (!nodes?.length) return;
+        const first = nodes[0]; const last = nodes[nodes.length - 1];
+        if (e.shiftKey && (document.activeElement === first || document.activeElement === modalRef.current)) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && (document.activeElement === last || document.activeElement === modalRef.current)) { e.preventDefault(); first.focus(); }
+      }
+    }
     document.addEventListener('keydown', onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -41,14 +59,6 @@ export default function MakeItRealModal({ open, onClose, advisorPackage }: Props
       triggerRef.current?.focus?.();
     };
   }, [onClose, open]);
-
-  // Reset run-skill selection (unselected by default) whenever the package changes.
-  useEffect(() => {
-    if (!open || !advisorPackage) return;
-    setSelectedRunSkills([]);
-  }, [open, advisorPackage]);
-
-  if (!open || !advisorPackage) return null;
 
   function closeModal() {
     setStep(0);
@@ -63,9 +73,10 @@ export default function MakeItRealModal({ open, onClose, advisorPackage }: Props
     try {
       await navigator.clipboard.writeText(text);
       setCopied(key);
+      setCopyError('');
       window.setTimeout(() => setCopied(c => (c === key ? null : c)), 1600);
-    } catch (error) {
-      if (import.meta.env.DEV) console.warn('Clipboard copy failed', error);
+    } catch {
+      setCopyError('Clipboard unavailable. Select and copy the displayed prompt manually.');
     }
   }
 
@@ -75,58 +86,71 @@ export default function MakeItRealModal({ open, onClose, advisorPackage }: Props
   const runSkillsLine = chosenRunSkills.length
     ? `\n\nUse the following skills when running the agent(s): ${chosenRunSkills.join(', ')}.`
     : '';
-  const specPrompt = `/spec2cloud ${advisorPackage.intent}${runSkillsLine}\n\nInvoke the installed agentic-loop skill as the mandatory policy layer for every stage, including immediately after Specify and before Plan.`;
+  const specPrompt = `${advisorPackage.copilotPrompt}${runSkillsLine}`;
+  const currentStep = STEPS[step].id;
 
   return createPortal(
-    <div className="modal-backdrop" onClick={closeModal}>
-      <div className="modal" ref={modalRef} tabIndex={-1} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="make-it-real-title">
+    <div className="modal-backdrop build-prompt-backdrop" onClick={closeModal}>
+      <div className="modal build-prompt-modal" ref={modalRef} tabIndex={-1} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="make-it-real-title">
         <header className="modal-head">
           <div>
-            <div className="modal-eyebrow">Agentic Launchpad</div>
-            <h2 id="make-it-real-title">Make it real</h2>
-            <p>Set up the toolchain, run the build loop in Autopilot, and let Copilot ship a governed agentic solution.</p>
+            <div className="modal-eyebrow">Customer workshop · Agentic Launchpad</div>
+            <h2 id="make-it-real-title">Your build prompt</h2>
+            <p>Your scope is confirmed. Prepare your environment, create your project, then paste the Markdown prompt into GitHub Copilot App. If you're already set up, go straight to Your build prompt; this page does not start a build or deployment.</p>
           </div>
           <button className="icon-btn" onClick={closeModal} aria-label="Close"><X size={16} /></button>
         </header>
 
-        <div className="stepper">
+        <nav className="stepper" aria-label="Build prompt and setup guidance">
           {STEPS.map((s, i) => {
             const Icon = s.icon;
-            const state = i < step ? 'done' : i === step ? 'current' : 'todo';
+            const state = i === step ? 'current' : 'todo';
             return (
-              <button key={s.id} className={`step ${state}`} onClick={() => setStep(i)}>
-                <span className="step-bubble">{state === 'done' ? <Check size={14} /> : <Icon size={14} />}</span>
+              <button key={s.id} className={`step ${state}`} aria-current={i === step ? 'page' : undefined} onClick={() => setStep(i)}>
+                <span className="step-bubble"><Icon size={14} /></span>
                 <span className="step-label">{s.title}</span>
               </button>
             );
           })}
-        </div>
+        </nav>
 
         <div className="modal-body">
-          {step === 0 && (
+          {currentStep === 'prep' && (
             <div className="step-pane">
-              <h3>1 · Prepare your environment</h3>
-              <p className="muted">Install the Agentic Loop toolchain and the Spec2Cloud plugin that drives the build loop. You need an Azure subscription with Contributor access and a GitHub Copilot plan.</p>
-              <CodeBlock label="Sign in to GitHub & Azure" code="copilot login; az login" k="prep-auth" copied={copied} onCopy={copy} />
-              <CodeBlock label="Install the Spec2Cloud plugin" code="copilot plugin marketplace add Azure-Samples/Spec2Cloud && copilot plugin install lean@Spec2Cloud" k="prep-plugin" copied={copied} onCopy={copy} />
-              <CodeBlock label="Verify prerequisites" code="gh --version && gh skill --help && az account show && azd auth login --check-status && copilot plugin list" k="prep-check" copied={copied} onCopy={copy} />
+              <h3>Prepare your environment</h3>
+              <p className="muted">Use <a href="https://gh.io/app" target="_blank" rel="noopener noreferrer">GitHub Copilot App</a> for this build. Install it and sign in with your Copilot-enabled GitHub account. Install GitHub CLI (gh), Azure CLI (az) and Azure Developer CLI (azd) for the commands below. Check resource and role-assignment permissions, model/region availability and approved sample data before a live workshop. This portal cannot verify your tools or subscription readiness.</p>
+              <p className="muted">In Copilot App, <a href="https://github.com/copilot/app/launch?open=ghapp%3A%2F%2Fplugins%2Fmarketplace%2Fadd%3Fsource%3DAzure-Samples%2FSpec2Cloud" target="_blank" rel="noopener noreferrer">add the Spec2Cloud marketplace</a>, then <a href="https://github.com/copilot/app/launch?open=ghapp%3A%2F%2Fplugins%2Finstall%3Fsource%3Dlean%2540Spec2Cloud" target="_blank" rel="noopener noreferrer">install the lean plugin</a>. Confirm lean@Spec2Cloud is installed and enabled in the App's plugin settings.</p>
+              <CodeBlock label="Sign in to GitHub CLI and Azure in your terminal" code={'gh auth login\naz login\nazd auth login'} k="prep-auth" copied={copied} onCopy={copy} />
+              <CodeBlock label="Verify command-line prerequisites and Azure subscription" code="gh --version && gh skill --help && gh auth status && az account show && azd auth login --check-status" k="prep-check" copied={copied} onCopy={copy} />
             </div>
           )}
 
-          {step === 1 && (
+          {currentStep === 'project' && (
             <div className="step-pane">
-              <h3>2 · Create your project</h3>
+              <h3>Create your project</h3>
               <p className="muted">Create an empty folder (or a private repo) to hold the loop's artifacts — spec, plan, source, and infra.</p>
               <CodeBlock label="New local folder" code="mkdir my-agentic-app && cd my-agentic-app" k="proj-mkdir" copied={copied} onCopy={copy} />
               <CodeBlock label="…or a private GitHub repo" code="gh repo create my-agentic-app --private --clone && cd my-agentic-app" k="proj-repo" copied={copied} onCopy={copy} />
               <CodeBlock label="Install the required Agentic Loop skill" code="gh skill install aiappsgbb/agentic-loop agentic-loop --agent github-copilot --scope project && gh skill list" k="proj-agentic-loop" copied={copied} onCopy={copy} />
+              <p className="muted"><strong>Why this skill?</strong> <Link to="/skills/agentic-loop" onClick={closeModal}>agentic-loop</Link> is the build-time policy layer that translates the <Link to="/concepts/platform" onClick={closeModal}>reference architecture</Link> into your specification and plan. It governs hosting, models, skills/tools, identity, observability and deployment; optional services stay tied to customer requirements.</p>
+              <CodeBlock label="Verify the skill source and check for updates (GitHub CLI 2.90+)" code="gh skill list --json skillName,sourceURL,scope,version,pinned,path && gh skill update --dry-run" k="proj-skill-check" copied={copied} onCopy={copy} />
+              <p className="muted">Check that agentic-loop is listed for this project and review any available update before building; respect pinned versions. Installing the skill is not invoking it. The copied prompt runs the readiness pre-flight before the build, then explicitly invokes agentic-loop after Specify and before Plan. Its decisions are recorded and carried through implementation, verification and deployment. If the skill cannot be invoked, stop before Plan.</p>
+              <p className="muted">Run these commands in your terminal inside the project folder. In GitHub Copilot App, choose <strong>+ → Add project from → Local folder or repository</strong> and select that folder. Start a session in the project using Plan mode to review the specification and implementation plan before approving execution.</p>
             </div>
           )}
 
-          {step === 2 && (
+          {currentStep === 'review' && (
             <div className="step-pane">
-              <h3>3 · Choose skills</h3>
-              <p className="muted"><strong>Build skills</strong> are identified and installed automatically by Copilot while it implements your solution — you don't need to pick them. <strong>Run skills</strong> are reused by the agent at execution time; select the ones you want from the suggestions below and they'll be appended to your prompt.</p>
+              <h3>Your confirmed scope</h3>
+              <p className="muted">This is the source of truth for the final prompt. Close the hand-off to edit it; any upstream change invalidates approval.</p>
+              <pre className="workshop-spec">{advisorPackage.workshopSpec ? formatWorkshopSpecMarkdown(advisorPackage.workshopSpec) : advisorPackage.intent}</pre>
+              {advisorPackage.workshopSpec?.execution === 'threadlight-pipeline' && <div className="modal-hint">The shipped Threadlight variant requires awesome-gbb and threadlight-skills. Follow its maintained guide and validate the opinionated infrastructure and deployment scope before execution.</div>}
+            </div>
+          )}
+          {currentStep === 'skills' && (
+            <div className="step-pane">
+              <h3>Choose skills</h3>
+              <p className="muted">The mandatory <strong>agentic-loop build skill</strong> is installed during project setup and explicitly invoked by the prompt. Copilot identifies additional <strong>build skills</strong> from the specification and checks their availability and freshness; review any installation or update approvals. <strong>Run skills</strong> are reused by the customer agent at execution time; select the ones you want below. Return to <strong>Your build prompt</strong> to copy the updated prompt.</p>
 
               {availableRunSkills.length > 0 ? (
                 <div className="run-skill-checklist">
@@ -151,40 +175,44 @@ export default function MakeItRealModal({ open, onClose, advisorPackage }: Props
             </div>
           )}
 
-          {step === 3 && (
+          {currentStep === 'loop' && (
             <div className="step-pane">
-              <h3>4 · Run the build loop</h3>
-              <p className="muted">Start by opening GitHub Copilot App or the CLI, then add your project and select your preferred coding model in Autopilot mode. Paste your prompt and run the <code>/spec2cloud</code> command to execute the complete workflow: Specify → Plan → Implement → Verify → Deploy. The project-scoped <code>agentic-loop</code> skill supplies the mandatory policy layer.</p>
-              <div className="modal-hint">Launch the standalone GitHub Copilot app, then open your project folder.</div>
-              <CodeBlock label="…or the Copilot CLI (all permissions)" code="copilot --allow-all" k="loop-open" copied={copied} onCopy={copy} />
-              <PackageBlock icon={<Sparkles size={14} />} title="Initial prompt" action="Copy prompt" copied={copied === 'prompt'} onCopy={() => copy(specPrompt, 'prompt')}>
+              <h3>Copy your prompt into GitHub Copilot App</h3>
+              <p className="muted">Open a session in your project in GitHub Copilot App and paste this Markdown prompt into Chat. It includes your confirmed scope and selected guides. Copilot will use {advisorPackage.workshopSpec?.execution === 'threadlight-pipeline' ? <code>threadlight-design</code> : <code>/spec2cloud</code>}; review Specify and Plan before approving implementation. Deployment needs separate approval.</p>
+              {advisorPackage.playbooks.length > 0 && <>
+                <p className="muted"><strong>First build on this topic?</strong> Explore the selected playbooks to understand the capability and guide the customer through it. <strong>Already familiar?</strong> Reuse the approach through the prompt below; you don't need to repeat every playbook step.</p>
+                <ul>{advisorPackage.playbooks.map(guide => <li key={guide.slug}><Link to={`/playbooks/${guide.slug}`} onClick={closeModal}>Explore {guide.name} playbook</Link></li>)}</ul>
+              </>}
+              <PackageBlock icon={<Sparkles size={14} />} title="Build prompt" action="Copy prompt" copied={copied === 'prompt'} onCopy={() => copy(specPrompt, 'prompt')}>
                 {specPrompt}
               </PackageBlock>
             </div>
           )}
 
-          {step === 4 && (
+          {currentStep === 'operate' && (
             <div className="step-pane">
-              <h3>5 · Review & operate</h3>
-              <p className="muted">When the loop finishes, Copilot returns the deployed frontend URL and previews it. Open the Foundry portal to review models, agents, tools, and traces in Application Insights.</p>
-              <CodeBlock label="Clean up when you're done" code="azd down --purge --force" k="operate-cleanup" copied={copied} onCopy={copy} />
+              <h3>Verify your pilot</h3>
+              <p className="muted">Check the approved success criteria, identity boundaries, safe data handling and scenario-specific failure paths. Record evidence, remaining gaps and production next steps. If development deployment was approved, inspect models, agents, tools and traces. Review the exact development environment before any cleanup.</p>
+              <CodeBlock label="Review development resources before cleanup" code="azd env get-values" k="operate-cleanup" copied={copied} onCopy={copy} />
               <div className="success-banner">
                 <Rocket size={16} />
                 <div>
-                  <strong>You're in the loop.</strong>
-                  <span> Copilot builds the agentic solution; Foundry and Azure runs the agentic loop with governance, telemetry, and evals.</span>
+                  <strong>A pilot with evidence, not a production certification.</strong>
+                  <span> Validate remaining operational, security and customer requirements before production rollout.</span>
                 </div>
               </div>
             </div>
           )}
+          {copyError && <p role="alert" className="workshop-warning">{copyError}</p>}
         </div>
 
         <footer className="modal-foot">
-          <button className="ghost-btn" onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}>Back</button>
-          <span className="step-counter">Step {step + 1} of {STEPS.length}</span>
+          {step === 0
+            ? <button className="ghost-btn" onClick={closeModal}>Back to workshop</button>
+            : <button className="ghost-btn" onClick={() => setStep(s => Math.max(0, s - 1))}>Back</button>}
           {step < STEPS.length - 1 ? (
             <button className="primary-btn" onClick={() => setStep(s => Math.min(STEPS.length - 1, s + 1))}>
-              Next <ArrowRight size={14} />
+              {STEPS[step + 1].title} <ArrowRight size={14} />
             </button>
           ) : (
             <button className="primary-btn" onClick={closeModal}>Done</button>

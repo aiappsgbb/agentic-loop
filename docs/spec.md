@@ -1,12 +1,12 @@
 # Agentic Loop Portal — Specification
 
-> **Last updated:** 2026-06-11
+> **Last updated:** 2026-10-07
 
 ## 1. Summary
 
 **Agentic Loop Portal** is a React + Vite advisory web portal that makes the path from agent pilot to production explicit. It presents three distinct ways to build and run agentic solutions: **Kratos** for a ready-to-use demo with domain-specific personas and skills, **Production Launchpad** for users who already have a concrete solution idea, and **Scenario Advisor** for users who want to start from a predefined industry scenario. The advisor paths converge on the same playbook-driven Build + Run flow: collect requirements, recommend SKILLs and tools, select the right Microsoft Foundry/Azure architecture, and produce a GitHub Copilot-led package that can be implemented and deployed with `azd up`.
 
-The portal remains a static client-side experience in this repository unless a later implementation explicitly adds live backend generation. The immediate product goal is to make the decision model, advisor flow, playbook reuse, SKILL source, and deployment hand-off unambiguous.
+The portal remains a static client-side experience. Workshop preparation MUST NOT use a local AI companion, GitHub Copilot SDK runtime, model calls or analysis backend. The immediate product goal is to make the decision model, advisor flow, playbook reuse, SKILL source, and deployment hand-off unambiguous.
 
 ## 2. Goals & Non-Goals
 
@@ -23,7 +23,7 @@ The portal remains a static client-side experience in this repository unless a l
 
 **Non-Goals**
 
-- No production AI inference is required in the portal itself for this specification iteration.
+- No AI inference, Copilot SDK execution, local companion service or authentication is used for workshop preparation.
 - No automatic repository creation, GitHub commit, or live `azd up` execution from the browser.
 - No user accounts, payments, persistence, or CMS.
 - No custom enterprise private networking deployment is created by the portal; private networking is an advisor requirement that changes recommendations and generated package instructions.
@@ -116,6 +116,29 @@ Every playbook selected by the advisor MUST declare the existing upstream SKILLs
 
 Deployment SKILLs are part of the playbook contract, not an afterthought. The default deployment SKILL set SHOULD include `aigbb-azd-compliance`, `bicep-azd-patterns`, `containerization`, `aigbb-azure-security`, and `aigbb-observability` whenever the generated package includes Azure deployment guidance.
 
+### 4.7 Client-side customer workshop preparation
+
+This current workshop contract supersedes earlier local-companion and AI-proposal requirements in the historical customer-workshop plan.
+
+- `/workshop`, scenario seeds, guide links and the home workshop entry MUST share the same client-side preparation flow.
+- Fresh sessions provide an editable sample brief. Capabilities, building blocks and candidate patterns are three checkbox columns. Frontier Models MUST stay selected and cannot be removed.
+- **Prepare workshop** MUST match maintained guides using curated requirement evidence, without network analysis, SDK/CLI processes, model calls or copied credentials.
+- **Proposed workshop approach** MUST explain guide fit, reusable implementation material, adaptation, prerequisites and exclusions. Selecting a guide adds its reference and skills to the build prompt; it does not implement a capability or deploy an app.
+- Playbooks MUST retain their educational purpose: context and guided examples help the Solution Engineer understand the topic and teach the customer while building. The proposal MUST expose the selected guide's platform focus, and the prompt hand-off MUST keep the guide accessible without adding mandatory tutorial steps.
+- A first workshop SHOULD use the guided playbook to learn the approach. Later workshops SHOULD allow prompt-led reuse without repeating every tutorial step. Generated build instructions MUST explain capability-to-requirement choices and leave a concise, repeatable walkthrough with verification evidence; scope and permission reviews remain required.
+- Curated starting points MUST steer toward meaningful capabilities justified by the customer's scope, not generic scaffolding or arbitrary extra features. No-match scopes MUST remain explicit custom approaches, not be redirected to an unrelated educational example.
+- Partial/no-match results MUST preserve covered guidance and surface uncovered requirements for manual scope decisions. No-match is not proof of infeasibility. No AI proposal or analysis-unavailable controls are shown.
+- Review collects intended users, testable success criteria, and scope notes. Gap/question decisions MUST be explicit before confirmation. Identity, approved sample data, access boundaries, verification evidence and production exclusions remain baseline requirements.
+- **Confirm scope & get prompt** MUST confirm the exact current specification and open the hand-off in one action. The hand-off starts with **Prepare your environment**, followed by **Create your project**, then **Your build prompt**; users already set up can select the prompt directly. Any edit invalidates confirmation. Unchanged scope can be reopened with **Open build prompt**.
+- The confirmed scope and copied build prompt MUST use Markdown headings, prose and lists rather than JSON. The customer brief appears once under its heading; the workflow command refers to the specification below, and fields identical to the brief refer back to it rather than repeating it. All specification fields and manual decisions MUST remain in the hand-off; internal exact confirmation snapshots do not change.
+- **GitHub Copilot App** MUST be the preferred build tool throughout the hand-off. Setup uses App marketplace/plugin links, project instructions add the local folder or repository in the App, and the build prompt is pasted into App Chat. App setup directions belong in the hand-off UI, not inside the copied prompt; the prompt contains only the build request, specification and execution instructions. Terminal commands support GitHub/Azure prerequisites, folder/repository creation and project skill installation, not launching or configuring Copilot CLI.
+- Workshop and Getting Started MUST share the sequence **readiness pre-flight → Specify → invoke agentic-loop → Plan**. Run the skill-owned RBAC pre-flight before step 1 and stop on BLOCKED/ERROR. Invoke the policy immediately after Specify writes `./docs/spec.md`, before Plan, and stop if invocation fails. Carry the resulting defaults and contracts through Implement, Verify and Deploy. Do not require a separate full policy invocation before Specify or rely on nested/transitive skill loading.
+- Build prompts MUST require the invoked skill path, pre-flight verdict and resulting architecture decisions to be recorded in the spec and carried into the plan. Skill installation/freshness checks are separate from invocation evidence. The portal cannot verify external skill execution and MUST NOT claim that it has invoked the customer's build skill.
+- The workshop MUST explain `agentic-loop` as the build-time policy layer translating the reference architecture into implementation contracts, distinct from customer-agent run skills. Link to the skill and reference architecture, preserve conditional defaults and scope-driven service selection, and do not turn the complete architecture diagram into mandatory resources.
+- Preparation MUST work identically on local Vite and static hosting without a companion, API proxy, Copilot sign-in or Azure access. No workshop-preparation SDK package or server is shipped.
+- Drafts remain in browser memory, survive navigation and reset on refresh. Preparation MUST NOT transmit customer text to a service or save it in browser storage.
+- Build execution is separate: the user copies the Markdown prompt into GitHub Copilot App in their own project. Existing `/spec2cloud` and Threadlight choices, skill catalogs and Copilot SDK architecture guidance for the resulting app remain intact.
+
 ## 5. Functional Requirements
 
 | ID | Requirement | Priority |
@@ -142,7 +165,7 @@ Deployment SKILLs are part of the playbook contract, not an afterthought. The de
 | FR-020 | The Skills catalog MUST identify which entries are upstream build SKILLs, deployment SKILLs, local portal concepts, and run architecture capabilities. | Should |
 | FR-021 | The package output MUST be copyable in sections: Copilot prompt, selected SKILLs, selected playbooks, architecture checklist, and deployment command. | Must |
 | FR-022 | The advisor MUST be deterministic for the same selections unless the user edits the idea or scenario. | Should |
-| FR-023 | All advisor output MUST be generated client-side from curated mappings in this repo unless a future live generation backend is explicitly specified. | Must |
+| FR-023 | All workshop preparation and advisor output MUST be generated client-side from curated mappings in this repo. No companion service, AI analysis endpoint or Copilot SDK runtime is used for preparation. | Must |
 | FR-024 | The Concepts and Platform pages MUST remain the explanatory layer behind advisor recommendations. | Must |
 | FR-025 | The sidebar MUST continue to group surfaces by intent: Start here, Build, and Learn. | Must |
 | FR-026 | `npm run build` MUST succeed with TypeScript strict mode. | Must |
@@ -206,9 +229,9 @@ If the upstream inventory changes, the portal mapping SHOULD be refreshed before
 | Category | Requirement |
 | --- | --- |
 | Performance | Home and advisor interactions MUST stay responsive on a modern laptop. Package generation is client-side and should complete under 500 ms for curated mappings. |
-| Availability | Static hosting only unless future live generation is specified; availability follows host SLA. |
+| Availability | Static hosting only; workshop preparation requires no companion or analysis backend. Availability follows host SLA. |
 | Security | No secrets in the client bundle. Advisor output MUST prefer Entra ID, managed identity, RBAC, and Key Vault over API keys. |
-| Privacy & Compliance | No user data is persisted by default. Freeform idea text remains in browser state unless live generation is later introduced. |
+| Privacy & Compliance | No workshop data is persisted or transmitted for preparation. Freeform idea text remains in browser memory. Prompt copy and subsequent submission in Copilot are explicit user actions. |
 | Accessibility | Path cards, requirement ticks, package sections, and copy buttons MUST be keyboard-accessible and screen-reader labeled. |
 | Scalability | Static SPA scales via CDN/edge hosting. Generated packages are text artifacts, not server jobs. |
 | Observability | Portal runtime observability is optional; generated Run architectures SHOULD include OpenTelemetry and Application Insights when observability is selected or implied. |

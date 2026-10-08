@@ -1,4 +1,5 @@
-import { playbooks, playbooksForScenario, playbookMatchTags, type Playbook, type Scenario } from './links';
+import { playbooks, type Playbook, type Scenario } from './catalog';
+import { recommendWorkshop, formatWorkshopSpecMarkdown, ESSENTIAL_SAFEGUARDS, type WorkshopSpec } from './workshop';
 
 export type AdvisorPath = 'idea' | 'scenario';
 
@@ -43,6 +44,7 @@ export interface AdvisorPackage {
   runArchitecture: string[];
   copilotPrompt: string;
   deploymentCommand: 'azd up';
+  workshopSpec?: WorkshopSpec;
 }
 
 export const DEFAULT_DEPLOYMENT_SKILLS = [
@@ -229,15 +231,15 @@ const selectionRequirementMap: Record<string, AdvisorRequirementId[]> = {
 
 const textRequirementHints: Array<[RegExp, AdvisorRequirementId]> = [
   [/\b(eval|quality|regression|test)\b/i, 'evals'],
-  [/\b(voice|speech|audio|conversation)\b/i, 'voice'],
+  [/\b(voice|speech|audio)\b/i, 'voice'],
   [/\b(private|vnet|network|endpoint)\b/i, 'private-networking'],
   [/\b(trace|monitor|observability|telemetry|logging)\b/i, 'observability'],
   [/\b(rag|ground|knowledge|document|citation|search)\b/i, 'knowledge-grounding'],
-  [/\b(gateway|quota|rate limit|cache|policy)\b/i, 'ai-gateway'],
+  [/\b(gateway|quota|rate limit|cache)\b/i, 'ai-gateway'],
   [/\b(identity|rbac|entra|auth|permission)\b/i, 'identity-rbac'],
   [/\b(storage|blob|file|artifact)\b/i, 'storage'],
   [/\b(state|persist|database|cosmos|history)\b/i, 'data-persistence'],
-  [/\b(m365|graph|teams|outlook|sharepoint)\b/i, 'm365-graph'],
+  [/\b(m365|microsoft graph|microsoft teams|teams (?:bot|channel)|outlook|sharepoint)\b/i, 'm365-graph'],
   [/\b(mcp|tool|connector|integration)\b/i, 'mcp-tools'],
   [/\b(web search|current|public web|internet)\b/i, 'web-search'],
   [/\b(approval|human|review|sign[- ]?off)\b/i, 'human-approval'],
@@ -267,13 +269,16 @@ export function buildAdvisorPackage(args: {
   intent: string;
   requirementIds: AdvisorRequirementId[];
   scenario?: Scenario;
+  workshopSpec?: WorkshopSpec;
 }): AdvisorPackage {
   const requirements = requirementsByIds(args.requirementIds);
-  const selectedPlaybooks = selectPlaybooks(requirements, args.scenario);
+  const selectedPlaybooks = args.workshopSpec
+    ? playbooks.filter(p => args.workshopSpec!.guides.some(g => g.slug === p.slug))
+    : recommendWorkshop(args.intent).guides.map(g => g.playbook);
   const buildSkills = unique([
     'agentic-loop',
     'copilot-sdk',
-    ...requirements.flatMap(r => r.buildSkills),
+    ...(args.workshopSpec ? [] : requirements.flatMap(r => r.buildSkills)),
     ...selectedPlaybooks.flatMap(p => p.buildSkills ?? []),
   ]);
   const deploymentSkills = unique([
@@ -296,6 +301,17 @@ export function buildAdvisorPackage(args: {
   const buildSkillList = buildSkills.map(s => `- ${s}`).join('\n');
   const deploymentSkillList = deploymentSkills.map(s => `- ${s}`).join('\n');
   const architectureList = runArchitecture.map(a => `- ${a}`).join('\n');
+  const buildPolicy = `## Required Agentic Loop build policy\n\n` +
+    `Run the skill-owned RBAC pre-flight before step 1. Report all permission gaps together and stop on BLOCKED or ERROR; do not create resources or grant permissions to bypass this gate.\n\n` +
+    `Immediately after Specify writes ./docs/spec.md and before Plan starts, invoke the installed agentic-loop skill as the mandatory policy layer. Do not rely on Specify embedding or transitively referencing it. If the skill is missing or cannot be invoked, stop and report the blocker rather than continuing with generic defaults.\n\n` +
+    `Apply the skill's defaults and implementation contracts to the concrete specification before planning, then carry them through Implement, Verify and Deploy. Record the invoked skill's path, the pre-flight verdict and the resulting architecture decisions in ./docs/spec.md, then carry those decisions into ./docs/plan.md. Installation alone is not evidence of invocation.\n\n` +
+    `Use the skill's [reference architecture service map](https://github.com/aiappsgbb/agentic-loop/blob/main/skills/agentic-loop/references/reference-architecture.md) to connect requirements to the implementation: Foundry hosted agents and models, Copilot SDK with governed Foundry skills and toolbox MCP, keyless identity, end-to-end observability and azd deployment. Apply the skill's conditional defaults; add complementary services only when the confirmed scope needs them, not every box in the architecture. Explain these choices to the Solution Engineer and customer.\n\n`;
+  const teachingInstructions = `## Learn while building\n\n` +
+    (selectedPlaybooks.length
+      ? `Use the selected playbooks as teaching material as well as implementation guidance. Explain their context and guided examples so the Solution Engineer can teach the customer what is being built and why.\n\n`
+      : `No maintained playbook covers this scope. Explain the customer-specific design and its limitations; do not substitute an unrelated tutorial or claim packaged guidance exists.\n\n`) +
+    `During Specify and Plan, connect each chosen platform capability to a confirmed customer requirement and explain the key design decisions. Use curated starting points where they fit, not generic scaffolding or extra capabilities unrelated to the scope.\n\n` +
+    `Leave a concise walkthrough of the implemented capability, verification evidence and repeatable build approach. This should help the Solution Engineer lead a first guided workshop and use the customer-specific prompt on later builds without repeating every tutorial step. Preserve scope and permission reviews on every build.\n\n`;
 
   return {
     path: args.path,
@@ -309,39 +325,43 @@ export function buildAdvisorPackage(args: {
     tools,
     runArchitecture,
     deploymentCommand: 'azd up',
-    copilotPrompt:
+    workshopSpec: args.workshopSpec,
+    copilotPrompt: args.workshopSpec
+      ? (args.workshopSpec.execution === 'threadlight-pipeline'
+        ? `Use the threadlight-design skill to design a pilot agent end-to-end from the confirmed specification below.\n\n`
+        : `/spec2cloud Build the pilot described in the confirmed specification below.\n\n`) +
+        buildPolicy +
+        `${formatWorkshopSpecMarkdown(args.workshopSpec)}\n\n` +
+        `## Maintained guidance to reuse\n\n${selectedPlaybooks.map(p =>
+          `- ${p.name} (${p.role}): https://github.com/aiappsgbb/agentic-loop/blob/main/playbooks/${p.slug}/README.md\n` +
+          `  Context: ${p.use_when}\n` +
+          `  Platform focus: ${[...(p.capabilities ?? []), ...(p.building_blocks ?? [])].map(label => label === 'Knowledge' ? 'Foundry IQ' : label).join('; ') || 'Validate against the confirmed customer scope.'}\n` +
+          `  Adaptation: ${p.adaptation}\n  Prerequisites: ${p.prerequisites.join('; ')}\n  Exclusions: ${p.exclusions.join('; ')}`
+        ).join('\n') || '- No packaged guidance chosen. Use the approved custom scope, not a random catalog default.'}\n\n` +
+        teachingInstructions +
+        `Reuse the chosen maintained guidance and preserve covered requirements. Generate only approved gaps. Candidate patterns remain provisional until validated against these constraints. Do not substitute canned examples for the customer brief.\n\n` +
+        `Respect the existing repository. Review Specify and Plan against this approved scope before implementation. Stop for unresolved questions or unsupported requirements, rather than fabricating support.\n\n` +
+        `## MVP safeguards\n\n${ESSENTIAL_SAFEGUARDS.map(s => `- ${s}`).join('\n')}\n\n` +
+        `Optional development deployment only after explicit scope/permission/model/data readiness review. Use the existing supported build loop; no automatic production rollout. Capture verification evidence and production next steps. A generated or deployed pilot is not production-ready.\n` +
+        (args.workshopSpec.execution === 'threadlight-pipeline'
+          ? `The customer chose the shipped Threadlight workflow. Reconcile its declared prerequisites and stages with the approved specification before proceeding; do not silently replace it with default execution.\n`
+          : '')
+      :
       `/spec2cloud ${args.intent.trim()}\n\n` +
-      `Respect the existing repository. Invoke the installed agentic-loop skill as the mandatory policy layer for every stage, including immediately after Specify and before Plan. Produce an azd-deployable package.\n\n` +
-      `Path: ${args.path === 'scenario' ? 'Scenario Advisor' : 'Production Launchpad'}\n` +
+      buildPolicy +
+      `Respect the existing repository. Produce an azd-deployable package.\n\n` +
+      `Path: ${args.path === 'scenario' ? 'Scenario workshop' : 'Customer workshop'}\n` +
       (args.scenario ? `Scenario: ${args.scenario.name} (${args.scenario.industry})\n` : '') +
-      `\nRequirements:\n${requirementList || '- Production-ready defaults'}\n\n` +
-      `Selected playbooks:\n${playbookList || '- Getting started'}\n\n` +
+      `\nRequirements:\n${requirementList || '- Validate customer-specific scope and constraints'}\n\n` +
+      `Supporting playbooks:\n${playbookList || '- No packaged coverage; validate a customer-specific approach'}\n\n` +
+      teachingInstructions +
       `Build SKILLs to use:\n${buildSkillList}\n\n` +
       `Deployment SKILLs to use:\n${deploymentSkillList}\n\n` +
       `Run architecture recommendations:\n${architectureList}\n\n` +
-      `Deployment command: azd up`,
+      `Optional development deployment command: azd up. A pilot requires verification evidence, not a production-readiness claim.`,
   };
-}
-
-function selectPlaybooks(requirements: AdvisorRequirement[], scenario?: Scenario): Playbook[] {
-  const fromScenario = scenario ? playbooksForScenario(scenario) : [];
-  const techniques = new Set(requirements.flatMap(r => r.techniques));
-  const fromRequirements = playbooks.filter(p =>
-    p.patterns.includes('*') || playbookMatchTags(p).some(t => techniques.has(t))
-  );
-  const selected = uniqueBySlug([...fromScenario, ...fromRequirements]);
-  return selected.length ? selected : playbooks.filter(p => p.slug === 'getting-started');
 }
 
 function unique<T>(items: T[]): T[] {
   return [...new Set(items)];
-}
-
-function uniqueBySlug(items: Playbook[]): Playbook[] {
-  const seen = new Set<string>();
-  return items.filter(item => {
-    if (seen.has(item.slug)) return false;
-    seen.add(item.slug);
-    return true;
-  });
 }
