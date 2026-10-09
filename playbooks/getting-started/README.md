@@ -53,7 +53,17 @@ You will need:
 - The `lean-spec2cloud` Copilot plugin installed and updated. Click [here](https://github.com/copilot/app/launch?open=ghapp%3A%2F%2Fplugins%2Fmarketplace%2Fadd%3Fsource%3DAzure-Samples%2FSpec2Cloud)
 to add the marketplace and [here](https://github.com/copilot/app/launch?open=ghapp%3A%2F%2Fplugins%2Finstall%3Fsource%3Dlean%2540Spec2Cloud) to install the plugin in the App. Confirm `lean@Spec2Cloud` is installed and enabled in the App's plugin settings.
 
-Sign in to the supporting tools in your terminal before you go further. These commands are identical on Windows, macOS, and Linux:
+**Set up Spec2Cloud Cockpit.** This companion canvas lets you follow the build stages and inspect Azure resources. It is separate from the `lean@Spec2Cloud` plugin.
+
+In GitHub Copilot App's right-hand review panel, click **+ → Spec2Cloud Cockpit**. If it is not listed, choose **Discover more → Import canvas from gist/URL → User scope**, then paste the official extension URL:
+
+```text
+https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cloud
+```
+
+After importing, click **+ → Spec2Cloud Cockpit** if it did not open automatically. Confirm the **Spec2Cloud** tab appears. The canvas does not grant deployment permissions or replace Azure sign-in.
+
+Sign in to the supporting tools in the terminal of the environment where Copilot executes the build, including when using a sandbox. These commands are identical on Windows, macOS, and Linux:
 
 ```bash
 gh auth login
@@ -115,13 +125,7 @@ Installation is not invocation. The starter prompt below runs the readiness pre-
 
 Open **GitHub Copilot App**. The terminal commands above only prepare supporting tools and project files; the build prompt runs in App Chat. Review tool and deployment permissions before approving execution.
 
-**1. Open the Spec2Cloud canvas** to watch the build loop execute. In the review panel on the right, click **+**, then pick **Spec2Cloud Cockpit** from the installed extensions. If it isn't listed, choose **Discover more → Import canvas from gist/URL → User scope**, then paste:
-
-```text
-https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cloud
-```
-
-The **Spec2Cloud** tab should appear now in the review panel. If doesn't appear automatically, click on **+** again and select **Spec2Cloud cockpit** from the Installed extensions.
+**1. Open Spec2Cloud Cockpit** to watch the build loop execute. Use **+ → Spec2Cloud Cockpit** in the right-hand review panel and confirm the **Spec2Cloud** tab appears. If it is missing, follow the import instructions in [Setup](#intro-setup).
 
 **2. Add your project.** On the left, click **+ → Add project from → Local folder or repository**, then select the `weather-agent` folder you created.
 
@@ -179,9 +183,9 @@ On the canvas, click the **Azure** icon to see the deployed resources, and the *
 
 | Symptom | Likely cause | Fix |
 |---------|--------------|-----|
-| Copilot App's plugin settings don't show an enabled `lean@Spec2Cloud` | Plugin not installed or enabled | Use the App marketplace and plugin links in [Setup](#build-setup), then enable the plugin |
+| Copilot App's plugin settings don't show an enabled `lean@Spec2Cloud` | Plugin not installed or enabled | Use the App marketplace and plugin links in [Setup](#intro-setup), then enable the plugin |
 | `gh skill list` doesn't show `agentic-loop` | Required project skill not installed | Run the project-scoped install command in [Create a new project](#build-create-a-new-project) |
-| The **Spec2Cloud** tab never appears | Canvas extension not imported | Re-import via **Discover more → Import canvas from gist/URL → User scope** with the URL above |
+| The **Spec2Cloud** tab never appears | Canvas extension not imported or opened | Follow the canvas import instructions in [Setup](#intro-setup), then select **+ → Spec2Cloud Cockpit** |
 | `azd` fails with an auth or subscription error | Wrong tenant or subscription selected | Run `azd auth login`, then `az account set --subscription <id>` |
 | Deploy fails on quota or region | Model capacity unavailable in the chosen region | Pick a region with capacity (or lower the requested capacity) and re-run `/deploy` |
 | The agent replies but no traces appear | Looking too early | Spans take a few seconds to land in Application Insights — refresh the **Traces** view |

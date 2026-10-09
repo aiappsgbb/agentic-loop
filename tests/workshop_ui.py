@@ -70,6 +70,17 @@ class WorkshopJourneys(unittest.TestCase):
         expect(dialog.get_by_role("link", name="GitHub Copilot App", exact=True)).to_have_attribute("href", "https://gh.io/app")
         expect(dialog.get_by_role("link", name="install the lean plugin", exact=True)).to_have_attribute(
             "href", "https://github.com/copilot/app/launch?open=ghapp%3A%2F%2Fplugins%2Finstall%3Fsource%3Dlean%2540Spec2Cloud")
+        expect(dialog.get_by_role("link", name="Spec2Cloud Cockpit extension", exact=True)).to_have_attribute(
+            "href", "https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cloud")
+        expect(dialog.get_by_text("Discover more → Import canvas from gist/URL → User scope", exact=True)).to_be_visible()
+        self.assertIn("+ → Spec2Cloud Cockpit", dialog.inner_text())
+        self.assertIn("Confirm the Spec2Cloud tab appears.", dialog.inner_text())
+        self.assertIn("It is separate from the lean plugin.", dialog.inner_text())
+        self.assertIn("does not grant deployment permissions or replace Azure sign-in", dialog.inner_text())
+        self.assertIn("including when using a sandbox", dialog.inner_text())
+        cockpit_url = dialog.locator(".code-block").filter(has_text="Spec2Cloud Cockpit canvas import URL")
+        expect(cockpit_url.locator("pre")).to_have_text(
+            "https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cloud")
         self.assertNotIn("copilot login", dialog.inner_text())
         self.assertNotIn("copilot plugin", dialog.inner_text())
         dialog.locator(".modal-foot").get_by_role("button", name="Create your project", exact=True).click()
@@ -99,6 +110,26 @@ class WorkshopJourneys(unittest.TestCase):
         folder = Path(os.environ.get("WORKSHOP_UI_ARTIFACTS", "test-results/workshop"))
         folder.mkdir(parents=True, exist_ok=True)
         self.page.screenshot(path=str(folder / name), full_page=self.page.get_by_role("dialog").count() == 0, animations="disabled")
+
+    def test_cockpit_environment_setup_and_getting_started(self):
+        self.go()
+        self.prepare(HR)
+        self.scope()
+        dialog = self.open_prompt()
+        dialog.get_by_role("navigation").get_by_role("button", name="Prepare your environment", exact=True).click()
+        self.page.evaluate("Object.defineProperty(navigator, 'clipboard', {configurable:true,value:{writeText:async text => window.copiedCockpitUrl = text}})")
+        cockpit_url = dialog.locator(".code-block").filter(has_text="Spec2Cloud Cockpit canvas import URL")
+        cockpit_url.get_by_role("button", name="Copy", exact=True).click()
+        expect(cockpit_url.get_by_role("button", name="Copied", exact=True)).to_be_visible()
+        self.assertEqual(self.page.evaluate("window.copiedCockpitUrl"),
+                         "https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cloud")
+        self.snapshot("cockpit-environment-setup.png")
+        self.page.keyboard.press("Escape")
+        self.go("/playbooks/getting-started#intro-setup")
+        expect(self.page.get_by_text("Set up Spec2Cloud Cockpit.", exact=True)).to_be_visible()
+        expect(self.page.get_by_text("Discover more → Import canvas from gist/URL → User scope", exact=True)).to_be_visible()
+        expect(self.page.locator(".md-code pre").filter(has_text="https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cloud")).to_be_visible()
+        self.snapshot("cockpit-getting-started-setup.png")
 
     def test_home_and_empty_brief(self):
         self.go("/")
