@@ -20,7 +20,7 @@ Run the [RBAC pre-flight](#rbac-pre-flight) **before step 1** of the run, so a p
 
 When choices are unspecified, prefer:
 
-- **Agent hosting** - Use Foundry **hosted agents** to implement AI agents. Expose the **Responses API** as the default hosted-agent protocol so clients call an OpenAI-compatible `/responses` endpoint and the platform manages conversation history, streaming, and session lifecycle. Use invocations only when the user explicitly needs that protocol or an existing sample/runtime requires it. Proactively propose an agent-based design even when the user didn't explicitly ask for agents, if the use case involves reasoning over tools, multi-step workflows, data grounding, or external system calls.
+- **Agent hosting** - Use Foundry **hosted agents** to implement AI agents. This is an **artifact-type contract, not a preference**: the provisioned agent must be a Foundry hosted agent (`kind: hosted`) — your container image and agent loop, run by Foundry. Declarative/prompt agents (`kind: prompt`, authored in the portal or via `PromptAgentDefinition`) are **not** the agentic-loop backbone and must never be substituted silently; see [Hosted-agent guarantee](#hosted-agent-guarantee). Expose the **Responses API** as the default hosted-agent protocol so clients call an OpenAI-compatible `/responses` endpoint and the platform manages conversation history, streaming, and session lifecycle. Use invocations only when the user explicitly needs that protocol or an existing sample/runtime requires it. Proactively propose an agent-based design even when the user didn't explicitly ask for agents, if the use case involves reasoning over tools, multi-step workflows, data grounding, or external system calls.
 - **Agent framework** - Default to the **GitHub Copilot SDK** for hosted agents. It runs BYOK against Microsoft Foundry models over the **Responses API**, consumes Foundry Skills from the Skills API, and bridges the Foundry toolbox MCP endpoint for tools and grounding. Use **Microsoft Agent Framework (MAF)** only when the user explicitly asks for MAF or the task is clearly graph/workflow orchestration. Pick one framework per agent; do not combine them.
 - **Skills first** - Treat **Foundry Skills API** skills as the default reusable behavior layer for agentic-loop specs. Author each skill as `./skills/<skill-name>/SKILL.md` in the implement stage, then use the **azd Foundry extension** for skill data-plane management (`azd ai skill create/update/list/show/download`). Add `postprovision` hooks in `azure.yaml` for repeatable create/update from the local `SKILL.md` files; use REST/SDK only for gaps not covered by `azd`. The hosted agent image must not copy this folder; at runtime the Copilot SDK agent downloads the governed skill versions from Foundry into a temp directory.
 - **Tools and grounding through toolbox MCP** - Govern custom MCP servers, Foundry IQ / CognitiveSearch grounding connections, A2A tools, and connectionless tools through Foundry **connections** and a single **toolbox**. Do not hardcode tool URLs, Search clients, or connection secrets in the agent runtime by default.
@@ -41,6 +41,16 @@ The net effect: **both skills and MCP tools** stay versioned, auditable, and upd
 ## Greenfield readiness policy
 
 `agentic-loop` owns defaults, decision policy, and generated contracts. It should make future `verify` and `deploy` runs smoother by declaring the right architecture and repository expectations before implementation starts.
+
+### Hosted-agent guarantee
+
+Every agentic-loop run must end with a **Foundry hosted agent** as the provisioned artifact. Guarantee it in three moves rather than discovering the wrong artifact after the fact:
+
+1. **Declare** - before `implement` starts, `./docs/plan.md` names the backbone explicitly: agent artifact = Foundry **hosted agent** (`kind: hosted`, Responses API), agent framework (Copilot SDK by default), and the Foundry model deployment. Never begin implement with an unspecified agent artifact.
+2. **Build it that way** - initialize from a hosted-agent manifest (`azd ai agent init -m <hosted manifest>` → `agent.manifest.yaml`), serve the Responses API from your own module via `azure-ai-agentserver-responses`, and deploy it as an azd service. Do **not** author the declarative path (`PromptAgentDefinition`, portal "create agent", instructions-only `create_agent(...)`) — it yields `kind: prompt`. Using it at all requires an explicit user request recorded as a deviation in `./docs/plan.md`.
+3. **Confirm and repair** - after `azd provision`/`azd deploy`, read the agent **back from the Foundry project** (never trust the deploy step's own return value) and compare `kind` with `hosted`. If it does not match, the loop **repairs**: report the mismatch, re-author the agent to the hosted shape, remove the wrong artifact, re-provision, and re-check. Do not report the run successful on an unrepaired mismatch; stopping the run is the last resort after repair fails to converge.
+
+The full step - declaration wording, the `kind` table, the read-back, the repair procedure, and the report message contract - is in [`references/hosted-agent-guarantee.md`](references/hosted-agent-guarantee.md), with the reference check script [`references/check_agent_kind.py`](references/check_agent_kind.py). It is deliberately self-contained (it needs only the project endpoint and agent name) so it can be lifted into a shared cross-playbook step.
 
 ### Agent Framework selection
 
@@ -65,6 +75,7 @@ When post-processing a spec, explicitly add or confirm these contracts in the ge
 
 | Contract | Required guidance |
 | --- | --- |
+| **Agent artifact type** | State that each agent is a Foundry **hosted agent** (`kind: hosted`, Responses API) with its framework and model deployment, and carry the confirm-and-repair step into verify. See [Hosted-agent guarantee](#hosted-agent-guarantee). |
 | **azd environment naming** | Suggest a convention-based name and let the user accept or override it. Example: `agentic-loop-weather-dev-eus2` from app name, stage, and region. |
 | **Durable azd artifacts** | Keep `.azure/deployment-plan.md` as a durable repo artifact. If `.azure/` is ignored, prefer `.azure/*` plus `!.azure/deployment-plan.md`. |
 | **Playbook artifact option** | When the user wants the fastest deploy path, offer a deploy-ready playbook artifact that can be downloaded and deployed without rebuilding from source. |
