@@ -76,18 +76,24 @@ The workshop recomposes the existing Agentic Launchpad. Old playbook/scenario ro
 
 **Reuse first; build only what is missing.** Workshop preparation uses curated, deterministic rules entirely in your browser. Partial coverage preserves existing guides and surfaces gaps for manual decisions in scope notes. No packaged match is not technical infeasibility. Candidate patterns require review. Editing upstream inputs invalidates scope confirmation. Essential identity, safe data handling and scenario verification remain in every MVP; a generated or deployed workshop pilot is not production-ready.
 
-## Run the portal
+## Use the hosted portal
+
+Open the [production Agentic Loop portal](https://aka.ms/agentic-loop) and select **Start a technical workshop**. No repository clone, package installation or local development server is required. Preparation, guide matching, scope review and prompt assembly run entirely in your browser. There is no local AI companion, SDK runtime, analysis endpoint or Copilot sign-in requirement to prepare a workshop.
+
+See [the workshop specification](docs/spec.md#47-client-side-customer-workshop-preparation) and [the workshop facilitator guide](docs/workshop-guide.md). The [original implementation plan](docs/customer-workshop-plan.md) is historical; its SDK preparation requirements have been superseded.
+
+New customer workshops start with one of three randomly selected, editable sample briefs. Scenario links retain their own context. Workshop drafts are held only in browser memory. Navigation preserves them; refreshing starts a new sample draft. Preparation does not transmit customer text to a service or put it in browser storage. Copying the prompt is explicit; submitting it to Copilot happens separately in your project.
+
+### Local development (portal contributors only)
+
+These commands are optional and only needed when changing the portal's source code:
 
 ```bash
 npm ci
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173/agentic-loop/workshop`. Preparation, guide matching, scope review and prompt assembly are client-side. There is no local AI companion, SDK runtime, analysis endpoint or Copilot sign-in requirement to prepare a workshop. Development and public static hosting use the same flow.
-
-See [the workshop specification](docs/spec.md#47-client-side-customer-workshop-preparation) and [the workshop facilitator guide](docs/workshop-guide.md). The [original implementation plan](docs/customer-workshop-plan.md) is historical; its SDK preparation requirements have been superseded.
-
-New customer workshops start with one of three randomly selected, editable sample briefs. Scenario links retain their own context. Workshop drafts are held only in browser memory. Navigation preserves them; refreshing starts a new sample draft. Preparation does not transmit customer text to a service or put it in browser storage. Copying the prompt is explicit; submitting it to Copilot happens separately in your project.
+Open `http://127.0.0.1:5173/agentic-loop/workshop`. Development and production static hosting use the same client-side flow. Production deployments build static assets in GitHub Actions; they do not run a Vite development server.
 
 ## Use the build loop
 
