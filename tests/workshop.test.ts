@@ -12,6 +12,14 @@ import workshopBriefs from '../src/data/workshop-briefs.json';
 import { newWorkshopDraft } from '../src/components/WorkshopContext';
 
 const hr = 'Employees need HR policy answers grounded in approved documents with citations.';
+test('production hosting serves playbook deep links through the SPA fallback', () => {
+  const config = JSON.parse(readFileSync('public/staticwebapp.config.json', 'utf8'));
+  assert.equal(config.navigationFallback.rewrite, '/index.html');
+  assert.ok(!config.navigationFallback.exclude.includes('/playbooks/*'));
+  assert.ok(config.navigationFallback.exclude.includes('/assets/*'));
+  assert.ok(config.navigationFallback.exclude.includes('/images/*'));
+  assert.ok(config.navigationFallback.exclude.some((pattern: string) => pattern.includes('css,js')));
+});
 test('three sample briefs cover reuse, gaps and a custom outcome without preapproving scope', () => {
   assert.equal(workshopBriefs.length, 3);
   assert.equal(new Set(workshopBriefs).size, 3);
