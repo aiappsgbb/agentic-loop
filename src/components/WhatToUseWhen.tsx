@@ -13,7 +13,7 @@ const PATHS = [
   {
     label: 'Showcase',
     title: 'Show an industry demo',
-    sub: 'Explore ready-made examples without setup. Available demos and Kratos remain directly accessible.',
+    sub: 'Explore ready-made industry examples without setup.',
     to: '/scenarios',
     icon: Layers,
     meta: 'Explore industry examples',
@@ -52,7 +52,7 @@ export default function WhatToUseWhen() {
           );
         })}
       </div>
-      <p>Already know which guide you need? <Link to="/playbooks">Browse playbooks</Link>. <Link to="/reference/kratos">Try Kratos</Link>.</p>
+      <p>Already know which guide you need? <Link to="/playbooks">Browse playbooks</Link>.</p>
     </section>
   );
 }

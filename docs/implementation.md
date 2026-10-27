@@ -1,5 +1,7 @@
 # Implementation: Three-Path Advisor ✨
 
+> Historical implementation record. Kratos has since been removed, including its launcher, persona builder and Front Door routes. Current customer actions are the technical workshop and industry showcase; see [information architecture](information-architecture.md) and [production hosting](../infra/README.md).
+
 ## What changed
 
 The portal now implements a clear three-path model without replacing the existing static site:

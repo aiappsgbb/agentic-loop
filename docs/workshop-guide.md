@@ -31,7 +31,7 @@ Curated starting points keep the workshop specific: connect the chosen capabilit
 
 ## Historical framing (not the implemented hand-off)
 
-The following earlier discussion records unresolved persona/export concepts. It is not a requirement to make Kratos the workshop execution target or a claim that its proposed production hand-offs are implemented.
+The following earlier discussion is retained only as historical context. Its Kratos persona/export proposal is retired, not an open implementation requirement: the reference integration, persona flow and portal links have been removed. Use the current customer-workshop flow above, not the diagram or proposed hand-offs below.
 
 > The end-to-end flow to walk on screen using **only the Agentic Loop web portal**.
 > ⚠ markers flag the steps that still depend on an **outstanding alignment/decision**.

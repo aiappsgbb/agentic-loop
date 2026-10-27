@@ -1,5 +1,7 @@
 # Plan: Customer workshop entry and playbook reuse
 
+> Historical plan, not the current runtime contract. The SDK preparation proposal was superseded by client-side preparation, and the Kratos reference integration has been removed. See [the workshop guide](workshop-guide.md) for the implemented flow.
+
 Date: 2026-10-02
 Repository: aiappsgbb/agentic-loop
 Status: Historical implementation handover; workshop preparation requirements superseded on 2026-10-07

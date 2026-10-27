@@ -16,7 +16,6 @@ const Playbooks = lazy(() => import('./pages/Playbooks'));
 const PlaybookPage = lazy(() => import('./pages/PlaybookPage'));
 const SkillsCatalog = lazy(() => import('./pages/SkillsCatalog'));
 const SkillDetail = lazy(() => import('./pages/SkillDetail'));
-const Kratos = lazy(() => import('./pages/Kratos'));
 const AgenticLoopConcept = lazy(() => import('./pages/concepts/AgenticLoop'));
 const Agents = lazy(() => import('./pages/concepts/Agents'));
 const Skills = lazy(() => import('./pages/concepts/Skills'));
@@ -46,8 +45,6 @@ export default function Portal() {
             <Route path="playbooks/:slug" element={lazyRoute(<PlaybookPage />)} />
             <Route path="skills" element={lazyRoute(<SkillsCatalog />)} />
             <Route path="skills/:name" element={lazyRoute(<SkillDetail />)} />
-            <Route path="reference/kratos" element={lazyRoute(<Kratos />)} />
-            <Route path="kratos" element={<Navigate to="/reference/kratos" replace />} />
             <Route path="concepts">
               <Route index element={<Navigate to="agentic-loop" replace />} />
               <Route path="agentic-loop" element={lazyRoute(<AgenticLoopConcept />)} />

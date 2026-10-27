@@ -10,7 +10,6 @@ const TITLES: Record<string, string> = {
   '/workshop': 'Start a technical workshop',
   '/playbooks': 'Playbooks',
   '/skills': 'Skills catalog',
-  '/kratos': 'Kratos',
   '/concepts/agentic-loop': 'The Agentic Loop',
   '/concepts/agents': 'Agents',
   '/concepts/skills': 'Skills',
