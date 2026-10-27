@@ -4,13 +4,13 @@
 
 ### Graduate an existing skill into a governed agent.
 
-Start with the skills that already work for your team. Install the `agentic-loop` build skill and your own skills into the project with the same `gh skill install` command, then let Agentic Loop build and deploy the skill-backed application.
+Start with the skills that already work for your team. Install the **Foundry Agentic Loop plugin** for the build workflow and use `gh skill install` for your runtime domain skills, then build and verify the skill-backed application.
 
 **Use when:** A proven local or GitHub-hosted `SKILL.md` needs enterprise identity, governance, runtime distribution, observability, evals, and repeatable deployment.
 
-**Core tech stack:** GitHub Skills CLI, `agentic-loop`, GitHub Copilot SDK, Foundry Hosted Agents, Foundry Models, Foundry Skills API
+**Core tech stack:** GitHub Skills CLI, `foundry-agentic-loop`, GitHub Copilot SDK, Foundry Hosted Agents, Foundry Models, Foundry Skills API
 
-The [`agentic-loop`](../../skills/agentic-loop/SKILL.md) skill is the required build-time orchestrator. The other project skills are runtime domain instructions. GitHub CLI installs both kinds into `.agents/skills`; Agentic Loop then publishes the selected runtime skills through the Foundry Skills API and configures the deployed agent to consume them.
+The plugin's `foundry-agentic-loop` skill coordinates the build. Project skills are runtime domain instructions installed into `.agents/skills` with GitHub CLI, then published through the Foundry Skills API and consumed by the deployed agent. Do not install the legacy policy skill alongside the plugin for a new build.
 
 The playbook is organized in three chapters:
 
@@ -26,20 +26,20 @@ The answer is an agentic backbone:
 
 1. Preserve the SKILL content that already works.
 2. Install it into the project with `gh skill install`.
-3. Use `agentic-loop` to build the application and publish immutable **Foundry Skills** versions.
+3. Use `foundry-agentic-loop` to build the application and publish immutable **Foundry Skills** versions.
 4. Download approved versions into writable runtime storage.
 5. Add Entra identity, tool policy, telemetry, evals, promotion, and rollback.
 
 ### What we will build
 
-You will create an application around the skills installed in `.agents/skills/`. The `agentic-loop` skill supplies the production backbone. The selected user skills are published as immutable Foundry skill versions, promoted after evaluation, and downloaded into writable runtime storage for Copilot SDK sessions.
+You will create an application around the skills installed in `.agents/skills/`. The `foundry-agentic-loop` plugin coordinates the build. The selected user skills are published as immutable Foundry skill versions, promoted after evaluation, and downloaded into writable runtime storage for Copilot SDK sessions.
 
 ```mermaid
 flowchart LR
-  BuildRepo[aiappsgbb/agentic-loop] --> CLI[gh skill install]
+  BuildPlugin[Foundry Agentic Loop plugin] --> Loop[Build workflow]
   UserRepo[User skill repo or local folder] --> CLI
   CLI --> Project[.agents/skills]
-  Project --> Loop[Run agentic-loop]
+  Project --> Loop
   Loop --> Skills[Publish with Foundry Skills API]
   Skills --> Download[Download selected skill versions]
   Download --> SkillDir[Writable runtime skill directory]
@@ -62,20 +62,21 @@ flowchart LR
 
 | Layer | Choice | Why |
 |---|---|---|
-| Project skills | `gh skill install` into `.agents/skills` | Uses the same simple installation path for `agentic-loop` and user skills. |
+| Build coordination | `foundry-agentic-loop` plugin | Bundles the skill, canvas and SDD workflow. |
+| Project skills | `gh skill install` into `.agents/skills` | Installs the runtime skills, not the build plugin. |
 | Skill lifecycle | Foundry Skills API | Gives versioned, immutable skill snapshots and `default_version` promotion. |
 | Skill injection | Foundry Skills API download into writable runtime storage | Lets Copilot SDK load the governed copy through `skill_directories`. |
 | Agentic loop | GitHub Copilot SDK | Default harness for long-running app loops, streaming, tools, and session integration. |
 | Runtime | Foundry Hosted Agents using Responses by default | Moves the app to a governed runtime with identity, sessions, scaling, and observability. |
 | Model backend | Foundry Models | Keeps model consumption measurable on the Foundry platform. |
-| Frontend | Selected during `/spec2cloud` | Matches the application and users the supplied skills support. |
+| Frontend | Confirmed during Specify | Matches the application and users the supplied skills support. |
 | Identity | Entra ID + managed identities + `DefaultAzureCredential` | Enables keyless workload access and enterprise authorization. |
 | Observability | OpenTelemetry -> Application Insights + Foundry monitoring | Makes runtime health, SKILL usage, tool calls, and eval outcomes visible. |
 | Infra | `azd init --minimal` + Bicep | Generates only the resources required by the selected application. |
 
 **Done means:**
 
-- `agentic-loop` and the selected user skills are installed with `gh skill install`.
+- The `foundry-agentic-loop` plugin is enabled and the selected user skills are installed with `gh skill install`.
 - Approved user skills are published as immutable Foundry skill versions.
 - Selected skill versions are downloaded from Foundry into writable runtime storage before the agent starts a session.
 - The agent runs on Foundry Hosted Agents and uses Foundry Models.
@@ -121,18 +122,22 @@ You will need:
 - Access to the [`aiappsgbb/agentic-loop`](https://github.com/aiappsgbb/agentic-loop) repository and to the repository or local directory containing your own skills.
 - [Azure CLI (`az`)](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) and [Azure Developer CLI (`azd`)](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/install-azd) installed and authenticated.
 - Bicep available through Azure CLI or the standalone [Bicep CLI](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install).
-- The `lean-spec2cloud` Copilot plugin installed and updated. Install it from the CLI with:
+- Git, Node.js, Python 3.13 and azd Foundry extensions. Approve any readiness-check installation separately.
+- The **foundry-agentic-loop** plugin: in Copilot App use **Customize → Plugins → foundry-agentic-loop → Install**. It bundles the skill, canvas and SDD workflow.
+
+> Install the [published Foundry Agentic Loop plugin](https://github.com/github/awesome-copilot/tree/main/plugins/foundry-agentic-loop). No separate lean plugin, policy-skill installation or Cockpit import is needed. If a bundled component is missing, Copilot asks before reinstalling the plugin. It never installs extensions from a URL or edits Copilot settings. Re-enable disabled extensions in your extension settings and continue in a new session. Without the canvas, continue in Chat; without the workflow, SDD cannot start. Switching to Rapid requires confirmation and an existing Foundry project.
+
+Install the published plugin from Copilot CLI if preferred:
 
 ```pwsh
-copilot plugin marketplace add Azure-Samples/Spec2Cloud
-copilot plugin install lean@Spec2Cloud
+copilot plugin install foundry-agentic-loop@awesome-copilot
 ```
 
 Sanity check before you go further:
 
 ```pwsh
 copilot --version
-copilot plugin list   # expect lean@Spec2Cloud
+copilot plugin list   # expect foundry-agentic-loop
 gh --version
 gh skill --help
 gh repo view aiappsgbb/agentic-loop --json nameWithOwner
@@ -142,7 +147,7 @@ azd version
 az bicep version
 ```
 
-> Tooling note: `copilot plugin install lean@Spec2Cloud` installs the Spec2Cloud plugin. `gh skill install ... --scope project` installs both Agentic Loop and your own skills into the project's `.agents/skills` directory.
+> Tooling note: the plugin bundles the build skill. `gh skill install ... --scope project` installs your runtime domain skills into `.agents/skills`; it does not install the canvas or workflow.
 
 > **Heads up on cost.** This playbook provisions billable Azure resources, including Container Apps, Foundry/AI Services, Application Insights, and optionally Container Registry. See [Clean up](#clean-up) to remove everything when you are done.
 
@@ -165,15 +170,9 @@ cd my-skill-backed-agent
 git init
 ```
 
-### Install Agentic Loop and your skills
+### Install your runtime skills
 
-Use the same command for the required build skill and your runtime domain skills.
-
-Install Agentic Loop:
-
-```pwsh
-gh skill install aiappsgbb/agentic-loop agentic-loop --agent github-copilot --scope project
-```
+The build skill is already bundled in the plugin. Install only the runtime domain skills your application needs.
 
 Install your skill from GitHub:
 
@@ -195,7 +194,7 @@ gh skill install C:\path\to\skills-repo --from-local --agent github-copilot --sc
 
 `gh skill install` is in preview. Review the [GitHub CLI command](https://cli.github.com/manual/gh_skill_install) and [GitHub agent-skills guidance](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills) for current behavior.
 
-Before continuing, confirm both the build skill and your runtime skills are installed:
+Before continuing, confirm the plugin is enabled and your runtime skills are installed:
 
 ```pwsh
 gh skill list
@@ -208,17 +207,14 @@ git commit -m "chore: add agent skills"
 
 ### Open GitHub Copilot
 
-This playbook uses the **GitHub Copilot App**, but the same prompt works in Copilot CLI and VS Code.
+This playbook uses the **GitHub Copilot App** and its bundled Foundry Agentic Loop canvas; the workflow also runs in Copilot CLI.
 
 > **Using the CLI instead?** Run `copilot --allow-all` only in a sandbox workspace, or omit the flag to approve each action.
 
-**1. Open the Spec2Cloud canvas.** In the review panel, click **+**, then choose **Spec2Cloud Cockpit**. If it is not installed, import:
+**1. Add your project.** Choose **+ -> Add project from -> Local folder or repository**, then select `my-skill-backed-agent`.
 
-```text
-https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cloud
-```
+**2. Open the bundled canvas.** In your project session, ask **open the agentic loop**. Choose **SDD** on Start and confirm the subscription. Planning is inside Specify; the other tabs are Build, Explore and Optimize. Rapid is an alternative for an existing project, with local verification before a separately approved deployment.
 
-**2. Add your project.** Choose **+ -> Add project from -> Local folder or repository**, then select `my-skill-backed-agent`.
 
 **3. Choose a model and mode.**
 
@@ -226,37 +222,29 @@ https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cl
 |---|---|
 | Interactive | Step-by-step collaboration; you confirm each stage |
 | Plan | Plans first, executes once you approve |
-| Autopilot *(recommended)* | Runs the full loop end to end |
+| Autopilot | Automates work, but the SDD workflow still pauses at the spec and deployment approval gates |
 
 ---
 
 ### Run the build loop
 
-Take the new workspace through **Specify -> Plan -> Implement -> Verify -> Deploy** with one prompt.
+Take the new workspace through **Specify -> Implement -> Verify -> Deploy** with one prompt.
 
-> **Required build skill:** The starter prompt invokes the installed `agentic-loop` skill to create the production backbone. The other installed project skills are the runtime domain skills deployed through the Foundry Skills API.
+> **Build versus run:** The starter prompt invokes the bundled `foundry-agentic-loop` skill. The installed project skills are the runtime domain skills deployed through the Foundry Skills API.
 
 ```text
-/spec2cloud Build [describe the application, target users, and business outcome]. Use the user-provided project skills installed under .agents/skills as the application's runtime domain instructions. Ask me to confirm which installed skills the deployed agent should use, the frontend, and any required APIs or MCP tools before finalizing the specification.
+Use the foundry-agentic-loop skill in SDD mode to build [describe the application, target users, and business outcome]. Use the user-provided project skills installed under .agents/skills as the application's runtime domain instructions. Ask me to confirm which installed skills the deployed agent should use, the frontend, and any required APIs or MCP tools before finalizing the specification.
 
-Use the `agentic-loop` skill.
+Use the `foundry-agentic-loop` skill and `foundry-agentic-loop-workflow`. Require spec approval and always pause before `azd up`. Confirm billable changes, run RBAC and placement preflight before creating resources, and stop on BLOCKED or ERROR. Freeze the contract in Specify and prove the minimal hosted integration before parallel work. Keep Azure settings only in `.azure/deployment-plan.md`, respect the `AGENTS.md` mode lock, and preserve evidence, `.agentic-loop/runs/` flight records and `docs/LOOP.md` lessons.
 
 Publish the selected installed user skills directly through the Foundry Skills API; do not build a separate skill-importer service. Create immutable versions, run routing, instruction-adherence, tool-boundary, safety, and scenario-specific evaluations against those exact versions, then promote passing versions to default_version. Before each Copilot SDK session, download the governed versions into writable runtime storage and configure skill_directories to those folders.
 
 Build the confirmed frontend and a Foundry Hosted Agent using the GitHub Copilot SDK and Foundry Models. Use managed identity and DefaultAzureCredential. Trace skill name/version, routing, tool calls, instruction adherence, latency, errors, and evaluation lineage. Support pinning and rollback without rebuilding the agent image.
 ```
 
-> `/spec2cloud` runs the same five-stage loop as Getting Started. The prompt explicitly invokes `agentic-loop`; the remaining requirements define skill installation, Foundry publication, runtime injection, evaluation, and promotion.
+> `foundry-agentic-loop-workflow` runs the same four-phase SDD loop as Getting Started. The prompt explicitly invokes `foundry-agentic-loop`; the remaining requirements define skill installation, Foundry publication, runtime injection, evaluation, and promotion.
 
-> Prefer to run one stage at a time? Use the same prompt with `/specify` first, then advance through each stage:
->
-> | Command | Produces | Review in |
-> |---|---|---|
-> | `/specify <prompt>` | Specification | `docs/spec.md` |
-> | `/plan` | Implementation and Azure plan | `docs/plan.md`, `.azure/deployment-plan.md` |
-> | `/implement` | App, infrastructure, and skill publication step | `src/`, `infra/`, `azure.yaml` |
-> | `/verify` | Publication, injection, policy, and regression tests | `docs/verify.md` |
-> | `/deploy` | Deployed skill-backed solution | `docs/deploy.md` |
+> For one phase or a range, ask Copilot to run `specify`, `implement`, `verify` or `deploy`; the workflow supports `from` and `to`. Planning is part of Specify. Each phase has fresh-context review and bounded fix rounds; a failed gate pauses with evidence. Ask to `resume` paused work instead of repeating completed steps.
 
 Use these recommended answers if Copilot asks clarifying questions:
 
@@ -295,7 +283,7 @@ git --no-pager diff -- docs\spec.md
 Turn the spec into a reviewable implementation and deployment plan.
 
 ```text
-/plan
+Review the Specify artifacts and frozen implementation contract before implementation.
 ```
 
 For this playbook, choose:
@@ -314,7 +302,7 @@ bring-your-own-skills-dev-eus2
 
 Review:
 
-- `docs/plan.md`
+- `docs/spec.md`
 - `.azure/deployment-plan.md`
 
 The deployment plan should include:

@@ -44,24 +44,25 @@ The result is a simpler path from **idea → pilot → production**, with enterp
 Agentic Loop brings together:
 
 - **GitHub Copilot** to specify, plan, implement, verify, and deploy the solution.
-- **GitHub Copilot SDK** as the default execution harness for agentic loops.
+- **GitHub Copilot SDK** as the execution harness for agents using runtime skills.
 - **SKILLs** as reusable specialization packages for domain knowledge, instructions, tools, and workflows.
 - **Microsoft Foundry Hosted Agents** as the governed runtime for secure and scalable execution.
 - **Foundry Models** as the intelligence layer, connected to evaluation, optimization, and measurable consumption.
 - **Foundry Skills and Toolboxes** to distribute versioned behavior, tools, and grounding without rebuilding the agent.
 - **Azure** for identity, networking, data, integration, observability, governance, and deployment.
 
-The default pattern is a GitHub Copilot SDK agent hosted on Microsoft Foundry, using Foundry Skills and a governed toolbox MCP endpoint. Microsoft Agent Framework is used when a solution explicitly requires graph or workflow orchestration.
+Agents run on Microsoft Foundry with a governed toolbox MCP endpoint. The new build plugin uses GitHub Copilot SDK for agents with runtime skills and Microsoft Agent Framework for basic agents and explicit workflows. A workflow that also needs skills requires clarification; keep one framework per agent.
 
 ## How the loop works
 
-The inner development loop is:
+The Foundry Agentic Loop plugin offers two build modes:
 
-1. **Specify** — turn the idea, business process, or problem into explicit requirements.
-2. **Plan** — select the architecture, models, tools, skills, grounding, and Azure services the scenario needs.
-3. **Implement** — build the agent, application, integrations, infrastructure, and reusable skills.
-4. **Verify** — test behavior, safety, identity, deployment readiness, and scenario-specific quality.
-5. **Deploy** — provision and release the solution to Azure with `azd`.
+| Mode | Start with | Outcome |
+| --- | --- | --- |
+| **Rapid prototyping** | An existing Foundry project | Build and verify locally from Chat; deploy separately after approval. |
+| **Spec-driven development (SDD)** | A brief and an Azure subscription | Create a project and run **Specify → Implement → Verify → Deploy** with `azd`. |
+
+SDD folds architecture planning and the frozen implementation contract into **Specify**. Each phase has a lead, an independent fresh-context reviewer and bounded fix rounds; only evidence passes the gate. Review the spec before implementation, and approve `azd up` separately. Durable flight records support journaled resume without repeating completed work.
 
 The deployed solution then enters an outer production loop: observe, evaluate, learn, improve, and redeploy.
 
@@ -99,21 +100,27 @@ Open `http://127.0.0.1:5173/agentic-loop/workshop`. Development and production s
 
 ## Use the build loop
 
-Install the Agentic Loop skill into the project you want GitHub Copilot to build:
+The [Foundry Agentic Loop plugin](https://github.com/github/awesome-copilot/tree/main/plugins/foundry-agentic-loop) is available in the awesome-copilot marketplace. It replaces the separate lean/Spec2Cloud setup for new builds.
+
+In **GitHub Copilot App → Customize → Plugins**, install **foundry-agentic-loop**. Or use the Copilot CLI:
 
 ```bash
-gh skill install aiappsgbb/agentic-loop agentic-loop \
-  --agent github-copilot \
-  --scope project
+copilot plugin install foundry-agentic-loop@awesome-copilot
 ```
 
-Open that project in GitHub Copilot App or the CLI, describe the idea or business problem, and run:
+The plugin bundles one build skill, the canvas and the SDD workflow. No separate policy-skill install or Cockpit import is needed. Open your workspace in GitHub Copilot App and ask:
 
 ```text
-/spec2cloud
+Open the agentic loop.
 ```
 
-The workflow carries the solution through **Specify → Plan → Implement → Verify → Deploy**. The Agentic Loop skill applies the Microsoft Foundry and Azure production defaults, selects relevant companion skills, and keeps the generated architecture aligned with the requirements.
+On **Start**, choose **Rapid** (existing project) or **SDD** (subscription), then shape an idea or select a prompt template and **Send to Chat**. The canvas also has **Build**, **Explore** and **Optimize** tabs. The portal's workshop prompt preserves your confirmed customer scope and chosen mode.
+
+If a bundled component is missing, Copilot asks before reinstalling the plugin. It never installs extensions from a URL or edits Copilot settings. Re-enable disabled extensions in your extension settings and continue in a new session. Without the canvas, continue in Chat; without the workflow, SDD cannot start. Switching to Rapid requires confirmation and an existing Foundry project.
+
+The first build records its mode and short-command routing in root `AGENTS.md`; all Azure settings stay in `.azure/deployment-plan.md`. Mode switches need confirmation. Verified lessons live in `docs/LOOP.md`, and SDD flight records in `.agentic-loop/runs/`. Ask **improve the agentic loop** for measured, evidence-backed skill/workflow changes, applied only after approval without weakening gates.
+
+Both modes need Azure authentication, resource and role-assignment permissions, model capacity and approved data. They create billable resources only after confirmation. The portal prepares instructions; it does not execute builds or certify production readiness. Existing projects can retain the [legacy policy skill](skills/agentic-loop/SKILL.md); new prompts use `foundry-agentic-loop`.
 
 ## Guiding outcomes
 

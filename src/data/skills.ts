@@ -6,6 +6,7 @@ import {
   RefreshCw, Factory, HeartPulse, Landmark,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { FOUNDRY_LOOP } from './buildWorkflow';
 
 export interface BuildSkill {
   /** Skill folder name — matches `skills/<id>/SKILL.md` in the repo and the route param. */
@@ -26,10 +27,18 @@ export interface BuildSkill {
  */
 export const BUILD_SKILLS: BuildSkill[] = [
   {
+    id: 'foundry-agentic-loop',
+    name: 'Foundry Agentic Loop',
+    repo: 'github/awesome-copilot',
+    description: 'Build with Rapid prototyping in an existing project, or Specify → Implement → Verify → Deploy with independent review and evidence gates. The published plugin bundles one skill, canvas and workflow.',
+    category: 'Orchestration',
+    icon: RefreshCw,
+  },
+  {
     id: 'agentic-loop',
-    name: 'Agentic Loop',
+    name: 'Agentic Loop (legacy)',
     repo: 'aiappsgbb/agentic-loop',
-    description: 'Required policy layer for every playbook execution. Applies the Agentic Loop defaults across Specify, Plan, Implement, Verify, and Deploy.',
+    description: 'Legacy five-stage policy skill, retained for existing projects. New builds use the foundry-agentic-loop plugin.',
     category: 'Orchestration',
     icon: RefreshCw,
   },
@@ -37,7 +46,7 @@ export const BUILD_SKILLS: BuildSkill[] = [
     id: 'microsoft-foundry',
     name: 'Microsoft Foundry',
     repo: 'microsoft/azure-skills',
-    description: 'Microsoft Foundry — the default for every agentic-loop spec. Declares hosted agents, models, and projects.',
+    description: 'Microsoft Foundry platform companion for the build loop. Manages hosted agents, models and projects; installation requires approval.',
     category: 'Foundry',
     icon: Boxes,
   },
@@ -53,7 +62,7 @@ export const BUILD_SKILLS: BuildSkill[] = [
     id: 'copilot-sdk',
     name: 'Copilot SDK',
     repo: 'github/awesome-copilot',
-    description: 'GitHub Copilot SDK for skill-using or integrated-loop agents — BYOK Foundry models, invocations protocol.',
+    description: 'GitHub Copilot SDK for agents using runtime skills — BYOK Foundry models, governed toolbox MCP and the Responses API.',
     category: 'Agent Framework',
     icon: Github,
   },
@@ -179,6 +188,7 @@ export function skillRawUrl(skill: BuildSkill | RunSkill): string {
 
 /** GitHub CLI command to install the skill. */
 export function skillInstallCommand(skill: BuildSkill | RunSkill): string {
+  if (skill.id === 'foundry-agentic-loop') return FOUNDRY_LOOP.installCommand;
   return `gh skill install ${skill.repo} ${skill.id} --agent github-copilot --scope project`;
 }
 

@@ -311,17 +311,18 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
                 </div>
               ))}
             </div>
-            <div className="workshop-remaining" aria-label="Required Agentic Loop build skill">
-              <h4>Why the Agentic Loop skill is required</h4>
-              <p>The <Link to="/skills/agentic-loop">agentic-loop build skill</Link> turns the <Link to="/concepts/platform">reference architecture</Link> into implementation rules: Foundry hosted agents and models, governed skills and tools, keyless identity, observability and azd deployment. It adds supporting services only where your scope needs them.</p>
-              <p>The build runs a readiness pre-flight first, then Specify. The prompt explicitly invokes agentic-loop after the spec is written, before Plan, and carries its decisions through the remaining stages. This is a build-time policy skill for Copilot, not a run skill for the customer's agent. The portal prepares the instructions but cannot verify external invocation.</p>
+            <div className="workshop-remaining" aria-label="Foundry Agentic Loop build approach">
+              <h4>One plugin, two ways to build</h4>
+              <p>The <Link to="/skills/foundry-agentic-loop">foundry-agentic-loop build skill</Link> bundles setup, architecture defaults and mode selection with a companion canvas and SDD workflow. It translates the <Link to="/concepts/platform">reference architecture</Link> into a customer-specific solution, adding services only where your scope needs them.</p>
+              <p><strong>Rapid</strong> builds and verifies locally in an existing Foundry project. <strong>SDD</strong> creates a project and runs Specify → Implement → Verify → Deploy, with planning folded into Specify, independent review and evidence gates. Review the spec before implementation; deployment always needs separate approval. The portal prepares the prompt, not the build.</p>
             </div>
             <div className="workshop-workflow">
               <label htmlFor={`workflow-${key}`}>Build workflow</label>
               <select id={`workflow-${key}`} value={draft.execution} onChange={e => {
-                if (e.target.value === 'agentic-loop' || e.target.value === 'threadlight-pipeline') patch({ execution: e.target.value });
+                if (e.target.value === 'agentic-loop' || e.target.value === 'agentic-loop-rapid' || e.target.value === 'threadlight-pipeline') patch({ execution: e.target.value });
               }}>
-                <option value="agentic-loop">Existing Agentic Loop build hand-off</option>
+                <option value="agentic-loop">Foundry Agentic Loop — SDD (new project, azd deployment)</option>
+                <option value="agentic-loop-rapid">Foundry Agentic Loop — Rapid (existing Foundry project)</option>
                 <option value="threadlight-pipeline">Shipped Threadlight delivery workflow (validate prerequisites)</option>
               </select>
             </div>

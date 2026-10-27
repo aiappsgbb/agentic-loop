@@ -1,6 +1,7 @@
 import { createContext } from 'react';
 import { withRequiredCapabilities } from '../data/workshop';
 import workshopBriefs from '../data/workshop-briefs.json';
+import type { BuildExecution } from '../data/buildWorkflow';
 
 export interface WorkshopDraft {
   brief: string;
@@ -20,7 +21,7 @@ export interface WorkshopDraft {
   evidence: string;
   questions: string;
   resolutions: string;
-  execution: 'agentic-loop' | 'threadlight-pipeline';
+  execution: BuildExecution;
   manualGuideIds: string[];
   removedGuideIds: string[];
   approved: string | null;

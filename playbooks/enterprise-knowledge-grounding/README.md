@@ -4,7 +4,7 @@
 
 ### Enterprise knowledge grounding playbook
 
-This playbook walks you through building an **HR Onboarding Concierge** with the Agentic Loop in the **GitHub Copilot App**, using the **Spec2Cloud canvas** to run and review every stage. New hires and managers ask questions about company policies, benefits, equipment, security training, and first-week tasks. The agent answers only from an enterprise HR corpus, cites the supporting policy snippets, and refuses when the answer is not supported by the corpus.
+This playbook walks you through building an **HR Onboarding Concierge** with the Agentic Loop in the **GitHub Copilot App**, using the **Foundry Agentic Loop canvas** to review progress and evidence gates. New hires and managers ask questions about company policies, benefits, equipment, security training, and first-week tasks. The agent answers only from an enterprise HR corpus, cites the supporting policy snippets, and refuses when the answer is not supported by the corpus.
 
 The playbook follows the same loop as Getting Started:
 
@@ -36,7 +36,7 @@ flowchart LR
   Retrieval --> Insights
 ```
 
-| Layer | Choice (from `agentic-loop` defaults) |
+| Layer | Choice for this scenario |
 |-------|----------------------------------------|
 | Frontend | React + Vite on Azure Container Apps |
 | Backend API | Python + FastAPI on Azure Container Apps |
@@ -48,12 +48,11 @@ flowchart LR
 | Observability | OpenTelemetry -> Application Insights |
 | Infra | `azd` + Bicep |
 
-Artifacts produced in your workspace mirror the five build stages:
+Artifacts produced in your workspace mirror the four SDD phases (planning is inside Specify):
 
 | Stage | Artifact |
 |-------|----------|
-| Specify | `./docs/spec.md`, `.github/copilot-instructions.md` |
-| Plan | `./docs/plan.md`, `./.azure/deployment-plan.md` |
+| Specify | `./docs/spec.md` (requirements, contract and workstreams), `./.azure/deployment-plan.md` |
 | Implement | `./src/`, `./infra/`, mock HR corpus, ingestion scripts |
 | Verify | `./docs/verify.md`, provisioned Foundry IQ knowledge base |
 | Deploy | Deployed Azure endpoint, `./docs/deploy.md` |
@@ -69,10 +68,15 @@ You will need:
 - [GitHub CLI (`gh`)](https://cli.github.com/) installed and logged in.
 - [Azure CLI (`az`)](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) and [Azure Developer CLI (`azd`)](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/install-azd) installed and authenticated.
 - GitHub CLI `v2.90.0+` with the agent skills preview available (`gh skill --help`).
-- The `lean-spec2cloud` Copilot plugin installed and updated. Click [here](https://github.com/copilot/app/launch?open=ghapp%3A%2F%2Fplugins%2Fmarketplace%2Fadd%3Fsource%3DAzure-Samples%2FSpec2Cloud) to add the marketplace and [here](https://github.com/copilot/app/launch?open=ghapp%3A%2F%2Fplugins%2Finstall%3Fsource%3Dlean%2540Spec2Cloud) to install the plugin. Or install it from the CLI:
+- Git, Node.js, Python 3.13 and azd Foundry extensions. Approve any readiness-check installation separately.
+- The **foundry-agentic-loop** plugin: in Copilot App use **Customize → Plugins → foundry-agentic-loop → Install**. It bundles the skill, canvas and SDD workflow.
+
+> Install the [published Foundry Agentic Loop plugin](https://github.com/github/awesome-copilot/tree/main/plugins/foundry-agentic-loop). No separate lean plugin, policy-skill installation or Cockpit import is needed. If a bundled component is missing, Copilot asks before reinstalling the plugin. It never installs extensions from a URL or edits Copilot settings. Re-enable disabled extensions in your extension settings and continue in a new session. Without the canvas, continue in Chat; without the workflow, SDD cannot start. Switching to Rapid requires confirmation and an existing Foundry project.
+
+Install the published plugin from Copilot CLI if preferred:
 
 ```bash
-copilot plugin marketplace add Azure-Samples/Spec2Cloud && copilot plugin install lean@Spec2Cloud
+copilot plugin install foundry-agentic-loop@awesome-copilot
 ```
 
 Sanity check before you go further:
@@ -80,7 +84,7 @@ Sanity check before you go further:
 ```bash
 az account show                 # confirm the correct tenant and subscription
 azd auth login --check-status   # confirm you are signed in to azd
-copilot plugin list             # expect to see lean@Spec2Cloud
+copilot plugin list             # expect foundry-agentic-loop
 ```
 
 > **Heads up on cost.** This playbook provisions billable Azure resources: Container Apps, Foundry/AI Services, Azure AI Search, Storage, and Application Insights. See [Clean up](#clean-up) to remove everything when you are done.
@@ -89,7 +93,7 @@ copilot plugin list             # expect to see lean@Spec2Cloud
 
 ### Create a new project
 
-Take an empty workspace through the **Specify -> Plan -> Implement -> Verify -> Deploy** loop and produce a running HR onboarding assistant.
+Take an empty workspace through the **Specify -> Implement -> Verify -> Deploy** loop and produce a running HR onboarding assistant.
 
 ```bash
 mkdir hr-onboarding-concierge
@@ -103,18 +107,13 @@ cd hr-onboarding-concierge
 > cd hr-onboarding-concierge
 > ```
 
-Install the Agentic Loop skill into the project before opening Copilot. Project scope keeps the policy version explicit and prevents execution from depending on the nested copy inside `specify`.
-
-```bash
-gh skill install aiappsgbb/agentic-loop agentic-loop --agent github-copilot --scope project
-gh skill list   # expect agentic-loop
-```
+The build skill comes with the plugin. No separate project-scoped policy-skill installation is needed.
 
 ---
 
 ### Open GitHub Copilot
 
-Use the **GitHub Copilot App** as the build interface and the **Spec2Cloud canvas** as the primary surface for running and reviewing the loop. The same prompt works in the Copilot CLI and Visual Studio Code when the app is unavailable.
+Use the **GitHub Copilot App** as the build interface with the bundled **Foundry Agentic Loop canvas** for reviewing progress and evidence gates. The workflow also runs in Copilot CLI.
 
 > **Using the CLI instead?** Run:
 >
@@ -124,15 +123,12 @@ Use the **GitHub Copilot App** as the build interface and the **Spec2Cloud canva
 >
 > Use `--allow-all` only on a sandbox workspace because it pre-approves file, command, and URL access.
 
-**1. Open the Spec2Cloud canvas** to watch the build loop execute. In the review panel on the right, click **+**, then pick **Spec2Cloud Cockpit** from the installed extensions. If it is not listed, choose **Discover more -> Import canvas from gist/URL -> User scope**, then paste:
+**1. Add your project.** On the left, click **+ -> Add project from -> Local folder or repository**, then select the `hr-onboarding-concierge` folder.
 
-```text
-https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cloud
-```
+**2. Open the bundled canvas.** In your project session, ask **open the agentic loop**. Choose **SDD** on Start and confirm the subscription. Planning is inside Specify; the other tabs are Build, Explore and Optimize. Rapid is an alternative for an existing project, with local verification before a separately approved deployment.
 
-The **Spec2Cloud** tab should appear in the review panel. If it does not appear automatically, click **+** again and select **Spec2Cloud Cockpit** from the installed extensions.
+If a bundled component is missing, Copilot asks before reinstalling the plugin. It never installs extensions from a URL or edits Copilot settings. Re-enable disabled extensions in your extension settings and continue in a new session. Without the canvas, continue in Chat; without the workflow, SDD cannot start. Switching to Rapid requires confirmation and an existing Foundry project.
 
-**2. Add your project.** On the left, click **+ -> Add project from -> Local folder or repository**, then select the `hr-onboarding-concierge` folder.
 
 **3. Choose a model and mode.** In the prompt box, pick a strong reasoning model and a run mode:
 
@@ -140,7 +136,7 @@ The **Spec2Cloud** tab should appear in the review panel. If it does not appear 
 |------|----------|
 | Interactive | Step-by-step collaboration; you confirm each stage |
 | Plan | Plans first, executes once you approve |
-| Autopilot *(recommended)* | Runs the full loop end-to-end without interruption |
+| Autopilot | Automates work, but the SDD workflow still pauses at the spec and deployment approval gates |
 
 ---
 
@@ -149,24 +145,16 @@ The **Spec2Cloud** tab should appear in the review panel. If it does not appear 
 Paste this starter prompt:
 
 ```text
-/spec2cloud Build an HR Onboarding Concierge for a fictional company called Zava. Employees and managers should ask onboarding questions about HR policies, benefits, PTO, equipment requests, security training, travel, remote work, and manager first-week checklists. Invoke the installed agentic-loop skill as the mandatory policy layer for every stage, including immediately after Specify and before Plan, to enhance the spec with its app, agent runtime, Azure infrastructure, identity, and telemetry defaults.
+Use the foundry-agentic-loop skill in SDD mode to build an HR Onboarding Concierge for a fictional company called Zava. Employees and managers should ask onboarding questions about HR policies, benefits, PTO, equipment requests, security training, travel, remote work, and manager first-week checklists. Use foundry-agentic-loop-workflow with gated spec approval and separate approval before azd up. Run RBAC and placement preflight before creating resources; stop on BLOCKED or ERROR. Freeze the contract in Specify, prove hosted integration before parallel work, and preserve evidence, flight records and verified lessons. Keep Azure settings in .azure/deployment-plan.md and respect the AGENTS.md mode lock.
 
 Ground all enterprise answers through Foundry IQ agentic retrieval. Do not let the app bypass Foundry IQ with direct ad hoc search calls. Create a realistic mock HR corpus in data/hr-onboarding-corpus with at least eight Markdown documents, including handbook, benefits, PTO and leave, remote work, equipment and access, security training, travel expenses, and manager onboarding guidance. Include metadata for title, owner, effective date, classification, source URI, and citation anchors.
 
 Implement a repeatable ingestion flow that uploads the mock corpus, injects it into the Foundry IQ knowledge base, maps source and citation metadata, and verifies cited evidence comes back from Foundry IQ. The agent must include citations for grounded answers and refuse with "I cannot answer from the available HR sources" when the corpus does not support the response. Create seed evals in data/evals for known answers, citation correctness, freshness, unsupported-question behavior, and retrieval telemetry.
 ```
 
-> `/spec2cloud` runs the same five-stage loop as the Getting Started playbook. The project-scoped `agentic-loop` prerequisite supplies the Foundry hosted-agent runtime, model, Azure deployment, identity, and telemetry defaults, and the prompt explicitly requires its invocation. Everything else in the starter prompt is unique to this playbook: **Foundry IQ agentic retrieval**, mock HR data injection, citations, refusal behavior, and eval coverage.
+> `foundry-agentic-loop-workflow` runs the same four-phase SDD loop as the Getting Started playbook. The bundled `foundry-agentic-loop` skill supplies the Foundry hosted-agent runtime, model, Azure deployment, identity, and telemetry defaults, and the prompt explicitly requires its invocation. Everything else in the starter prompt is unique to this playbook: **Foundry IQ agentic retrieval**, mock HR data injection, citations, refusal behavior, and eval coverage.
 
-> Tip: Prefer to run the loop one stage at a time? Use the same prompt with `/specify` first, then advance through each stage:
->
-> | Command | Produces | Review in |
-> |---------|----------|-----------|
-> | `/specify <prompt>` | Specification | `docs/spec.md` |
-> | `/plan` | Implementation + Azure deployment plan | `docs/plan.md`, `.azure/deployment-plan.md` |
-> | `/implement` | azd template + source code + mock corpus | `src/`, `infra/`, `data/` |
-> | `/verify` | Provisioned Foundry IQ dependencies and smoke tests | `docs/verify.md` |
-> | `/deploy` | Full solution deployed to Azure | `docs/deploy.md` |
+> For one phase or a range, ask Copilot to run `specify`, `implement`, `verify` or `deploy`; the workflow supports `from` and `to`. Planning is part of Specify. Each phase has fresh-context review and bounded fix rounds; a failed gate pauses with evidence. Ask to `resume` paused work instead of repeating completed steps.
 
 End-to-end execution time varies, but this scenario usually takes longer than Getting Started because it provisions search, creates a knowledge base, injects sample data, and runs retrieval evals.
 
@@ -185,7 +173,7 @@ Before implementation, confirm the generated plan keeps Foundry IQ as the ground
 | Evals | Known-answer, citation, no-answer, freshness, and telemetry checks are generated. |
 | Observability | App, agent, ingestion, and Foundry IQ retrieval traces flow to Application Insights. |
 
-Use the Spec2Cloud canvas to inspect the generated **Specify**, **Plan**, **Implement**, **Verify**, and **Deploy** stages. Open the **Azure** and **Foundry** shortcuts from the canvas to verify that the Foundry project contains the hosted agent and Foundry IQ knowledge base.
+Use the Foundry Agentic Loop canvas Build tab to inspect Specify, Implement, Verify and Deploy, including their evidence gates. Use Explore and the Foundry portal to verify the hosted agent and Foundry IQ knowledge base.
 
 ---
 
@@ -228,7 +216,7 @@ Deployment readiness checklist:
 - [ ] Citation, unsupported-question, and freshness tests pass.
 - [ ] Application Insights receives traces for app turns, ingestion, retrieval, and agent runs.
 
-When the loop finishes, Copilot returns the deployed frontend URL and the Spec2Cloud canvas can preview it. Open the Foundry portal from the canvas to review the hosted agent, Foundry IQ knowledge base, retrieval configuration, and traces.
+After approved deployment, Copilot reports the verified frontend URL. Use Explore to exercise the app and the Foundry portal to inspect agents, models, tools and correlated traces.
 
 ## Run
 
@@ -247,7 +235,7 @@ Good answers should be concise, grounded, and cited. They should not invent poli
 
 ### Observe traces
 
-Use the Spec2Cloud canvas to open the Foundry project, then inspect agent runs and Application Insights traces.
+Use the Foundry portal to open the project, then inspect agent runs and Application Insights traces.
 
 Track:
 

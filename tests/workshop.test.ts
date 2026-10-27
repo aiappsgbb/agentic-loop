@@ -10,6 +10,8 @@ import {
 import { buildAdvisorPackage, inferRequirementsFromSelections } from '../src/data/advisor';
 import workshopBriefs from '../src/data/workshop-briefs.json';
 import { newWorkshopDraft } from '../src/components/WorkshopContext';
+import { FOUNDRY_LOOP } from '../src/data/buildWorkflow';
+import { getBuildSkill, skillInstallCommand, skillRawUrl, skillRepoUrl } from '../src/data/skills';
 
 const hr = 'Employees need HR policy answers grounded in approved documents with citations.';
 test('production hosting serves playbook deep links through the SPA fallback', () => {
@@ -142,7 +144,7 @@ test('full approved scope, selections, criteria and constraints survive the copi
   assert.ok(result.copilotPrompt.includes(formatWorkshopSpecMarkdown(spec)));
   assert.ok(!result.copilotPrompt.includes(formatWorkshopSpec(spec)));
   assert.ok(!result.copilotPrompt.includes('GitHub Copilot App'));
-  assert.ok(result.copilotPrompt.startsWith('/spec2cloud Build the pilot described in the confirmed specification below.\n\n## Required Agentic Loop build policy'));
+  assert.ok(result.copilotPrompt.startsWith('Use the foundry-agentic-loop skill to build the pilot described in the confirmed specification below.\n\n## Foundry Agentic Loop build contract'));
   assert.deepEqual(result.playbooks.map(p => p.slug), spec.guides.map(g => g.slug));
   assert.ok(!result.copilotPrompt.includes('Weather'));
   assert.match(result.copilotPrompt, /not production-ready/);
@@ -168,14 +170,14 @@ test('Markdown specification preserves every customer decision without JSON', ()
       }
     }
   }
-  assert.match(markdown, /### Build workflow\n\nAgentic Loop \/spec2cloud/);
+  assert.match(markdown, /### Build workflow\n\nFoundry Agentic Loop — SDD/);
   assert.match(markdown, /### Success criteria\n\n- Every supported answer cites a source/);
   assert.match(formatWorkshopSpecMarkdown(spec), /### Remaining gaps\n\n- None specified\./);
   assert.match(formatWorkshopSpecMarkdown({ ...spec, execution: 'threadlight-pipeline' }), /### Build workflow\n\nThreadlight pipeline/);
   assert.ok(!markdown.includes('"brief":'));
 });
 test('build prompts include the customer brief only once for both workflows', () => {
-  for (const execution of ['agentic-loop', 'threadlight-pipeline'] as const) {
+  for (const execution of ['agentic-loop', 'agentic-loop-rapid', 'threadlight-pipeline'] as const) {
     for (const workshopSpec of [
       { ...spec, execution },
       { ...spec, execution, outcome: hr, inScope: [hr], gaps: [hr], resolutions: 'Use a manual pilot.' },
@@ -193,7 +195,7 @@ test('build prompts include the customer brief only once for both workflows', ()
 });
 test('build prompts contain execution instructions, not App setup directions', () => {
   const result = buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [] });
-  assert.ok(result.copilotPrompt.startsWith(`/spec2cloud ${hr}\n\n## Required Agentic Loop build policy`));
+  assert.ok(result.copilotPrompt.startsWith(`Use the foundry-agentic-loop skill in SDD mode. Build: ${hr}\n\n## Foundry Agentic Loop build contract`));
   assert.ok(!result.copilotPrompt.includes('GitHub Copilot App'));
 });
 test('playbooks retain teaching context and repeatable customer-specific build guidance', () => {
@@ -213,21 +215,17 @@ test('playbooks retain teaching context and repeatable customer-specific build g
   assert.ok(!custom.copilotPrompt.includes('Platform focus:'));
   assert.ok(!custom.copilotPrompt.includes('Weather'));
 });
-test('all workshop paths share Getting Started skill invocation and readiness gates', () => {
+test('all workshop paths use the bundled skill and preserve readiness safeguards', () => {
   const gettingStarted = readFileSync(new URL('../playbooks/getting-started/README.md', import.meta.url), 'utf8');
   const invocationContract = [
-    'Do not rely on Specify embedding or transitively referencing it.',
-    'If the skill is missing or cannot be invoked, stop and report the blocker rather than continuing with generic defaults.',
-    'Run the skill-owned RBAC pre-flight before step 1.',
-    'Report all permission gaps together and stop on BLOCKED or ERROR; do not create resources or grant permissions to bypass this gate.',
-    'Immediately after Specify writes ./docs/spec.md and before Plan starts, invoke the installed agentic-loop skill as the mandatory policy layer.',
-    "Apply the skill's defaults and implementation contracts to the concrete specification before planning, then carry them through Implement, Verify and Deploy.",
-    "Record the invoked skill's path, the pre-flight verdict and the resulting architecture decisions in ./docs/spec.md, then carry those decisions into ./docs/plan.md.",
-    'Installation alone is not evidence of invocation.',
+    'Run the skill-owned read-only RBAC and placement preflight before creating resources.',
+    'Report all permission gaps together and stop on BLOCKED or ERROR; do not grant permissions to bypass this gate.',
+    'Confirm billable changes before making them.',
   ];
   const packages = [
     buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [], workshopSpec: spec }),
     buildAdvisorPackage({ path: 'scenario', intent: hr, requirementIds: [], workshopSpec: spec }),
+    buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [], workshopSpec: { ...spec, execution: 'agentic-loop-rapid' } }),
     buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [], workshopSpec: { ...spec, execution: 'threadlight-pipeline' } }),
     buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [] }),
     buildAdvisorPackage({ path: 'scenario', intent: hr, requirementIds: [] }),
@@ -237,17 +235,80 @@ test('all workshop paths share Getting Started skill invocation and readiness ga
     for (const result of packages) assert.equal(result.copilotPrompt.split(sentence).length - 1, 1);
   }
   for (const result of packages) {
-    assert.ok(!result.copilotPrompt.includes('policy layer before Specify'));
-    assert.ok(!result.copilotPrompt.includes('reapply agentic-loop'));
-    assert.ok(result.copilotPrompt.indexOf('Run the skill-owned RBAC pre-flight') <
-      result.copilotPrompt.indexOf('invoke the installed agentic-loop skill'));
-    assert.ok(result.buildSkills.includes('agentic-loop'));
-    assert.match(result.copilotPrompt, /skills\/agentic-loop\/references\/reference-architecture\.md/);
-    assert.match(result.copilotPrompt, /add complementary services only when the confirmed scope needs them/);
+    assert.match(result.copilotPrompt, /Invoke the installed foundry-agentic-loop skill/);
+    assert.ok(!result.copilotPrompt.includes('before Plan starts'));
+    assert.ok(result.buildSkills.includes('foundry-agentic-loop'));
+    assert.ok(result.buildSkills.includes('microsoft-foundry'));
+    assert.ok(!result.buildSkills.includes('agentic-loop'));
+    assert.match(result.copilotPrompt, /Add complementary services only when the confirmed scope needs them/);
     assert.ok(!result.copilotPrompt.includes('GitHub Copilot App'));
     if (result.workshopSpec) {
-      assert.ok(result.copilotPrompt.indexOf('## Required Agentic Loop build policy') <
+      assert.ok(result.copilotPrompt.indexOf('## Foundry Agentic Loop build contract') <
         result.copilotPrompt.indexOf('## Confirmed customer workshop specification'));
     }
+  }
+});
+test('SDD folds planning into Specify and retains review, approval and resume gates', () => {
+  const result = buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [], workshopSpec: spec });
+  assert.match(result.copilotPrompt, /foundry-agentic-loop-workflow: Specify → Implement → Verify → Deploy/);
+  assert.match(result.copilotPrompt, /Planning is part of Specify, not a separate Plan phase/);
+  assert.match(result.copilotPrompt, /Require spec approval and always pause before azd up/);
+  assert.match(result.copilotPrompt, /portal scope confirmation is not deployment approval/);
+  assert.match(result.copilotPrompt, /independent fresh-context reviewer/);
+  assert.match(result.copilotPrompt, /bounded fix rounds/);
+  assert.match(result.copilotPrompt, /Resume journaled work/);
+  assert.match(result.copilotPrompt, /\.agentic-loop\/runs\//);
+  assert.equal(result.deploymentCommand, 'azd up');
+});
+test('Rapid preserves the existing-project requirement without running SDD', () => {
+  const rapidSpec: WorkshopSpec = { ...spec, execution: 'agentic-loop-rapid' };
+  const result = buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [], workshopSpec: rapidSpec });
+  assert.match(result.copilotPrompt, /Rapid prototyping in an existing Foundry project/);
+  assert.match(result.copilotPrompt, /Ask for the project if none is established/);
+  assert.match(result.copilotPrompt, /never substitute a saved suggestion without approval/);
+  assert.match(result.copilotPrompt, /separate, explicitly approved action using az containerapp up/);
+  assert.ok(!result.copilotPrompt.includes('SDD with foundry-agentic-loop-workflow'));
+  assert.equal(result.deploymentCommand, 'az containerapp up');
+  assert.ok(!approvalIsCurrent(rapidSpec, formatWorkshopSpec(spec)));
+  assert.match(formatWorkshopSpecMarkdown(rapidSpec), /Foundry Agentic Loop — Rapid prototyping/);
+});
+test('Threadlight remains an explicit alternate delivery workflow', () => {
+  const result = buildAdvisorPackage({
+    path: 'idea', intent: hr, requirementIds: [], workshopSpec: { ...spec, execution: 'threadlight-pipeline' },
+  });
+  assert.match(result.copilotPrompt, /^Use the threadlight-design skill/);
+  assert.match(result.copilotPrompt, /do not start the SDD workflow or replace the selected delivery workflow/);
+  assert.ok(!result.copilotPrompt.includes('SDD with foundry-agentic-loop-workflow'));
+});
+test('published skill links follow upstream main and install the whole plugin', () => {
+  const skill = getBuildSkill('foundry-agentic-loop')!;
+  assert.equal(skill.repo, 'github/awesome-copilot');
+  assert.equal(skillInstallCommand(skill), FOUNDRY_LOOP.installCommand);
+  assert.equal(skillRepoUrl(skill), 'https://github.com/github/awesome-copilot/tree/main/skills/foundry-agentic-loop');
+  assert.equal(skillRawUrl(skill), 'https://raw.githubusercontent.com/github/awesome-copilot/main/skills/foundry-agentic-loop/SKILL.md');
+  assert.ok(getBuildSkill('agentic-loop'), 'Legacy skill route remains supported');
+  const catalog = readFileSync('skills/agentic-loop/references/build-skills-catalog.md', 'utf8');
+  assert.match(catalog, /`github\/awesome-copilot`\s+\| `foundry-agentic-loop`/);
+  for (const guide of playbooks.filter(p => p.buildSkills?.includes('foundry-agentic-loop'))) {
+    const content = readFileSync(`playbooks/${guide.slug}/README.md`, 'utf8');
+    assert.ok(!guide.buildSkills?.includes('agentic-loop'));
+    assert.match(content, /copilot plugin install foundry-agentic-loop@awesome-copilot/);
+    assert.match(content, /https:\/\/github.com\/github\/awesome-copilot\/tree\/main\/plugins\/foundry-agentic-loop/);
+    assert.doesNotMatch(content, /once published|publication pending|currently (?:an? )?open|Preview availability/i);
+    assert.match(content, /Without the canvas, continue in Chat; without the workflow, SDD cannot start/);
+    assert.doesNotMatch(content, /required extensions are missing, disabled or unavailable, stop/);
+    assert.ok(!content.includes('/spec2cloud'));
+    assert.ok(!content.includes('lean@Spec2Cloud'));
+    assert.ok(!content.includes('Spec2Cloud canvas'));
+    assert.ok(!content.includes('/plan'));
+  }
+});
+test('published recovery guidance preserves consent and the selected mode', () => {
+  for (const execution of ['agentic-loop', 'agentic-loop-rapid', 'threadlight-pipeline'] as const) {
+    const { copilotPrompt } = buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [], workshopSpec: { ...spec, execution } });
+    assert.match(copilotPrompt, /Ask before reinstalling the plugin/);
+    assert.match(copilotPrompt, /never install extensions from a URL or edit Copilot settings/);
+    assert.match(copilotPrompt, /Without the canvas, continue in Chat; without the workflow, SDD cannot start/);
+    assert.match(copilotPrompt, /Offer Rapid only with user confirmation and an existing Foundry project/);
   }
 });

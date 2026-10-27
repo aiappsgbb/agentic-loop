@@ -40,7 +40,7 @@ flowchart LR
   Agent --> Insights
 ```
 
-| Layer | Choice (from `agentic-loop` defaults) | Why |
+| Layer | Choice for this scenario | Why |
 |---|---|---|
 | Frontend | React + Vite on Azure Container Apps | Captures mic audio and plays streamed speech. |
 | Backend API | Python + FastAPI on Azure Container Apps | Bridges the audio stream and the agent session. |
@@ -78,10 +78,15 @@ You will need:
 - [GitHub CLI (`gh`)](https://cli.github.com/) installed and logged in.
 - [Azure CLI (`az`)](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) and [Azure Developer CLI (`azd`)](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/install-azd) installed and authenticated.
 - A microphone and speaker (or headset) to exercise the voice loop.
-- The `lean-spec2cloud` Copilot plugin installed and updated. Click [here](https://github.com/copilot/app/launch?open=ghapp%3A%2F%2Fplugins%2Fmarketplace%2Fadd%3Fsource%3DAzure-Samples%2FSpec2Cloud) to add the marketplace and [here](https://github.com/copilot/app/launch?open=ghapp%3A%2F%2Fplugins%2Finstall%3Fsource%3Dlean%2540Spec2Cloud) to install the plugin. Or install in the CLI with:
+- Git, Node.js, Python 3.13 and azd Foundry extensions. Approve any readiness-check installation separately.
+- The **foundry-agentic-loop** plugin: in Copilot App use **Customize → Plugins → foundry-agentic-loop → Install**. It bundles the skill, canvas and SDD workflow.
+
+> Install the [published Foundry Agentic Loop plugin](https://github.com/github/awesome-copilot/tree/main/plugins/foundry-agentic-loop). No separate lean plugin, policy-skill installation or Cockpit import is needed. If a bundled component is missing, Copilot asks before reinstalling the plugin. It never installs extensions from a URL or edits Copilot settings. Re-enable disabled extensions in your extension settings and continue in a new session. Without the canvas, continue in Chat; without the workflow, SDD cannot start. Switching to Rapid requires confirmation and an existing Foundry project.
+
+Install the published plugin from Copilot CLI if preferred:
 
   ```bash
-  copilot plugin marketplace add Azure-Samples/Spec2Cloud && copilot plugin install lean@Spec2Cloud
+  copilot plugin install foundry-agentic-loop@awesome-copilot
   ```
 
 Sanity check before you go further:
@@ -89,7 +94,7 @@ Sanity check before you go further:
 ```bash
 az account show                 # confirm the correct tenant and subscription
 azd auth login --check-status   # confirm you are signed in to azd
-copilot plugin list             # expect to see lean@Spec2Cloud
+copilot plugin list             # expect foundry-agentic-loop
 ```
 
 > **Heads up on cost.** This playbook provisions billable Azure resources (Container Apps, a Foundry/AI Services account, Voice Live, and Application Insights). Leaving them running incurs charges — see [Clean up](#clean-up) to remove everything when you are done.
@@ -98,7 +103,7 @@ copilot plugin list             # expect to see lean@Spec2Cloud
 
 ### Create a new project
 
-Take an empty workspace through the **Specify → Plan → Implement → Verify → Deploy** loop and produce a streaming voice agent.
+Take an empty workspace through the **Specify → Implement → Verify → Deploy** loop and produce a streaming voice agent.
 
 ```bash
 mkdir voice-first-agent
@@ -114,17 +119,14 @@ cd voice-first-agent
 
 ### Open GitHub Copilot
 
-This playbook uses the **GitHub Copilot App**, but the same prompt works in Copilot CLI and VS Code.
+This playbook uses the **GitHub Copilot App** and its bundled Foundry Agentic Loop canvas; the workflow also runs in Copilot CLI.
 
 > **Using the CLI instead?** Run `copilot --allow-all` only in a sandbox workspace, or omit the flag to approve each action.
 
-**1. Open the Spec2Cloud canvas.** In the review panel, click **+**, then choose **Spec2Cloud Cockpit**. If it is not installed, import:
+**1. Add your project.** Choose **+ -> Add project from -> Local folder or repository**, then select `voice-first-agent`.
 
-```text
-https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cloud
-```
+**2. Open the bundled canvas.** In your project session, ask **open the agentic loop**. Choose **SDD** on Start and confirm the subscription. Planning is inside Specify; the other tabs are Build, Explore and Optimize. Rapid is an alternative for an existing project, with local verification before a separately approved deployment.
 
-**2. Add your project.** Choose **+ -> Add project from -> Local folder or repository**, then select `voice-first-agent`.
 
 **3. Choose a model and mode.**
 
@@ -132,7 +134,7 @@ https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cl
 |---|---|
 | Interactive | Step-by-step collaboration; you confirm each stage |
 | Plan | Plans first, executes once you approve |
-| Autopilot *(recommended)* | Runs the full loop end to end |
+| Autopilot | Automates work, but the SDD workflow still pauses at the spec and deployment approval gates |
 
 ---
 
@@ -141,9 +143,9 @@ https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cl
 Paste this starter prompt:
 
 ```text
-/spec2cloud Build Harbor, a voice guest-services concierge for the fictional Woodgrove Hotel. In the browser, guests ask spoken questions about breakfast, accessibility, amenities, local transport, and simple service requests. Harbor must answer from committed mock hotel data, confirm details before creating a request, and escalate safety, medical, billing, and complaint scenarios to staff.
+Use the foundry-agentic-loop skill in SDD mode to build Harbor, a voice guest-services concierge for the fictional Woodgrove Hotel. In the browser, guests ask spoken questions about breakfast, accessibility, amenities, local transport, and simple service requests. Harbor must answer from committed mock hotel data, confirm details before creating a request, and escalate safety, medical, billing, and complaint scenarios to staff.
 
-Use the `agentic-loop` skill.
+Use the `foundry-agentic-loop` skill and `foundry-agentic-loop-workflow`. Require spec approval and always pause before `azd up`. Confirm billable changes, run RBAC and placement preflight before creating resources, and stop on BLOCKED or ERROR. Freeze the contract in Specify and prove the minimal hosted integration before parallel work. Keep Azure settings only in `.azure/deployment-plan.md`, respect the `AGENTS.md` mode lock, and preserve evidence, `.agentic-loop/runs/` flight records and `docs/LOOP.md` lessons.
 
 Create realistic mock content under data/woodgrove-hotel: property facts, amenity hours, accessibility guidance, transport notes, service-request types, room-number aliases, and escalation rules. Author skills/guest-services-concierge/SKILL.md with concise spoken-response guidance, confirmation rules, source-use requirements, allowed tools, and staff escalation behavior.
 
@@ -154,17 +156,9 @@ Stream speech-to-text and text-to-speech through Azure AI Voice Live, support ba
 
 > Foundry Skills are a preview capability. Opt in explicitly (for example, `allow_preview=True`) and fail visibly if publication, promotion, or runtime download does not succeed.
 
-> `/spec2cloud` runs the same five-stage loop as Getting Started. The prompt explicitly invokes `agentic-loop`; the remaining requirements define this playbook's streaming audio, barge-in, voice latency, and spoken-turn telemetry.
+> `foundry-agentic-loop-workflow` runs the same four-phase SDD loop as Getting Started. The prompt explicitly invokes `foundry-agentic-loop`; the remaining requirements define this playbook's streaming audio, barge-in, voice latency, and spoken-turn telemetry.
 
-> Prefer to run one stage at a time? Use the same prompt with `/specify` first, then advance through each stage:
->
-> | Command | Produces | Review in |
-> |---|---|---|
-> | `/specify <prompt>` | Specification | `docs/spec.md` |
-> | `/plan` | Implementation and Azure plan | `docs/plan.md`, `.azure/deployment-plan.md` |
-> | `/implement` | Source, infrastructure, and audio pipeline | `src/`, `infra/`, `azure.yaml` |
-> | `/verify` | Streaming, barge-in, and latency tests | `docs/verify.md` |
-> | `/deploy` | Deployed solution | `docs/deploy.md` |
+> For one phase or a range, ask Copilot to run `specify`, `implement`, `verify` or `deploy`; the workflow supports `from` and `to`. Planning is part of Specify. Each phase has fresh-context review and bounded fix rounds; a failed gate pauses with evidence. Ask to `resume` paused work instead of repeating completed steps.
 
 Use these recommended answers if Copilot asks clarifying questions:
 
@@ -187,7 +181,7 @@ When the skill finishes, review `docs/spec.md` for these must-have requirements:
 Turn the spec into a reviewable implementation and deployment plan.
 
 ```text
-/plan
+Review the Specify artifacts and frozen implementation contract before implementation.
 ```
 
 The deployment plan should include:
@@ -202,7 +196,7 @@ The deployment plan should include:
 | Skill lifecycle | Author, version, evaluate, promote, attach, download, consume, trace, and roll back `guest-services-concierge`. |
 | azd template | `minimal` / `azd init --minimal`. |
 
-Review `docs/plan.md` and `.azure/deployment-plan.md` before continuing.
+Review `docs/spec.md` and `.azure/deployment-plan.md` before continuing.
 
 ---
 
@@ -292,7 +286,7 @@ Deployment readiness checklist:
 - [ ] Streaming, barge-in, and latency tests pass.
 - [ ] Application Insights receives latency telemetry.
 
-When the loop finishes, Copilot returns the deployed frontend URL and the Spec2Cloud canvas auto-previews it. Click the **Foundry** icon to review the agent, model, and voice wiring.
+After approved deployment, Copilot reports the verified frontend URL. Use Explore to exercise the app and the Foundry portal to inspect agents, models, tools and correlated traces.
 
 ---
 
@@ -397,7 +391,7 @@ Promotion checklist: explicit RBAC per environment, latency and barge-in evals r
 
 > Tip: run the loop fully unattended for larger changes:
 > ```bash
-> copilot -p "/spec2cloud <your next big idea>" --no-ask-user --yolo -- autopilot
+> copilot -p "Use the foundry-agentic-loop skill in SDD mode to <your next big idea>" --no-ask-user --yolo -- autopilot
 > ```
 
 ---

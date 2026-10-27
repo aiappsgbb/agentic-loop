@@ -99,7 +99,7 @@ export default function SkillsCatalog() {
           <div>
             <div className="catalog-phase-eyebrow">Build phase</div>
             <h2>GitHub Copilot · authoring, grounding, and shipping agents.</h2>
-            <p>The skills the loop installs while you build — agent frameworks, Azure building blocks, and deployment. Open one to read its <code>SKILL.md</code>.</p>
+            <p>Start with the <Link to="/skills/foundry-agentic-loop">Foundry Agentic Loop plugin</Link> for Rapid prototyping or evidence-gated SDD. It bundles the build skill, canvas and workflow; companion skills add only the capabilities your scope needs. Open a skill to read its <code>SKILL.md</code>.</p>
           </div>
           <span className="catalog-count">{buildSkills.length}</span>
         </div>
