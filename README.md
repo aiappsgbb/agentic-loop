@@ -70,9 +70,11 @@ The deployed solution then enters an outer production loop: observe, evaluate, l
 | Path | Use it when | Outcome |
 | --- | --- | --- |
 | **Start a technical workshop** (`/workshop`) | Bring a customer brief, optionally seeded from an industry example. | Review coverage, adapt maintained guidance, then confirm scope and copy the complete build prompt. |
-| **Show an industry demo** (`/scenarios`) | Explore existing examples without setup. | Showcase available industry demos; Kratos stays directly accessible. |
+| **Show an industry demo** (`/scenarios`) | Explore existing examples without setup. | Showcase available industry demos. |
 
 The workshop recomposes the existing Agentic Launchpad. Old playbook/scenario routes and the home `#prompt` anchor remain usable. The library separates practice exercises, capability guides, delivery workflows, operations and shared infrastructure. A playbook is reusable guidance, not prerequisite homework.
+
+The former Kratos reference demo and persona import flow have been retired. Its old portal URLs now show the standard not-found page; workshops, industry examples and library routes are unchanged. See [production hosting](infra/README.md) for the corresponding Front Door route retirement.
 
 **Reuse first; build only what is missing.** Workshop preparation uses curated, deterministic rules entirely in your browser. Partial coverage preserves existing guides and surfaces gaps for manual decisions in scope notes. No packaged match is not technical infeasibility. Candidate patterns require review. Editing upstream inputs invalidates scope confirmation. Essential identity, safe data handling and scenario verification remain in every MVP; a generated or deployed workshop pilot is not production-ready.
 

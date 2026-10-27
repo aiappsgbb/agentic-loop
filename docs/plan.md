@@ -1,5 +1,7 @@
 ## Plan: Three-Path Advisor
 
+> Historical plan. The three-path framing and Kratos-preservation requirements below are superseded: the reference demo and persona flow are retired. Current behavior is defined in [the specification](spec.md), [information architecture](information-architecture.md) and [workshop guide](workshop-guide.md).
+
 Implement the refined three-path model by extending the existing static portal rather than replacing it. The current Home hero, Kratos launcher, Scenario pages, Playbooks catalog, and guided modal stay in place. The implementation adds a shared advisor data model that maps requirements to upstream build/deployment SKILLs, playbooks, tools, and Foundry/Azure run recommendations, then reuses that model from the greenfield idea flow and scenario flow.
 
 **Steps**

@@ -1,59 +1,45 @@
-# Infra — Front Door path-mount for embedded Kratos
+# Infrastructure - portal hosting
 
-This folder provisions an **Azure Front Door (Standard)** profile that serves the
-agentic-loop-site and the **always-latest Kratos** app from a single host:
-
-```
-                         ┌────────────────────────────────────────┐
-   user ──▶ Front Door ──┤  /kratos/*  ──▶  Kratos SWA (basePath)  │
-                         │  /*         ──▶  agentic-loop-site SWA   │
-                         └────────────────────────────────────────┘
-```
-
-Kratos is **not copied** into this repo. Front Door forwards `/kratos/*`
-(including `/kratos/.auth/*` and `/kratos/api/*`) verbatim to the Kratos Static
-Web App, which is built with Next.js `basePath: '/kratos'`. Deploying the site
-never bundles Kratos code — the embedded app is always whatever is currently
-deployed to the Kratos SWA.
+Azure Front Door serves the portal Static Web App through the `route-site`
+catch-all (`/*`). The portal has no embedded reference application or persona
+import relay.
 
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `frontdoor.bicep` | AFD profile, endpoint, two origin groups (site + kratos), two routes (`/kratos/*`, `/*`). |
-| `frontdoor.parameters.json` | Example parameters (fill in the two SWA hostnames). |
-| `deploy-frontdoor.ps1` | Resolves both SWA hostnames via `az` and deploys the Bicep; prints the Entra redirect URI. |
+| `frontdoor.bicep` | Front Door profile, endpoint, site origin group/origin and catch-all route. |
+| `frontdoor.parameters.json` | Example parameters; supply the portal SWA hostname. |
+| `deploy-frontdoor.ps1` | Resolve an existing portal SWA hostname and deploy the template. |
 
-## Deploy order
+## Provisioning
 
-1. Deploy the **agentic-loop-site** SWA (`../deploy.ps1`).
-2. Deploy the **Kratos** frontend SWA from the `kratos-agent` repo, built with
-   `NEXT_PUBLIC_BASE_PATH=/kratos`.
-3. Run `./deploy-frontdoor.ps1` (adjust the `-SiteSwaName` / `-KratosSwaName`
-   / resource-group params as needed).
-4. Copy the printed **redirect URI** into the **Kratos** Entra app registration:
-   `https://<front-door-host>/kratos/.auth/login/aad/callback`.
-5. Rebuild/redeploy the site if you changed `VITE_KRATOS_*` (see below).
+Authenticate Azure CLI in the intended subscription, deploy the portal SWA
+(`../deploy.ps1`), then run `./deploy-frontdoor.ps1` with the matching resource
+group, SWA, profile and endpoint names. Build with `npm run build -- --base=/`
+for root hosting. GitHub Pages uses the default `/agentic-loop/` build instead.
 
-## Two auth apps (Variant B)
+## Production releases
 
-There are **two** Entra app registrations:
+Pushes to `main` run `.github/workflows/deploy-afd.yml`, which builds the root
+site, uses GitHub OIDC to publish to `stapp-agentic-loop-livetest` in
+`rg-agentic-loop-livetest`, and purges the `afd-agentic-loop` endpoint cache.
+The separate Pages workflow publishes the same source with its Pages base path.
+`public/staticwebapp.config.json` supplies the portal's SPA navigation fallback.
 
-- **App #1 — site**: EasyAuth on the agentic-loop-site SWA (if the site is gated).
-- **App #2 — Kratos**: EasyAuth on the Kratos SWA. Its redirect URI must be under
-  the Front Door host: `https://<front-door-host>/kratos/.auth/login/aad/callback`.
+## Retired reference integration
 
-The site never calls the Kratos import API directly. It builds a manifest, relays
-it via same-origin `sessionStorage['kratos.import']`, and navigates into
-`/kratos/?embed=1&import=1`. Kratos runs its own login and imports on entry.
-Because the relay is **same-origin**, it only works once both apps sit behind the
-same Front Door host (production). See `src/lib/kratosHandoff.ts`.
+Kratos is no longer part of the portal. The frontend routes `/reference/kratos`
+and `/kratos` fall through to the standard not-found page; nested legacy paths
+do the same. `VITE_KRATOS_BASE` and `VITE_KRATOS_STANDALONE_URL` are no longer used.
 
-## Frontend env vars
+After a successful SWA upload, the production workflow lists Front Door routes
+and deletes only `route-kratos` and `route-kratos-api` if present. Deletion errors
+fail the release. Repeat runs are safe when those routes are already absent.
+The remaining `route-site` sends their former paths to the portal.
 
-| Var | Default | Purpose |
-|-----|---------|---------|
-| `VITE_KRATOS_BASE` | `/kratos` | Same-origin mount path the site deep-links into. |
-| `VITE_KRATOS_STANDALONE_URL` | _(unset)_ | Local dev only — point at a standalone Kratos (e.g. `http://localhost:3000`). Persona/prompt deep-links work cross-origin; the sessionStorage **import** relay requires same-origin and only works behind Front Door. |
-
-Copy `.env.example` to `.env` to override locally.
+This explicit retirement is required because incremental ARM deployments do not
+delete resources omitted from Bicep. Running `deploy-frontdoor.ps1` alone does
+not retire old routes; use the production workflow for existing deployments.
+The standalone frontend, backend, Entra registration and unused origin groups
+are intentionally not deleted or changed by this portal release.

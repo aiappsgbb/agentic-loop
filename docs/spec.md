@@ -1,10 +1,10 @@
 # Agentic Loop Portal — Specification
 
-> **Last updated:** 2026-10-07
+> **Last updated:** 2026-10-27
 
 ## 1. Summary
 
-**Agentic Loop Portal** is a React + Vite advisory web portal that makes the path from agent pilot to production explicit. It presents three distinct ways to build and run agentic solutions: **Kratos** for a ready-to-use demo with domain-specific personas and skills, **Production Launchpad** for users who already have a concrete solution idea, and **Scenario Advisor** for users who want to start from a predefined industry scenario. The advisor paths converge on the same playbook-driven Build + Run flow: collect requirements, recommend SKILLs and tools, select the right Microsoft Foundry/Azure architecture, and produce a GitHub Copilot-led package that can be implemented and deployed with `azd up`.
+**Agentic Loop Portal** is a React + Vite advisory web portal that makes the path from agent pilot to production explicit. Its two customer actions are **Start a technical workshop** and **Show an industry demo**. Production Launchpad and Scenario Advisor support the shared playbook-driven Build + Run flow: collect requirements, recommend SKILLs and tools, select the right Microsoft Foundry/Azure architecture, and produce a GitHub Copilot-led package that can be implemented and deployed with `azd up`.
 
 The portal remains a static client-side experience. Workshop preparation MUST NOT use a local AI companion, GitHub Copilot SDK runtime, model calls or analysis backend. The immediate product goal is to make the decision model, advisor flow, playbook reuse, SKILL source, and deployment hand-off unambiguous.
 
@@ -12,14 +12,13 @@ The portal remains a static client-side experience. Workshop preparation MUST NO
 
 **Goals**
 
-- Make the three entry paths obvious within seconds: **Try Kratos**, **Build my concrete idea**, or **Start from a scenario**.
-- Position Kratos as the ready-to-use demo path with domain-specific personas that resemble agents using SKILLs to complete tasks.
+- Make the two customer actions obvious within seconds: **Start a technical workshop** or **Show an industry demo**.
 - Position Production Launchpad and Scenario Advisor as two inputs into the same playbook approach, not as competing implementation models.
 - Provide an advisor-type flow where users can tick requirements such as evals, voice, private networking, observability, grounding, identity, AI Gateway, storage, or M365 integration.
 - Convert advisor selections into a GitHub Copilot-led build package: recommended SKILLs, tools, run architecture, generated implementation prompt, and deployment guidance ending in `azd up`.
 - Source build SKILL recommendations from `aiappsgbb/agentic-loop` at `.github/skills` on `main`.
 - Keep Foundry and Azure recommendations grounded in the Build / Run / Scale model: GitHub Copilot SDK + SKILLs for build, Microsoft Foundry Hosted Agents + Foundry Models + Azure services for run.
-- Preserve the existing Scenarios, Playbooks, Skills catalog, Concepts, Platform, and Kratos surfaces while making their roles clearer.
+- Preserve the existing Scenarios, Playbooks, Skills catalog, Concepts and Platform surfaces while making their roles clearer.
 
 **Non-Goals**
 
@@ -33,34 +32,27 @@ The portal remains a static client-side experience. Workshop preparation MUST NO
 
 | Persona | Scenario | Success Criteria |
 | --- | --- | --- |
-| Technical decision-maker | Wants to understand the right on-ramp without reading all docs. | Sees three clear paths and can explain when to use Kratos, Production Launchpad, or Scenario Advisor. |
-| Business stakeholder | Wants a live proof point before funding build work. | Starts with Kratos, selects a persona, and sees how domain-specific skills fulfill tasks with no setup. |
+| Technical decision-maker | Wants to understand the right on-ramp without reading all docs. | Can distinguish building a customer pilot from showcasing an existing industry example. |
+| Business stakeholder | Wants a proof point before funding build work. | Explores available industry demos through Scenarios. |
 | AI engineer | Has a concrete agentic solution idea and wants build guidance. | Uses Production Launchpad, selects requirements, and receives a playbook-backed Copilot package with SKILLs, tools, architecture, and `azd up` deployment path. |
 | Industry solution lead | Wants to start from a proven industry pattern. | Uses Scenario Advisor, selects a predefined scenario, customizes requirements, and receives the same package shape as Production Launchpad. |
 | Enterprise architect | Needs run architecture recommendations. | Sees why Hosted Agents, Foundry Models, AI Gateway, observability, identity, private networking, storage, and M365/Fabric integrations are recommended. |
-| Field seller / GBB | Needs repeatable customer motion. | Can demo Kratos, then pivot to an advisor-generated package that maps to build SKILLs and deployable Azure/Foundry architecture. |
+| Field seller / GBB | Needs repeatable customer motion. | Can show an industry example, then prepare a customer workshop with a package mapping to build SKILLs and deployable Azure/Foundry architecture. |
 
 ## 4. Experience Model
 
-### 4.1 Three paths
+### 4.1 Customer actions and supporting advisors
+
+Home and navigation expose `/workshop` for building with a customer and `/scenarios` for showcasing industry examples. The supporting advisor paths retain their existing identifiers:
 
 | Path | Name | User intent | Primary surface | Output |
 | --- | --- | --- | --- | --- |
-| 1 | **Kratos** | "Show me a working agent now." | `/kratos` and the ready-to-use tile on Home | Live-feeling demo with domain-specific personas and task skills. |
 | 2 | **Production Launchpad** | "I have a concrete idea; help me move it from pilot to production." | Home advisor / greenfield flow | Copilot package based on requirements, SKILLs, tools, playbooks, and run architecture. |
 | 3 | **Scenario Advisor** | "Start from an existing scenario." | `/scenarios` and `/scenarios/:id` | Same Copilot package shape as Path 2, pre-seeded by scenario metadata and scenario playbooks. |
 
-### 4.2 Path 1 — Kratos
+### 4.2 Retired reference demo
 
-Kratos is the ready-to-use demo. It MUST be framed as an experience path, not a build path. Kratos personas represent domain-specific agents with curated skills for tasks such as customer support, sales enablement, knowledge assistance, workflow execution, or technical guidance.
-
-Kratos MUST:
-
-- Let users select a persona.
-- Show each persona as a domain-specific agent-like experience.
-- Make skills visible as the mechanism that enables task fulfillment.
-- Offer a next-step CTA to move from "try it live" to either Production Launchpad or Scenario Advisor.
-- Avoid implying that the demo itself deploys production infrastructure.
+Kratos and its persona builder/import relay are removed. `/kratos`, `/reference/kratos` and nested legacy paths MUST render the standard not-found page, without launching or redirecting to the standalone app. No navigation or homepage CTA may advertise it. Production deployment MUST retire its Front Door routes without deleting standalone apps or identity resources.
 
 ### 4.3 Path 2 — Production Launchpad
 
@@ -98,10 +90,10 @@ Scenarios and playbooks MUST remain distinct:
 
 | Artifact | Meaning | Supports which path? | Role in advisor output |
 | --- | --- | --- | --- |
-| **Scenario** | A predefined vertical outcome or industry blueprint, such as a customer-support, sales, or operations solution. | Path 3 directly. Can also inspire Path 1 personas. | Pre-seeds intent, industry context, default requirements, related playbooks, and architecture assumptions. |
+| **Scenario** | A predefined vertical outcome or industry blueprint, such as a customer-support, sales, or operations solution. | Path 3 directly; can also seed a customer workshop. | Pre-seeds intent, industry context, default requirements, related playbooks, and architecture assumptions. |
 | **Playbook** | A reusable horizontal implementation technique, such as grounding, evals, voice, governance, or deployment. | Paths 2 and 3. | Explains how to build part of the package and is composed into the generated Copilot prompt. |
 
-A Scenario answers **"what outcome are we building?"** A Playbook answers **"how do we implement a reusable part of it?"** Kratos answers **"can I experience a ready-made version now?"**
+A Scenario answers **"what outcome are we building?"** A Playbook answers **"how do we implement a reusable part of it?"**
 
 Paths 2 and 3 MUST use playbooks in the same way:
 
@@ -144,10 +136,10 @@ This current workshop contract supersedes earlier local-companion and AI-proposa
 
 | ID | Requirement | Priority |
 | --- | --- | --- |
-| FR-001 | The Home page MUST present the pilot-to-production problem statement and immediately route users into the three paths: Kratos, Production Launchpad, and Scenario Advisor. | Must |
-| FR-002 | The "What to use when" section MUST describe exactly three user-facing paths and explain when to use each. | Must |
-| FR-003 | The Kratos path MUST be labeled as ready-to-use / demo / no setup and MUST not be positioned as a production deployment generator. | Must |
-| FR-004 | The Kratos launcher MUST expose domain-specific personas and make the persona's skills visible or discoverable. | Must |
+| FR-001 | The Home page MUST present the pilot-to-production problem statement and route users to a technical workshop or industry demo. | Must |
+| FR-002 | The "What to use when" section MUST describe exactly two customer actions and explain when to use each. | Must |
+| FR-003 | Retired reference-demo URLs MUST render the standard not-found page. | Must |
+| FR-004 | Navigation and homepage content MUST NOT advertise the retired demo or persona launcher. | Must |
 | FR-005 | The Production Launchpad MUST accept freeform idea text before package generation. | Must |
 | FR-006 | The Scenario Advisor MUST let users start from a predefined scenario already documented in `src/data/scenarios.json`. | Must |
 | FR-007 | Paths 2 and 3 MUST use the same advisor state model, requirement checklist, playbook matching logic, package shape, and deployment hand-off. | Must |
@@ -236,14 +228,15 @@ If the upstream inventory changes, the portal mapping SHOULD be refreshed before
 | Accessibility | Path cards, requirement ticks, package sections, and copy buttons MUST be keyboard-accessible and screen-reader labeled. |
 | Scalability | Static SPA scales via CDN/edge hosting. Generated packages are text artifacts, not server jobs. |
 | Observability | Portal runtime observability is optional; generated Run architectures SHOULD include OpenTelemetry and Application Insights when observability is selected or implied. |
-| Responsiveness | Three path cards and advisor checklists MUST work down to 720 px without horizontal overflow. |
+| Responsiveness | Customer action cards and advisor checklists MUST work down to 720 px without horizontal overflow. |
 
 ## 9. Architecture Overview
 
 ```mermaid
 flowchart LR
   User[Visitor] --> Home[Home hero + What to use when]
-  Home --> Kratos[Path 1: Kratos demo]
+  Home --> Workshop[Start a technical workshop]
+  Workshop --> Advisor
   Home --> Idea[Path 2: Production Launchpad]
   Home --> Scenarios[Path 3: Scenario Advisor]
   Scenarios --> ScenarioData[(src/data/scenarios.json)]
@@ -299,7 +292,7 @@ No persisted data is required for the portal.
 Client-side advisor state:
 
 ```ts
-type AdvisorPath = 'kratos' | 'idea' | 'scenario';
+type AdvisorPath = 'idea' | 'scenario';
 
 type AdvisorRequirement =
   | 'evals'
@@ -319,7 +312,7 @@ type AdvisorRequirement =
   | 'api-backend';
 
 type AdvisorPackage = {
-  path: Exclude<AdvisorPath, 'kratos'>;
+  path: AdvisorPath;
   intent: string;
   scenarioId?: string;
   requirements: AdvisorRequirement[];
@@ -351,8 +344,8 @@ Reference content:
   - GitHub Copilot hand-off prompt, copyable from the package output.
   - `azd up` as the canonical deployment command in generated packages.
 - **Routes**:
-  - `/` — Home with hero, What to use when, Kratos/Idea/Scenario entry points.
-  - `/kratos` — ready-to-use demo path.
+  - `/` — Home with hero and workshop/showcase customer actions.
+  - `/workshop` — client-side customer workshop preparation.
   - `/scenarios` — scenario index and Scenario Advisor entry.
   - `/scenarios/:id` — scenario playbook and prefilled Scenario Advisor entry.
   - `/playbooks` and `/playbooks/:slug` — reusable playbook catalog and slide deck.
@@ -366,7 +359,7 @@ Reference content:
 | 1 | Should upstream `.github/skills` be fetched dynamically at build time, synced manually into local data, or represented as a curated local mapping with a source link? | Product/Engineering | open |
 | 2 | Should generated packages remain text-only, or should the portal create a downloadable ZIP / repo scaffold in a later iteration? | Product | open |
 | 3 | Should the advisor include cost/region/SKU recommendations, or leave those for a later `plan` stage? | Architecture | open |
-| 4 | Should Kratos personas map one-to-one to scenario personas, or remain a separate demo catalog? | Product | open |
+| 4 | Should Kratos personas map one-to-one to scenario personas? | Product | closed: reference integration retired |
 | 5 | Should the portal add Application Insights if users interact with advisor flows? | Compliance | open |
 
 > Identity, secrets, and deployment targets live in [.azure/deployment-plan.md](../.azure/deployment-plan.md) when deployment planning is added.

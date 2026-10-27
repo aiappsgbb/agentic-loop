@@ -111,6 +111,25 @@ class WorkshopJourneys(unittest.TestCase):
         folder.mkdir(parents=True, exist_ok=True)
         self.page.screenshot(path=str(folder / name), full_page=self.page.get_by_role("dialog").count() == 0, animations="disabled")
 
+    def test_retired_reference_routes_and_home_navigation(self):
+        for base in dict.fromkeys([BASE, STATIC]):
+            with self.subTest(base=base):
+                for width in [1440, 390]:
+                    self.page.set_viewport_size({"width": width, "height": 900})
+                    self.go("/", base)
+                    self.assertNotIn("kratos", self.page.locator("body").inner_text().lower())
+                    expect(self.page.locator('a[href*="kratos"]')).to_have_count(0)
+                    expect(self.page.locator(".wtuw-path-card")).to_have_count(2)
+                    expect(self.page.locator(".wtuw-path-card").filter(has_text="Start a technical workshop")).to_be_visible()
+                    expect(self.page.locator(".wtuw-path-card").filter(has_text="Show an industry demo")).to_be_visible()
+                    self.assertLessEqual(self.page.evaluate("document.documentElement.scrollWidth"), width)
+                for path in ["/kratos", "/kratos/", "/reference/kratos", "/kratos/api/use-cases"]:
+                    self.go(path, base)
+                    expect(self.page.get_by_role("heading", name="Page not found", exact=True)).to_be_visible()
+                    expect(self.page.get_by_role("link", name="Back to home", exact=True)).to_be_visible()
+                    expect(self.page.locator('a[href*="kratos"]')).to_have_count(0)
+                    self.assertEqual(self.page.url, base + path)
+
     def test_cockpit_environment_setup_and_getting_started(self):
         self.go()
         self.prepare(HR)
