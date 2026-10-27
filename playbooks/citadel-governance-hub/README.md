@@ -4,7 +4,7 @@
 
 ### A demo is not a production system
 
-The [Agentic Loop](../getting-started/README.md) is brilliant at getting you to a working agent. You drive [`lean-spec2cloud`](https://github.com/Azure-Samples/Spec2Cloud/tree/main/plugins/lean-spec2cloud) from a single prompt, the [`agentic-loop`](../../skills/agentic-loop/SKILL.md) skill applies the GBB defaults, and minutes later a Foundry hosted agent is answering questions in your tenant.
+The [Agentic Loop](../getting-started/README.md) gets you to a working agent. The published [Foundry Agentic Loop plugin](https://github.com/github/awesome-copilot/tree/main/plugins/foundry-agentic-loop) bundles the skill, canvas and evidence-gated SDD workflow. Choose Rapid for an existing Foundry project, or SDD to specify, implement, verify and deploy a new solution with separate deployment approval.
 
 Then the review board shows up. Before that agent can serve real users it has to answer four questions the loop alone doesn't — and every one of them is a **governance** question:
 

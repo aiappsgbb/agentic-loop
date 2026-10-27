@@ -43,7 +43,7 @@ export interface AdvisorPackage {
   tools: string[];
   runArchitecture: string[];
   copilotPrompt: string;
-  deploymentCommand: 'azd up';
+  deploymentCommand: 'azd up' | 'az containerapp up';
   workshopSpec?: WorkshopSpec;
 }
 
@@ -276,11 +276,11 @@ export function buildAdvisorPackage(args: {
     ? playbooks.filter(p => args.workshopSpec!.guides.some(g => g.slug === p.slug))
     : recommendWorkshop(args.intent).guides.map(g => g.playbook);
   const buildSkills = unique([
-    'agentic-loop',
-    'copilot-sdk',
+    'foundry-agentic-loop',
+    'microsoft-foundry',
     ...(args.workshopSpec ? [] : requirements.flatMap(r => r.buildSkills)),
     ...selectedPlaybooks.flatMap(p => p.buildSkills ?? []),
-  ]);
+  ]).filter(s => s !== 'agentic-loop');
   const deploymentSkills = unique([
     ...DEFAULT_DEPLOYMENT_SKILLS,
     ...requirements.flatMap(r => r.deploymentSkills),
@@ -301,16 +301,25 @@ export function buildAdvisorPackage(args: {
   const buildSkillList = buildSkills.map(s => `- ${s}`).join('\n');
   const deploymentSkillList = deploymentSkills.map(s => `- ${s}`).join('\n');
   const architectureList = runArchitecture.map(a => `- ${a}`).join('\n');
-  const buildPolicy = `## Required Agentic Loop build policy\n\n` +
-    `Run the skill-owned RBAC pre-flight before step 1. Report all permission gaps together and stop on BLOCKED or ERROR; do not create resources or grant permissions to bypass this gate.\n\n` +
-    `Immediately after Specify writes ./docs/spec.md and before Plan starts, invoke the installed agentic-loop skill as the mandatory policy layer. Do not rely on Specify embedding or transitively referencing it. If the skill is missing or cannot be invoked, stop and report the blocker rather than continuing with generic defaults.\n\n` +
-    `Apply the skill's defaults and implementation contracts to the concrete specification before planning, then carry them through Implement, Verify and Deploy. Record the invoked skill's path, the pre-flight verdict and the resulting architecture decisions in ./docs/spec.md, then carry those decisions into ./docs/plan.md. Installation alone is not evidence of invocation.\n\n` +
-    `Use the skill's [reference architecture service map](https://github.com/aiappsgbb/agentic-loop/blob/main/skills/agentic-loop/references/reference-architecture.md) to connect requirements to the implementation: Foundry hosted agents and models, Copilot SDK with governed Foundry skills and toolbox MCP, keyless identity, end-to-end observability and azd deployment. Apply the skill's conditional defaults; add complementary services only when the confirmed scope needs them, not every box in the architecture. Explain these choices to the Solution Engineer and customer.\n\n`;
+  const execution = args.workshopSpec?.execution ?? 'agentic-loop';
+  const buildPolicy = `## Foundry Agentic Loop build contract\n\n` +
+    `Invoke the installed foundry-agentic-loop skill. If the plugin or skill is unavailable, report the blocker. Ask before reinstalling the plugin for missing bundled components; never install extensions from a URL or edit Copilot settings. Tell the user to re-enable disabled extensions in their extension settings and continue in a new session. Without the canvas, continue in Chat; without the workflow, SDD cannot start. Offer Rapid only with user confirmation and an existing Foundry project; do not silently change modes or fall back to /spec2cloud or the legacy agentic-loop policy skill.\n\n` +
+    (execution === 'threadlight-pipeline'
+      ? `The customer chose Threadlight. Reconcile its prerequisites with this scope and the Foundry guidance; do not start the SDD workflow or replace the selected delivery workflow.\n\n`
+      : `Use ${execution === 'agentic-loop-rapid'
+        ? 'Rapid prototyping in an existing Foundry project. Ask for the project if none is established; never substitute a saved suggestion without approval. Build and verify locally from Chat; deployment is a separate, explicitly approved action using az containerapp up, not the SDD workflow'
+        : 'SDD with foundry-agentic-loop-workflow: Specify → Implement → Verify → Deploy. Planning is part of Specify, not a separate Plan phase. Start with an Azure subscription and create the Foundry project through the workflow. Require spec approval and always pause before azd up; portal scope confirmation is not deployment approval'}.\n\n` +
+        `Respect any existing AGENTS.md mode lock. Confirm a mode switch before rewriting it, preserve unrelated instructions, and keep Azure target settings only in .azure/deployment-plan.md.\n\n`) +
+    `Run the skill-owned read-only RBAC and placement preflight before creating resources. Report all permission gaps together and stop on BLOCKED or ERROR; do not grant permissions to bypass this gate. Confirm billable changes before making them.\n\n` +
+    `Freeze the implementation contract before parallel work and prove the minimal hosted integration before expanding the app. Use Foundry hosted agents with the Responses API, a governed toolbox for tools and skills, Foundry IQ when private knowledge needs grounding, managed identities and least-privilege RBAC, and OpenTelemetry into one Application Insights. Use Copilot SDK for runtime skills; use Microsoft Agent Framework for basic agents and explicit workflows. Clarify a workflow that also needs skills. Add complementary services only when the confirmed scope needs them.\n\n` +
+    (execution === 'agentic-loop'
+      ? `Each SDD phase needs a lead and an independent fresh-context reviewer, evidence-based gates and bounded fix rounds. Pause with evidence when a gate cannot pass; never silently waive it. Preserve flight records in .agentic-loop/runs/ and verified lessons in docs/LOOP.md. Resume journaled work rather than rerunning completed steps.\n\n`
+      : `Record verified lessons in docs/LOOP.md and retain scenario, access and failure-path evidence. Do not claim a successful build or deployment from status codes alone.\n\n`);
   const teachingInstructions = `## Learn while building\n\n` +
     (selectedPlaybooks.length
       ? `Use the selected playbooks as teaching material as well as implementation guidance. Explain their context and guided examples so the Solution Engineer can teach the customer what is being built and why.\n\n`
       : `No maintained playbook covers this scope. Explain the customer-specific design and its limitations; do not substitute an unrelated tutorial or claim packaged guidance exists.\n\n`) +
-    `During Specify and Plan, connect each chosen platform capability to a confirmed customer requirement and explain the key design decisions. Use curated starting points where they fit, not generic scaffolding or extra capabilities unrelated to the scope.\n\n` +
+    `During specification and design, connect each chosen platform capability to a confirmed customer requirement and explain the key design decisions. Use curated starting points where they fit, not generic scaffolding or extra capabilities unrelated to the scope.\n\n` +
     `Leave a concise walkthrough of the implemented capability, verification evidence and repeatable build approach. This should help the Solution Engineer lead a first guided workshop and use the customer-specific prompt on later builds without repeating every tutorial step. Preserve scope and permission reviews on every build.\n\n`;
 
   return {
@@ -324,12 +333,12 @@ export function buildAdvisorPackage(args: {
     runSkills,
     tools,
     runArchitecture,
-    deploymentCommand: 'azd up',
+    deploymentCommand: execution === 'agentic-loop-rapid' ? 'az containerapp up' : 'azd up',
     workshopSpec: args.workshopSpec,
     copilotPrompt: args.workshopSpec
       ? (args.workshopSpec.execution === 'threadlight-pipeline'
         ? `Use the threadlight-design skill to design a pilot agent end-to-end from the confirmed specification below.\n\n`
-        : `/spec2cloud Build the pilot described in the confirmed specification below.\n\n`) +
+        : `Use the foundry-agentic-loop skill to build the pilot described in the confirmed specification below.\n\n`) +
         buildPolicy +
         `${formatWorkshopSpecMarkdown(args.workshopSpec)}\n\n` +
         `## Maintained guidance to reuse\n\n${selectedPlaybooks.map(p =>
@@ -340,14 +349,14 @@ export function buildAdvisorPackage(args: {
         ).join('\n') || '- No packaged guidance chosen. Use the approved custom scope, not a random catalog default.'}\n\n` +
         teachingInstructions +
         `Reuse the chosen maintained guidance and preserve covered requirements. Generate only approved gaps. Candidate patterns remain provisional until validated against these constraints. Do not substitute canned examples for the customer brief.\n\n` +
-        `Respect the existing repository. Review Specify and Plan against this approved scope before implementation. Stop for unresolved questions or unsupported requirements, rather than fabricating support.\n\n` +
+        `Respect the existing repository. Review the specification and implementation contract against this confirmed scope before implementation. Stop for unresolved questions or unsupported requirements, rather than fabricating support.\n\n` +
         `## MVP safeguards\n\n${ESSENTIAL_SAFEGUARDS.map(s => `- ${s}`).join('\n')}\n\n` +
         `Optional development deployment only after explicit scope/permission/model/data readiness review. Use the existing supported build loop; no automatic production rollout. Capture verification evidence and production next steps. A generated or deployed pilot is not production-ready.\n` +
         (args.workshopSpec.execution === 'threadlight-pipeline'
           ? `The customer chose the shipped Threadlight workflow. Reconcile its declared prerequisites and stages with the approved specification before proceeding; do not silently replace it with default execution.\n`
           : '')
       :
-      `/spec2cloud ${args.intent.trim()}\n\n` +
+      `Use the foundry-agentic-loop skill in SDD mode. Build: ${args.intent.trim()}\n\n` +
       buildPolicy +
       `Respect the existing repository. Produce an azd-deployable package.\n\n` +
       `Path: ${args.path === 'scenario' ? 'Scenario workshop' : 'Customer workshop'}\n` +

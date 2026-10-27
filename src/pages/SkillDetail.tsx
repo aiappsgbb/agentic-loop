@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import { ArrowLeft, ExternalLink, Copy, Check, Terminal, AlertTriangle } from 'lucide-react';
 import ShareButton from '../components/ShareButton';
+import { FOUNDRY_LOOP } from '../data/buildWorkflow';
 import {
   getSkill, skillRepoUrl, skillRawUrl, skillInstallCommand,
 } from '../data/skills';
@@ -131,6 +132,14 @@ export default function SkillDetail() {
             <button type="button" className="skill-install-copy" onClick={copyInstall} aria-label="Copy install command">
               {copied ? <Check size={14} /> : <Copy size={14} />}
             </button>
+          </div>
+        </div>
+      )}
+      {skill.id === 'foundry-agentic-loop' && (
+        <div className="md-callout">
+          <Terminal size={16} className="md-callout-icon" />
+          <div className="md-callout-body">
+            <p>Install the <a href={FOUNDRY_LOOP.pluginUrl} target="_blank" rel="noreferrer">published Foundry Agentic Loop plugin</a> from Customize → Plugins in Copilot App, or use the command above. It bundles this skill, the canvas and the SDD workflow. The content below follows upstream main.</p>
           </div>
         </div>
       )}

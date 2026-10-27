@@ -43,11 +43,15 @@ What the reader needs before starting:
 - GitHub Copilot installed and logged in through the Copilot App, Copilot CLI, or VS Code.
 - GitHub CLI (`gh`) installed and authenticated.
 - Azure CLI (`az`) and Azure Developer CLI (`azd`) installed and authenticated.
-- The `lean-spec2cloud` Copilot plugin installed and updated.
+- Git, Node.js, Python 3.13 and azd Foundry extensions.
+- The **foundry-agentic-loop** plugin: in Copilot App use **Customize → Plugins → foundry-agentic-loop → Install**. It bundles the skill, canvas and SDD workflow.
+
+> Install the [published Foundry Agentic Loop plugin](https://github.com/github/awesome-copilot/tree/main/plugins/foundry-agentic-loop). No separate lean plugin, policy-skill installation or Cockpit import is needed. If a bundled component is missing, Copilot asks before reinstalling the plugin. It never installs extensions from a URL or edits Copilot settings. Re-enable disabled extensions in your extension settings and continue in a new session. Without the canvas, continue in Chat; without the workflow, SDD cannot start. Switching to Rapid requires confirmation and an existing Foundry project.
+
+Install the published plugin from Copilot CLI if preferred:
 
 ```bash
-copilot plugin marketplace add Azure-Samples/Spec2Cloud
-copilot plugin install lean@Spec2Cloud
+copilot plugin install foundry-agentic-loop@awesome-copilot
 ```
 
 List every additional service permission, CLI, SDK, preview feature, device, or local dependency required by this playbook. Do not send readers to another playbook or to `playbooks/README.md` for prerequisite steps.
@@ -55,7 +59,7 @@ List every additional service permission, CLI, SDK, preview feature, device, or 
 ```bash
 az account show                 # confirm the correct tenant and subscription
 azd auth login --check-status   # confirm you are signed in to azd
-copilot plugin list             # expect lean@Spec2Cloud
+copilot plugin list             # expect foundry-agentic-loop
 ```
 
 > **Heads up on cost.** This playbook provisions billable Azure resources.
@@ -70,29 +74,27 @@ Create or clone the workspace that will hold the generated solution.
 ```bash
 mkdir example-agent
 cd example-agent
-gh skill install aiappsgbb/agentic-loop agentic-loop --agent github-copilot --scope project
-gh skill list   # expect agentic-loop
 ```
 
 ---
 
 ### Open GitHub Copilot
 
-Open the project in the GitHub Copilot App, Copilot CLI, or VS Code. In the app, open the Spec2Cloud Cockpit and choose a run mode.
+Open the project in GitHub Copilot App and ask **open the agentic loop**. Choose SDD on Start for a new project, or Rapid for an existing Foundry project. Confirm billable changes and any companion-skill installs separately.
 
 ---
 
 ### Run the build loop
 
-Use `/spec2cloud` for the golden end-to-end path. The command invokes Specify, Plan, Implement, Verify, and Deploy. Invoke `agentic-loop` naturally in the prompt; installation and repository details belong in setup instructions, not in the application prompt.
+Use the bundled `foundry-agentic-loop` skill. SDD runs Specify → Implement → Verify → Deploy; Specify includes planning. Each phase has independent review, bounded fixes and evidence gates. Require spec approval and separate deployment approval.
 
 ```text
-/spec2cloud <complete application prompt>
+Use the foundry-agentic-loop skill in SDD mode to <complete application prompt>
 
-Use the `agentic-loop` skill.
+Use the `foundry-agentic-loop` skill and `foundry-agentic-loop-workflow`. Require spec approval and always pause before `azd up`. Confirm billable changes, run RBAC and placement preflight before creating resources, and stop on BLOCKED or ERROR. Freeze the contract in Specify and prove the minimal hosted integration before parallel work. Keep Azure settings only in `.azure/deployment-plan.md`, respect the `AGENTS.md` mode lock, and preserve evidence, `.agentic-loop/runs/` flight records and `docs/LOOP.md` lessons.
 ```
 
-> To run one stage at a time, start with `/specify`, then use `/plan`, `/implement`, `/verify`, and `/deploy`.
+> For one phase or a range, ask Copilot to run `specify`, `implement`, `verify` or `deploy`, using the workflow's `from` and `to` options. Ask to `resume` paused work rather than repeating completed phases.
 
 ---
 
@@ -122,7 +124,7 @@ How to read telemetry and debug a turn end to end.
 
 How to evolve the solution and push changes through the loop.
 
-> Tip: run the loop unattended for larger changes.
+> Ask **improve the agentic loop** for measured, approval-required improvements from verified lessons and flight records. Never weaken the gates.
 
 ---
 

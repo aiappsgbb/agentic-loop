@@ -1,4 +1,5 @@
 import { playbooks, type Playbook } from './catalog';
+import { buildWorkflowLabel, type BuildExecution } from './buildWorkflow';
 
 export type CoverageState = 'strong' | 'partial' | 'none' | 'clarification' | 'unsupported';
 export function withRequiredCapabilities(ids: readonly string[]): string[] {
@@ -94,7 +95,7 @@ export interface WorkshopSpec {
   capabilities: string[];
   buildingBlocks: string[];
   candidatePatterns: string[];
-  execution: 'agentic-loop' | 'threadlight-pipeline';
+  execution: BuildExecution;
   guides: Array<{ slug: string; reason: string }>;
   gaps: string[];
   openQuestions: string[];
@@ -129,7 +130,7 @@ export function formatWorkshopSpecMarkdown(spec: WorkshopSpec): string {
     section('Capabilities', spec.capabilities),
     section('Building blocks', spec.buildingBlocks),
     section('Candidate patterns', spec.candidatePatterns),
-    section('Build workflow', spec.execution === 'threadlight-pipeline' ? 'Threadlight pipeline' : 'Agentic Loop /spec2cloud'),
+    section('Build workflow', buildWorkflowLabel(spec.execution)),
     section('Selected guides', spec.guides.map(guide => `${guide.slug}: ${guide.reason}`)),
     section('Remaining gaps', spec.gaps),
     section('Open questions', spec.openQuestions),

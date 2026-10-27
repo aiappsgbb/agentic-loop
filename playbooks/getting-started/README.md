@@ -4,7 +4,7 @@
 
 ### Getting started playbook
 
-This playbook walks you through building a simple **weather agent** end-to-end with the Agentic Loop. You drive the build loop from a single prompt, and the **agentic-loop** skill applies the proven recipe on top.
+This playbook walks you through building a simple **weather agent** with the **Foundry Agentic Loop plugin**. One plugin bundles the build skill, canvas and evidence-gated SDD workflow.
 
 The playbook is organized in three chapters:
 
@@ -20,7 +20,7 @@ A chat-style web app where the user talks to a Foundry **hosted agent**. The age
 
 ![Weather agent architecture](./images/architecture.png)
 
-| Layer            | Choice (from `agentic-loop` defaults)                                        |
+| Layer            | Choice for this skill-using agent                                        |
 |------------------|------------------------------------------------------------------------------|
 | Frontend         | React + Vite on Azure Container Apps                                         |
 | Backend API      | Python + FastAPI on Azure Container Apps                                     |
@@ -29,15 +29,16 @@ A chat-style web app where the user talks to a Foundry **hosted agent**. The age
 | Observability    | OpenTelemetry → Application Insights (wired via Foundry)                     |
 | Infra            | `azd` + Bicep (Azure Verified Modules)                                       |
 
-Artifacts produced in your workspace mirror the five build stages:
+Artifacts produced in your workspace mirror the four SDD phases. Planning is part of Specify:
 
 | Stage      | Artifact                                            |
 |------------|-----------------------------------------------------|
-| Specify    | `./docs/spec.md`, `.github/copilot-instructions.md` |
-| Plan       | `./docs/plan.md`, `./.azure/deployment-plan.md`     |
-| Implement  | `./docs/implement.md`, `./src/`, etc.               |
-| Verify     | `./docs/verify.md`, provisioned Azure dependencies  |
+| Specify    | `./docs/spec.md` (requirements, contract, workstreams), `./.azure/deployment-plan.md` |
+| Implement  | `./docs/implementation.md`, `./src/`, provisioned Azure dependencies |
+| Verify     | `./docs/verify.md`, local E2E tests and agent evaluations |
 | Deploy     | Deployed Azure endpoint, `./docs/deploy.md`         |
+
+The mode lock lives in root `AGENTS.md`. SDD flight records live in `.agentic-loop/runs/`, and verified lessons in `docs/LOOP.md`. Azure settings stay only in `.azure/deployment-plan.md`.
 
 ---
 
@@ -45,23 +46,22 @@ Artifacts produced in your workspace mirror the five build stages:
 
 You will need:
 
-- Azure subscription with Contributor permissions, plus a GitHub Copilot plan.
+- Azure subscription with resource-creation, role-assignment and Foundry data-plane permissions, plus a GitHub Copilot plan. Preflight checks all required scopes before creating resources.
 - [GitHub Copilot App](https://gh.io/app) installed and signed in with your Copilot-enabled GitHub account. Use the App as the build tool throughout this guide.
 - [GitHub CLI (`gh`)](https://cli.github.com/) installed and logged in.
 - [Azure CLI (`az`)](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) and [Azure Developer CLI (`azd`)](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/install-azd) installed and authenticated to your Azure subscription.
-- GitHub CLI `v2.90.0+` with the agent skills preview available (`gh skill --help`).
-- The `lean-spec2cloud` Copilot plugin installed and updated. Click [here](https://github.com/copilot/app/launch?open=ghapp%3A%2F%2Fplugins%2Fmarketplace%2Fadd%3Fsource%3DAzure-Samples%2FSpec2Cloud)
-to add the marketplace and [here](https://github.com/copilot/app/launch?open=ghapp%3A%2F%2Fplugins%2Finstall%3Fsource%3Dlean%2540Spec2Cloud) to install the plugin in the App. Confirm `lean@Spec2Cloud` is installed and enabled in the App's plugin settings.
+- Git, Node.js, Python 3.13 and the azd Foundry extensions. The canvas readiness check helps identify missing tools; approve installation separately.
+- The `foundry-agentic-loop` plugin. In Copilot App, choose **Customize → Plugins**, find **foundry-agentic-loop**, then **Install**.
 
-**Set up Spec2Cloud Cockpit.** This companion canvas lets you follow the build stages and inspect Azure resources. It is separate from the `lean@Spec2Cloud` plugin.
+> Install the [published Foundry Agentic Loop plugin](https://github.com/github/awesome-copilot/tree/main/plugins/foundry-agentic-loop). No separate lean plugin, policy-skill installation or Cockpit import is needed. If a bundled component is missing, Copilot asks before reinstalling the plugin. It never installs extensions from a URL or edits Copilot settings. Re-enable disabled extensions in your extension settings and continue in a new session. Without the canvas, continue in Chat; without the workflow, SDD cannot start. Switching to Rapid requires confirmation and an existing Foundry project.
 
-In GitHub Copilot App's right-hand review panel, click **+ → Spec2Cloud Cockpit**. If it is not listed, choose **Discover more → Import canvas from gist/URL → User scope**, then paste the official extension URL:
+Alternatively, install the published plugin from Copilot CLI:
 
-```text
-https://github.com/Azure-Samples/Spec2Cloud/tree/main/.github/extensions/spec2cloud
+```bash
+copilot plugin install foundry-agentic-loop@awesome-copilot
 ```
 
-After importing, click **+ → Spec2Cloud Cockpit** if it did not open automatically. Confirm the **Spec2Cloud** tab appears. The canvas does not grant deployment permissions or replace Azure sign-in.
+**Open the bundled canvas.** In your project session, ask **open the agentic loop**. No separate lean plugin, policy-skill install or Cockpit import is needed. The canvas does not grant deployment permissions or replace Azure sign-in.
 
 Sign in to the supporting tools in the terminal of the environment where Copilot executes the build, including when using a sandbox. These commands are identical on Windows, macOS, and Linux:
 
@@ -85,7 +85,7 @@ gh auth status       # confirm GitHub CLI authentication
 
 ### Create a new project
 
-Take an empty workspace through the **Specify → Plan → Implement → Verify → Deploy** loop and produce a running weather agent powered by a custom MCP server (random data) and agent skills.
+Take an empty workspace through **Specify → Implement → Verify → Deploy** in SDD mode to produce a weather agent powered by a custom MCP server (random data) and runtime skills. For a quick local build in an existing Foundry project, choose Rapid instead; deployment remains separate and approved.
 
 Create an empty folder to host the solution. A local folder gives the loop's artifacts (spec, plan, source, infra) a place to live.
 
@@ -101,23 +101,7 @@ cd weather-agent
 > cd weather-agent
 > ```
 
-Install the Agentic Loop skill into the project before opening Copilot. Project scope keeps the policy version explicit and prevents execution from depending on the nested copy inside `specify`.
-
-```bash
-gh skill install aiappsgbb/agentic-loop agentic-loop --agent github-copilot --scope project
-gh skill list   # expect agentic-loop
-```
-
-The `agentic-loop` skill is the **build-time policy layer**, not a run skill for the weather agent. It translates the [reference architecture service map](../../skills/agentic-loop/references/reference-architecture.md) into specification and implementation decisions: Foundry hosted agents and models, Copilot SDK with governed Foundry skills and toolbox MCP, keyless identity, observability and `azd` deployment. The map adds complementary services only when the scope needs them, not every box in the architecture.
-
-Check the installed source, version and pin state, and review available updates before relying on it:
-
-```bash
-gh skill list --json skillName,sourceURL,scope,version,pinned,path
-gh skill update --dry-run
-```
-
-Installation is not invocation. The starter prompt below runs the readiness pre-flight before the build, then explicitly invokes the skill after Specify writes the spec and before Plan. Its decisions carry through the remaining stages. Do not depend on a nested copy inside `specify`.
+The `foundry-agentic-loop` build skill comes with the plugin. It is not a run skill for the weather agent. It coordinates readiness, Foundry defaults and the chosen mode, and asks before installing the `microsoft-foundry` companion skill. Only add complementary services when the confirmed scope needs them.
 
 ---
 
@@ -125,17 +109,11 @@ Installation is not invocation. The starter prompt below runs the readiness pre-
 
 Open **GitHub Copilot App**. The terminal commands above only prepare supporting tools and project files; the build prompt runs in App Chat. Review tool and deployment permissions before approving execution.
 
-**1. Open Spec2Cloud Cockpit** to watch the build loop execute. Use **+ → Spec2Cloud Cockpit** in the right-hand review panel and confirm the **Spec2Cloud** tab appears. If it is missing, follow the import instructions in [Setup](#intro-setup).
+**1. Add your project.** Choose **+ → Add project from → Local folder or repository**, then select `weather-agent`.
 
-**2. Add your project.** On the left, click **+ → Add project from → Local folder or repository**, then select the `weather-agent` folder you created.
+**2. Open the agentic loop.** Ask this in Chat to open the bundled canvas. Its tabs are **Start**, **Build**, **Explore** and **Optimize**.
 
-**3. Choose a model and mode.** In the prompt box, pick a strong reasoning model (e.g. Claude Opus 4.8) and a run mode:
-
-| Mode | Behavior |
-|------|----------|
-| Interactive | Step-by-step collaboration; you confirm each stage |
-| Plan | Plans first, executes once you approve |
-| Autopilot *(recommended)* | Runs the full loop end-to-end without interruption |
+**3. Choose SDD on Start**, confirm your subscription, then use the prompt below. Rapid instead requires an existing Foundry project and produces a verified local app first. Copilot records the mode in `AGENTS.md`; switching modes needs confirmation.
 
 ---
 
@@ -144,38 +122,24 @@ Open **GitHub Copilot App**. The terminal commands above only prepare supporting
 Paste the following starter prompt:
 
 ```text
-/spec2cloud A polished, modern weather app that provides weather information and forecasts through two interfaces: a visual SVG map of Europe or a chat interface. The app retrieves data from a custom MCP server, processes it through an integrated agent skill for specialized forecasting, and offers multiple forecasting styles—optimistic, pessimistic, and others—that users can select based on their preference. All features are fully functional except for the weather data, which is randomly generated for demonstration. The app includes a trace toggle that displays agent event information, such as the tools (input/output) and skills (skill.md content) used during forecasting.
+Use the foundry-agentic-loop skill in SDD mode to build a polished, modern weather app that provides weather information and forecasts through two interfaces: a visual SVG map of Europe or a chat interface. The app retrieves data from a custom MCP server, processes it through an integrated agent skill for specialized forecasting, and offers multiple forecasting styles—optimistic, pessimistic, and others—that users can select based on their preference. All features are fully functional except for the weather data, which is randomly generated for demonstration. The app includes a trace toggle that displays agent event information, such as the tools (input/output) and skills (skill.md content) used during forecasting.
 
-Run the skill-owned RBAC pre-flight before step 1. Report all permission gaps together and stop on BLOCKED or ERROR; do not create resources or grant permissions to bypass this gate.
+Run the skill-owned read-only RBAC and placement preflight before creating resources. Report all permission gaps together and stop on BLOCKED or ERROR; do not grant permissions to bypass this gate. Confirm billable changes before making them.
 
-Immediately after Specify writes ./docs/spec.md and before Plan starts, invoke the installed agentic-loop skill as the mandatory policy layer. Do not rely on Specify embedding or transitively referencing it. If the skill is missing or cannot be invoked, stop and report the blocker rather than continuing with generic defaults.
+Use foundry-agentic-loop-workflow: Specify → Implement → Verify → Deploy. Planning is part of Specify, not a separate Plan phase. Require spec approval and always pause before azd up. Respect any existing AGENTS.md mode lock; confirm a mode switch and keep Azure settings only in .azure/deployment-plan.md.
 
-Apply the skill's defaults and implementation contracts to the concrete specification before planning, then carry them through Implement, Verify and Deploy. Record the invoked skill's path, the pre-flight verdict and the resulting architecture decisions in ./docs/spec.md, then carry those decisions into ./docs/plan.md. Installation alone is not evidence of invocation.
+Freeze the implementation contract before parallel work and prove the minimal hosted integration first. Each SDD phase needs independent fresh-context review, evidence-based gates and bounded fix rounds. Preserve flight records in .agentic-loop/runs/ and verified lessons in docs/LOOP.md. Report missing bundled components and ask before reinstalling the plugin; never install extensions from a URL or edit Copilot settings. Ask the user to re-enable disabled extensions in their extension settings and start a new session. Without the canvas, continue in Chat; without the workflow, SDD cannot start. Offer Rapid only with user confirmation and an existing Foundry project.
 ```
 
 ![Run](./images/run.png)
 
 > Tip: GitHub Copilot App supports voice dictation using a local modal to make it easier to write your prompts.
 
-> `/spec2cloud` runs the build loop; the explicitly invoked `agentic-loop` skill applies the architecture defaults and readiness gates. Review its recorded decisions in the spec and plan rather than assuming the command or plugin loaded the policy automatically.
+The **Build** tab shows progress and gates. A lead implements, an independent reviewer reruns checks, and bounded fix rounds either pass on evidence or pause for your decision. Spec approval and deployment approval are distinct. Execution time varies; do not treat a time estimate as a readiness guarantee.
 
-> Tip: **Prefer to run the loop one stage at a time?** Use the same prompt with `/specify` first, then advance through each stage, reviewing the artifact it produces before moving on:
->
-> | Command | Produces | Review in |
-> |---------|----------|-----------|
-> | `/specify <prompt>` | Specification | `docs/spec.md` |
-> | `/plan` | Implementation + Azure deployment plan | `docs/plan.md`, `.azure/deployment-plan.md` |
-> | `/implement` | azd template + source code | `src/`, `infra/`, `azure.yaml` |
-> | `/verify` | Provisioned Foundry project; local smoke test | `docs/verify.md` |
-> | `/deploy` | Full solution deployed to Azure | `docs/deploy.md` |
+For one phase or a range, ask Copilot to run `specify`, `implement`, `verify` or `deploy`; the workflow supports `from` and `to`. Ask to `resume` a paused run instead of repeating completed work. Deployment approval is tied to the spec, plan, verify report and Azure target; changed inputs require fresh approval.
 
-End-to-end execution time varies, but typically completes in under an hour.
-
-When the loop finishes, Copilot returns the deployed frontend URL and the Spec2Cloud canvas auto-previews it. Clicking the **Deploy** stage opens the frontend URL (or `docs/deploy.md`).
-
-On the canvas, click the **Azure** icon to see the deployed resources, and the **Foundry** icon to see the agents, models, and toolbox. Open the Foundry portal to review the models, agents, tools, and skills that were deployed.
-
-![Canvas Foundry](./images/canvas-foundry.png)
+After completion, use **Explore** and the verified endpoint to exercise the app. Open Foundry to inspect agents, models, toolboxes and traces.
 
 ---
 
@@ -183,11 +147,11 @@ On the canvas, click the **Azure** icon to see the deployed resources, and the *
 
 | Symptom | Likely cause | Fix |
 |---------|--------------|-----|
-| Copilot App's plugin settings don't show an enabled `lean@Spec2Cloud` | Plugin not installed or enabled | Use the App marketplace and plugin links in [Setup](#intro-setup), then enable the plugin |
-| `gh skill list` doesn't show `agentic-loop` | Required project skill not installed | Run the project-scoped install command in [Create a new project](#build-create-a-new-project) |
-| The **Spec2Cloud** tab never appears | Canvas extension not imported or opened | Follow the canvas import instructions in [Setup](#intro-setup), then select **+ → Spec2Cloud Cockpit** |
+| Canvas or workflow is missing | Bundled component unavailable | Ask before reinstalling the plugin; do not install extensions from a URL or edit Copilot settings |
+| Canvas or workflow is disabled | An extension was disabled in an earlier session | Re-enable it and continue in a new session |
+| Gate remains blocked | Evidence check failed or permissions are missing | Inspect all reported issues, fix and verify, then ask to resume; never weaken the gate |
 | `azd` fails with an auth or subscription error | Wrong tenant or subscription selected | Run `azd auth login`, then `az account set --subscription <id>` |
-| Deploy fails on quota or region | Model capacity unavailable in the chosen region | Pick a region with capacity (or lower the requested capacity) and re-run `/deploy` |
+| Deploy fails on quota or region | Model capacity unavailable in the chosen region | Reconcile the deployment plan with the placement check and request fresh approval before `deploy` |
 | The agent replies but no traces appear | Looking too early | Spans take a few seconds to land in Application Insights — refresh the **Traces** view |
 
 ---
@@ -214,7 +178,7 @@ Copilot SDK emits events on which tools and skills it has used.
 
 ### Observe traces
 
-Every span the agent emits already lands in Application Insights — that wiring is part of the `agentic-loop` defaults. The goal here is to **learn to read those traces** so you can debug an agent the way you'd debug a microservice.
+OpenTelemetry into one Application Insights resource is part of the plugin's defaults. Verify correlated spans from the backend, agent, tools and model calls rather than assuming instrumentation succeeded. Keep sensitive content capture off unless approved with redaction and retention controls.
 
 Use the canvas to open the hosted agent in the Foundry project, then click **Traces**. Inspect a trace to see exactly what the agent did on each turn — the model call, the `get_weather` tool invocation, and the response — end to end.
 
@@ -231,19 +195,16 @@ You built, ran, and scaled a full-stack agent without hand-writing the spec, inf
 - **Customize the agent** — change its instructions, add tools, or swap the model, then push the change through the loop.
 - **Explore the other playbooks** — apply the same loop to richer, production-grade scenarios.
 
-> Tip: To run the loop fully unattended and scale to many more use cases, you can use the following command:
-> ```bash
-> copilot -p "/spec2cloud <your next big idea>" --no-ask-user --yolo -- autopilot
-> ```
+Ask **improve the agentic loop** to mine `docs/LOOP.md` and flight records for evidence-backed skill and workflow improvements. Changes are measured against the base commit and applied only after approval; approvals, RBAC, safety and evidence gates are never weakened.
 
 ---
 
 ### Clean up
 
-When you are done experimenting, delete every Azure resource the loop created so you stop incurring charges. Run this from the project root, where `azure.yaml` lives:
+Review the exact environment and subscription, then explicitly approve teardown before running this from the SDD project root, where `azure.yaml` lives:
 
 ```bash
 azd down --purge --force
 ```
 
-`--purge` also removes soft-deleted resources (such as the Foundry/AI Services account and Key Vault) so their names are immediately reusable.
+`--purge` also removes soft-deleted resources. Entra app registrations live outside the resource group: review the build-created registrations in `docs/implementation.md` and approve their removal separately. For Rapid, do not tear down the pre-existing Foundry project.
