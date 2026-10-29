@@ -2,14 +2,32 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   Eye, Plug, Waypoints, KeyRound, Network, Database, HardDrive,
-  ExternalLink, DollarSign, FileText,
+  Boxes, ExternalLink, DollarSign, FileText,
 } from 'lucide-react';
 
 const BLOCKS = [
   {
+    id: 'container-apps',
+    icon: Boxes,
+    name: 'Azure Container Apps',
+    short: 'Frontend and backend hosting, separate from the Foundry agent runtime',
+    body: `Azure Container Apps (ACA) hosts the web frontend and backend API around your Foundry hosted agent. It is selected by default in a new workshop but remains removable. Removing it means agreeing an alternative app-hosting target before deployment, not silently restoring it from a playbook example.`,
+    bullets: [
+      'Containerized frontend and backend with managed scaling and revisions',
+      'Validate ingress, streaming, health checks and managed-identity access',
+      'The agent stays on Foundry Hosted Agents, not on ACA',
+      'Review environment, networking and cost before approved deployment',
+    ],
+    links: {
+      official: 'https://azure.microsoft.com/en-us/products/container-apps/',
+      pricing: 'https://azure.microsoft.com/en-us/pricing/details/container-apps/',
+      docs: 'https://learn.microsoft.com/azure/container-apps/overview',
+    },
+  },
+  {
     id: 'observability',
     icon: Eye,
-    name: 'Observability',
+    name: 'Tracing',
     short: 'Azure Monitor, Application Insights, Log Analytics',
     body: `Azure Monitor unifies metrics, distributed traces, and logs into a single queryable lake. Application Insights instruments your agents, tools, and skills with OpenTelemetry so every prompt, tool call, token, and eval result is correlated end-to-end. Log Analytics gives you KQL across the whole stack — answer "which tool call regressed last Tuesday?" in seconds.`,
     bullets: [

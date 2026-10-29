@@ -111,6 +111,7 @@ export default function Tools() {
         <div>
           <h3>Opinionated Foundry stance: prefer Toolboxes for shared tools</h3>
           <p>
+            The reference architecture and workshop call this component <strong>MCP</strong>. The underlying implementation remains a governed Foundry toolbox, not a change to direct server connections.{' '}
             Use{' '}
             <a href="https://learn.microsoft.com/azure/foundry/agents/how-to/tools/toolbox?pivots=azd" target="_blank" rel="noreferrer">Foundry Toolboxes</a>{' '}
             as the preferred distribution pattern when multiple agents need a shared, governed tool set. Toolbox is not the

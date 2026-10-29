@@ -123,9 +123,10 @@ function parsePlaybook(md: string, slug: string): Parsed {
   // hashed URL Vite produced for the bundled asset in `playbooks/<slug>/images/`.
   const fix = (body: string) =>
     body.replace(
-      /(!\[[^\]]*]\()\.?\/?images\/([^)\s]+)/g,
-      (match, prefix: string, file: string) => {
-        const resolved = PLAYBOOK_IMAGES[`/playbooks/${slug}/images/${file}`];
+      /(!\[[^\]]*]\()(\.\.\/shared\/|\.\/|)images\/([^)\s]+)/g,
+      (match, prefix: string, directory: string, file: string) => {
+        const owner = directory === '../shared/' ? 'shared' : slug;
+        const resolved = PLAYBOOK_IMAGES[`/playbooks/${owner}/images/${file}`];
         return resolved ? `${prefix}${resolved}` : match;
       },
     );

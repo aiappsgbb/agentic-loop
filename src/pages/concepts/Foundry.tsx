@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import {
   Brain, ImageIcon, Volume2, Headphones, MessagesSquare, FileSearch, BookOpen,
   ExternalLink, DollarSign, FileText, Bot, Boxes, FlaskConical, Activity,
-  Briefcase, Network,
+  Briefcase, Globe, Network, SlidersHorizontal,
 } from 'lucide-react';
 
 // The IQ layer is what an agent knows. It comes first on this page on purpose:
@@ -44,6 +44,24 @@ const IQ_LAYER = [
       official: 'https://www.microsoft.com/en-us/microsoft-365/copilot',
       pricing: 'https://www.microsoft.com/en-us/microsoft-365/enterprise/microsoft365-plans-and-pricing',
       docs: 'https://learn.microsoft.com/en-us/microsoft-365-copilot/extensibility/work-iq',
+    },
+  },
+  {
+    id: 'web-iq',
+    icon: Globe,
+    name: 'WebIQ',
+    short: 'Current public-web context with sources and provenance',
+    body: `Microsoft Web IQ supplies fresh public-web information for agents and applications through search and grounding APIs, including MCP integration. It complements Foundry IQ's enterprise knowledge, Work IQ's collaboration context and Fabric IQ's business data; it does not replace private-data access controls.`,
+    bullets: [
+      'Public-web search and grounding with source URLs and provenance',
+      'MCP integration for governed agent tool access',
+      'Validate a paid subscription (not Azure credits), Web IQ AppID/Entra authentication and supported endpoints',
+      'Keep private customer data out of public search queries',
+    ],
+    links: {
+      official: 'https://learn.microsoft.com/web-iq/overview',
+      pricing: 'https://learn.microsoft.com/web-iq/resources/faq',
+      docs: 'https://learn.microsoft.com/web-iq/overview',
     },
   },
   {
@@ -232,7 +250,7 @@ const CAPABILITIES = [
   {
     id: 'observability',
     icon: Activity,
-    name: 'Observability',
+    name: 'Tracing',
     short: 'OpenTelemetry tracing, metrics, and cost per run',
     body: `Every agent run emits OpenTelemetry traces — the model calls, the tool invocations, the retrieved documents, the token counts and the latency at each hop — into Application Insights and Azure Monitor. Replay a single conversation to see exactly which skill fired and why, alert on error rate or p95 latency, and attribute spend per agent, per model, per customer.`,
     bullets: [
@@ -245,6 +263,42 @@ const CAPABILITIES = [
       official: 'https://azure.microsoft.com/en-us/products/ai-foundry/',
       pricing: 'https://azure.microsoft.com/en-us/pricing/details/monitor/',
       docs: 'https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/observability',
+    },
+  },
+  {
+    id: 'agent-optimizer',
+    icon: SlidersHorizontal,
+    name: 'Agent Optimizer',
+    short: 'Evaluation-driven improvements against a measured baseline',
+    body: `Foundry Agent Optimizer compares an agent baseline with candidate instructions, skills, function-tool descriptions or models, depending on the agent type. Hosted agents need optimizer-ready configuration and the Responses protocol. Select it in the workshop to include that setup and evaluation plan; selecting the component does not start an optimization run.`,
+    bullets: [
+      'Use representative datasets, explicit criteria and supported evaluation/optimization models',
+      'Compare quality and token usage against the same baseline',
+      'Run against safe test tools: evaluation can execute real tool calls',
+      'Validate regional support and approve cost, candidate application and redeployment separately',
+    ],
+    links: {
+      official: 'https://learn.microsoft.com/azure/foundry/agents/concepts/agent-optimizer-overview',
+      pricing: 'https://learn.microsoft.com/azure/foundry/agents/concepts/agent-optimizer-costs',
+      docs: 'https://learn.microsoft.com/azure/foundry/agents/concepts/agent-optimizer-overview',
+    },
+  },
+  {
+    id: 'agent-insights',
+    icon: Activity,
+    name: 'Agent Insights',
+    short: 'Preview trace analysis with evidence-backed findings',
+    body: `Foundry Agent Insights analyzes agent traces to surface issues and proposed improvements with supporting evidence. Review the finding and its linked traces before acting. Existing findings can be retrieved read-only; scanning, monitor creation, status changes and applying fixes are distinct operations, not consequences of selecting this workshop component.`,
+    bullets: [
+      'Validate preview access, trace availability, permissions and supported judge models',
+      'Choose representative traces and the analysis scope deliberately',
+      'Confirm findings and review proposed fixes before changing an agent',
+      'Keep sensitive telemetry redacted and approve billable analysis separately',
+    ],
+    links: {
+      official: 'https://learn.microsoft.com/azure/foundry/observability/how-to/agent-insights',
+      pricing: 'https://azure.microsoft.com/en-us/pricing/details/ai-foundry/',
+      docs: 'https://learn.microsoft.com/azure/foundry/observability/how-to/agent-insights',
     },
   },
 ];
@@ -310,9 +364,9 @@ export default function Foundry() {
         <h2>Context is the differentiator, not the model.</h2>
         <p>
           Any team can call a frontier model. What separates a demo from a system of record is what the agent
-          <em> knows</em>. Microsoft's IQ layer supplies that context in three complementary planes — your institutional
-          knowledge, how your organisation actually works, and what your business data means — each governed, permission-trimmed,
-          and composable. Ground an agent in one, or in all three.
+          <em> knows</em>. Microsoft's IQ layer supplies institutional knowledge, collaboration context,
+          business semantics and current public-web information. Select the sources your scenario needs;
+          private-data permissions and public-web query boundaries still apply.
         </p>
 
         <div className="platform-grid">

@@ -1,190 +1,23 @@
 import { Link } from 'react-router-dom';
-import type { LucideIcon } from 'lucide-react';
-import {
-  BarChart3,
-  BookOpen,
-  Database,
-  Eye,
-  KeyRound,
-  Network,
-  Plug,
-  Sparkles,
-  ShieldCheck,
-  Waypoints,
-  Wrench,
-} from 'lucide-react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { Info, Sparkles } from 'lucide-react';
 import { asset } from '../data/asset';
+import {
+  SPINE_NODES, COMPLEMENTARY_NODES, SKILLS_NODE, FOUNDATION_NODES,
+  selectedArchitecture,
+  FOUNDRY_MODELS, isFoundryModelId,
+  type ArchitectureNode, type ArchitectureSelections, type ArchitectureSelectionField, type BrandIconName, type FoundryModelId,
+} from '../data/architecture';
 
 type ArchitectureVariant = 'compact' | 'full' | 'backbone';
-type ArchitectureWeight = 'spine' | 'complementary' | 'foundation';
-type BrandIconName = 'copilot-sdk' | 'hosted-agent' | 'foundry-models';
 
-interface ArchitectureNode {
-  id: string;
-  label: string;
-  caption: string;
-  href: string;
-  icon: LucideIcon;
-  weight: ArchitectureWeight;
-  brandIcon?: BrandIconName;
+interface ArchitectureSelection {
+  values: ArchitectureSelections;
+  model: FoundryModelId;
+  onModelChange: (model: FoundryModelId) => void;
+  onToggle: (field: ArchitectureSelectionField, id: string) => void;
+  requiredBy?: (field: ArchitectureSelectionField, id: string) => string | undefined;
 }
-
-const SPINE_NODES: ArchitectureNode[] = [
-  {
-    id: 'github-copilot-sdk',
-    label: 'GitHub Copilot SDK',
-    caption: 'Agent Loop runtime that binds skills, tools, and model calls.',
-    href: '/concepts/agentic-loop',
-    icon: Sparkles,
-    weight: 'spine',
-    brandIcon: 'copilot-sdk',
-  },
-  {
-    id: 'hosted-agent',
-    label: 'Hosted Agent',
-    caption: 'Foundry runtime where skills execute and tools are invoked under policy.',
-    href: '/concepts/agents',
-    icon: Sparkles,
-    weight: 'spine',
-    brandIcon: 'hosted-agent',
-  },
-  {
-    id: 'foundry-model',
-    label: 'Foundry Models',
-    caption: 'Frontier and open models behind the agent loop.',
-    href: '/concepts/platform/foundry#frontier-models',
-    icon: Sparkles,
-    weight: 'spine',
-    brandIcon: 'foundry-models',
-  },
-];
-
-const COMPLEMENTARY_NODES: ArchitectureNode[] = [
-  {
-    id: 'foundry-iq',
-    label: 'Foundry IQ',
-    caption: 'Grounded knowledge, connectors, and retrieval.',
-    href: '/concepts/platform/foundry#foundry-iq',
-    icon: BookOpen,
-    weight: 'complementary',
-  },
-  {
-    id: 'work-iq',
-    label: 'Work IQ',
-    caption: 'Organisational memory from Microsoft 365 signals.',
-    href: '/concepts/platform/foundry#work-iq',
-    icon: Plug,
-    weight: 'complementary',
-  },
-  {
-    id: 'fabric-iq',
-    label: 'Fabric IQ',
-    caption: 'Business semantics and ontologies over OneLake.',
-    href: '/concepts/platform/foundry#fabric-iq',
-    icon: Database,
-    weight: 'complementary',
-  },
-  {
-    id: 'toolbox',
-    label: 'Toolbox',
-    caption: 'APIs, MCP tools, and business actions.',
-    href: '/concepts/tools',
-    icon: Wrench,
-    weight: 'complementary',
-  },
-  {
-    id: 'evals',
-    label: 'Evals',
-    caption: 'Quality, safety, and cost checks on traces.',
-    href: '/concepts/platform/foundry#evaluations',
-    icon: BarChart3,
-    weight: 'complementary',
-  },
-  {
-    id: 'content-safety',
-    label: 'Content Safety',
-    caption: 'Prompt shields, safety filters, and policy enforcement.',
-    href: '/concepts/platform/foundry#frontier-models',
-    icon: ShieldCheck,
-    weight: 'complementary',
-  },
-  {
-    id: 'ai-gateway',
-    label: 'AI Gateway',
-    caption: 'API Management for routing, quotas, caching, and policy.',
-    href: '/concepts/platform/azure#ai-gateway',
-    icon: Waypoints,
-    weight: 'complementary',
-  },
-  {
-    id: 'observability',
-    label: 'Observability',
-    caption: 'Telemetry and insight across the full loop.',
-    href: '/concepts/platform/azure#observability',
-    icon: Eye,
-    weight: 'complementary',
-  },
-];
-
-const SKILLS_NODE: ArchitectureNode = {
-  id: 'agent-skills',
-  label: 'Skills',
-  caption: 'Reusable agent capabilities that combine with tools in the loop.',
-  href: '/concepts/skills',
-  icon: Sparkles,
-  weight: 'complementary',
-};
-
-const FOUNDATION_NODES: ArchitectureNode[] = [
-  {
-    id: 'entra-rbac',
-    label: 'Entra / RBAC',
-    caption: 'Identity, scopes, and managed access.',
-    href: '/concepts/platform/azure#identity',
-    icon: ShieldCheck,
-    weight: 'foundation',
-  },
-  {
-    id: 'key-vault',
-    label: 'Key Vault',
-    caption: 'Secrets and certificates under policy.',
-    href: '/concepts/platform/azure#identity',
-    icon: KeyRound,
-    weight: 'foundation',
-  },
-  {
-    id: 'app-insights',
-    label: 'App Insights',
-    caption: 'Application traces and live diagnostics.',
-    href: '/concepts/platform/azure#observability',
-    icon: Eye,
-    weight: 'foundation',
-  },
-  {
-    id: 'ai-search',
-    label: 'AI Search',
-    caption: 'Hybrid vector and keyword retrieval.',
-    href: '/concepts/platform/foundry#foundry-iq',
-    icon: BookOpen,
-    weight: 'foundation',
-  },
-  {
-    id: 'cosmos',
-    label: 'Cosmos',
-    caption: 'Agent state, memory, and operational data.',
-    href: '/concepts/platform/azure#data',
-    icon: Database,
-    weight: 'foundation',
-  },
-  {
-    id: 'networking',
-    label: 'Networking',
-    caption: 'Private endpoints, VNets, and hybrid reach.',
-    href: '/concepts/platform/azure#private-net',
-    icon: Network,
-    weight: 'foundation',
-  },
-];
 
 const BRAND_ICON_SRC: Record<Exclude<BrandIconName, 'copilot-sdk'>, string> = {
   'hosted-agent': asset('/ai-agents.svg'),
@@ -223,8 +56,98 @@ function LayerLabel({ children, platform = false }: { children: string; platform
   );
 }
 
-function ArchitectureNodeLink({ node, dense = false }: { node: ArchitectureNode; dense?: boolean }) {
+function ArchitectureNodeInfo({ node, label, requirement }: { node: ArchitectureNode; label: string; requirement?: string }) {
+  const [open, setOpen] = useState(false);
+  const container = useRef<HTMLDivElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
+  const panelId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    function dismissOutside(event: PointerEvent) {
+      if (event.target instanceof Node && !container.current?.contains(event.target)) setOpen(false);
+    }
+    function dismissOnEscape(event: KeyboardEvent) {
+      if (event.key !== 'Escape') return;
+      if (container.current?.contains(document.activeElement)) button.current?.focus();
+      setOpen(false);
+      event.stopPropagation();
+    }
+    document.addEventListener('pointerdown', dismissOutside);
+    document.addEventListener('keydown', dismissOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', dismissOutside);
+      document.removeEventListener('keydown', dismissOnEscape);
+    };
+  }, [open]);
+
+  return (
+    <div ref={container} className="architecture-choice-help"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => { if (!container.current?.contains(document.activeElement)) setOpen(false); }}
+      onFocus={() => setOpen(true)}
+      onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false); }}>
+      <button ref={button} type="button" className="architecture-choice-info"
+        aria-label={`About ${label}`} aria-expanded={open} aria-controls={panelId}
+        onClick={() => setOpen(true)}>
+        <Info size={15} aria-hidden="true" />
+      </button>
+      {open && (
+        <div id={panelId} className="architecture-choice-popover" role="region" aria-label={`About ${label}`}>
+          <strong>{label}</strong>
+          <p>{node.selection?.caption ?? node.caption}</p>
+          {requirement && <p>{requirement}. Remove the playbook to change this selection.</p>}
+          {node.id === 'foundry-model' && <p>Auto lets Copilot choose a model during the build. Explicit choices are preferences; model availability is validated in your Foundry project.</p>}
+          <Link to={node.href} aria-label={`Learn more about ${label}`}>Learn more</Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ArchitectureNodeLink({ node, dense = false, selection }: {
+  node: ArchitectureNode;
+  dense?: boolean;
+  selection?: ArchitectureSelection;
+}) {
+  const modelInputId = useId();
   const Icon = node.icon;
+  if (selection) {
+    const option = node.selection;
+    const core = node.weight === 'spine';
+    const requirement = option && selection.requiredBy?.(option.field, option.id);
+    const requiredByObservability = node.id === 'app-insights' && selection.values.buildingBlocks.includes('observability');
+    const checked = core || requiredByObservability || Boolean(option && selection.values[option.field].includes(option.id));
+    const label = option?.label ?? node.label;
+    return (
+      <div className={`architecture-node architecture-node-${node.weight} architecture-choice ${checked ? 'is-included' : 'is-available'}`}>
+        <label className="architecture-choice-control">
+          <input type="checkbox" checked={checked} disabled={core || requiredByObservability || Boolean(requirement)} aria-label={label}
+            aria-description={requirement}
+            onChange={() => { if (option) selection.onToggle(option.field, option.id); }} />
+          <span className={`architecture-node-icon ${node.brandIcon ? `is-brand is-brand-${node.brandIcon}` : ''}`}>
+            {node.brandIcon ? <BrandIcon type={node.brandIcon} /> : <Icon size={18} />}
+          </span>
+          <span className="architecture-node-copy">
+            <span className="architecture-node-label">{label}</span>
+            <span className="architecture-choice-state">{core ? 'Core \u00b7 Required' : requiredByObservability ? 'Required by Tracing' : requirement ? 'Required by playbook' : checked ? 'Included' : 'Not included'}</span>
+          </span>
+        </label>
+        {node.id === 'foundry-model' && (
+          <div className="architecture-model-choice">
+            <label htmlFor={modelInputId}>Foundry model</label>
+            <select id={modelInputId} value={selection.model} onChange={event => {
+              const model = event.target.value;
+              if (isFoundryModelId(model)) selection.onModelChange(model);
+            }}>
+              {Object.entries(FOUNDRY_MODELS).map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+            </select>
+          </div>
+        )}
+        <ArchitectureNodeInfo node={node} label={label} requirement={requirement} />
+      </div>
+    );
+  }
   return (
     <Link
       to={node.href}
@@ -245,21 +168,21 @@ function ArchitectureNodeLink({ node, dense = false }: { node: ArchitectureNode;
   );
 }
 
-function Spine({ variant }: { variant: ArchitectureVariant }) {
+function Spine({ variant, selection }: { variant: ArchitectureVariant; selection?: ArchitectureSelection }) {
   const [githubCopilotSdk, hostedAgent, foundryModels] = SPINE_NODES;
 
   return (
     <div className={`architecture-spine architecture-spine-${variant}`}>
       <div className="architecture-system-flow">
-        <ArchitectureNodeLink node={githubCopilotSdk} />
+        <ArchitectureNodeLink node={githubCopilotSdk} selection={selection} />
         <div className="architecture-model-connector" aria-hidden="true">
           <span className="architecture-model-connector-label">runs in</span>
         </div>
-        <ArchitectureNodeLink node={hostedAgent} />
+        <ArchitectureNodeLink node={hostedAgent} selection={selection} />
         <div className="architecture-model-connector" aria-hidden="true">
           <span className="architecture-model-connector-label">model calls</span>
         </div>
-        <ArchitectureNodeLink node={foundryModels} />
+        <ArchitectureNodeLink node={foundryModels} selection={selection} />
       </div>
     </div>
   );
@@ -286,37 +209,41 @@ function CompactArchitecture() {
   );
 }
 
-function FullArchitecture() {
+function FullArchitecture({ selection }: { selection?: ArchitectureSelection }) {
   const serviceColumns = [
     {
-      title: 'Intelligence',
-      nodes: COMPLEMENTARY_NODES.filter(node => ['foundry-iq', 'work-iq', 'fabric-iq'].includes(node.id)),
+      title: 'Microsoft IQ',
+      nodes: COMPLEMENTARY_NODES.filter(node => ['foundry-iq', 'work-iq', 'fabric-iq', 'web-iq'].includes(node.id)),
     },
     {
       title: 'Skills + Tools',
       nodes: [SKILLS_NODE, ...COMPLEMENTARY_NODES.filter(node => node.id === 'toolbox')],
-      note: 'Skills and tools plug into the Agent Loop (GHCP SDK) and execute through the Hosted Agent runtime.',
+      note: 'Skills supply domain expertise; tools connect the agent to business actions.',
     },
     {
-      title: 'Control Plane',
-      nodes: COMPLEMENTARY_NODES.filter(node => ['evals', 'content-safety', 'ai-gateway', 'observability'].includes(node.id)),
+      title: 'Optimize',
+      nodes: ['observability', 'evals', 'agent-optimizer', 'agent-insights'].flatMap(id =>
+        COMPLEMENTARY_NODES.filter(node => node.id === id)),
     },
   ];
 
   return (
-    <section className="architecture-strip architecture-strip-full" aria-labelledby="platform-architecture-heading">
+    <section className={`architecture-strip architecture-strip-full ${selection ? 'architecture-configurator' : ''}`}
+      aria-label={selection ? 'Select your architecture' : 'Reference architecture'}>
       <div className="architecture-strip-head">
         <div>
-          <div className="section-eyebrow">Interactive map</div>
-          <h2 id="platform-architecture-heading">Agentic Backbone, Foundry Platform, Azure Foundation.</h2>
-          <p>Use the map to explain the story: GitHub Copilot SDK powers the loop, skills and tools create differentiated value, and Azure Foundry plus Azure foundation services operationalize it for enterprise customers.</p>
+          {!selection && <div className="section-eyebrow">Interactive map</div>}
+          <h2>{selection ? 'Select your architecture' : 'Agentic Backbone, Foundry Platform, Azure Foundation.'}</h2>
+          <p>{selection
+            ? 'The backbone is included. Select optional components together with your customer; hover over or tap an info icon for details and documentation.'
+            : 'Use the map to explain the story: GitHub Copilot SDK powers the loop, skills and tools create differentiated value, and Azure Foundry plus Azure foundation services operationalize it for enterprise customers.'}</p>
         </div>
       </div>
 
       <div className="architecture-full-canvas">
         <div className="architecture-layer architecture-core-layer" aria-label="Core agent system">
           <div className="architecture-layer-label">Agentic Backbone</div>
-          <Spine variant="full" />
+          <Spine variant="full" selection={selection} />
         </div>
 
         <div className="architecture-layer architecture-services-layer" aria-label="Foundry Platform">
@@ -326,8 +253,8 @@ function FullArchitecture() {
               <div key={column.title} className="architecture-service-column">
                 <h3>{column.title}</h3>
                 <div className="architecture-service-stack">
-                  {column.nodes.map(node => <ArchitectureNodeLink key={node.id} node={node} />)}
-                  {column.note && <p className="architecture-service-note">{column.note}</p>}
+                  {column.nodes.map(node => <ArchitectureNodeLink key={node.id} node={node} selection={selection} />)}
+                  {!selection && column.note && <p className="architecture-service-note">{column.note}</p>}
                 </div>
               </div>
             ))}
@@ -337,8 +264,14 @@ function FullArchitecture() {
         <div className="architecture-foundation" aria-label="Foundation services">
           <div className="architecture-foundation-label">Azure Foundation</div>
           <div className="architecture-foundation-grid">
-            {FOUNDATION_NODES.map(node => <ArchitectureNodeLink key={node.id} node={node} dense />)}
+            {FOUNDATION_NODES.map(node => <ArchitectureNodeLink key={node.id} node={node} dense selection={selection} />)}
           </div>
+          {selection && (
+            <div className="architecture-selection-summary">
+              <p role="status">{SPINE_NODES.length} core components + {selectedArchitecture(selection.values).length - SPINE_NODES.length} optional components included</p>
+              <p>Selections describe the build scope; nothing is deployed here. Included playbooks lock their required components. Foundry IQ and Skills share their linked agent-capability selections. Tracing includes App Insights. Azure Container Apps starts selected but can be removed. The brief and unselected guide recommendations never select components.</p>
+            </div>
+          )}
         </div>
       </div>
     </section>
@@ -369,8 +302,8 @@ function BackboneArchitecture() {
   );
 }
 
-export default function ArchitectureStrip({ variant }: { variant: ArchitectureVariant }) {
+export default function ArchitectureStrip({ variant, selection }: { variant: ArchitectureVariant; selection?: ArchitectureSelection }) {
   if (variant === 'compact') return <CompactArchitecture />;
   if (variant === 'backbone') return <BackboneArchitecture />;
-  return <FullArchitecture />;
+  return <FullArchitecture selection={selection} />;
 }

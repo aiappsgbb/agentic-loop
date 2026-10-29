@@ -8,7 +8,7 @@ This playbook builds **Harbor**, a voice concierge for the fictional Woodgrove H
 
 **Use when:** Your experience is spoken or real-time conversational, not text-first.
 
-**Core tech stack:** Azure AI Voice Live, Copilot SDK, Foundry Hosted Agents, Foundry Skills API, Foundry Models
+**Core tech stack:** gpt-live-1 native speech-to-speech, Copilot SDK, Foundry Hosted Agents, Foundry Skills API, Foundry Models
 
 The agent consumes a `guest-services-concierge` skill that defines the spoken response style, hotel facts, tool boundaries, confirmation rules, and staff escalation behavior. The skill is versioned and promoted through the Foundry Skills API, downloaded to writable runtime storage, and loaded into every Copilot SDK session.
 
@@ -22,19 +22,20 @@ The playbook is organized in three chapters:
 
 ### What we will build
 
-A browser app where a Woodgrove guest speaks and hears Harbor reply in real time. Audio streams through Azure AI Voice Live, the Copilot SDK agent follows the governed `guest-services-concierge` skill, and mock hotel data powers amenity answers and service-request tools. Every turn traces latency, interruption, skill version, and escalation.
+A browser app where a Woodgrove guest speaks and hears Harbor reply in real time. The `gpt-live-1` model consumes and produces audio directly; do not implement this as a chained speech-to-text, text-reasoning and text-to-speech pipeline. The hosted Copilot SDK agent follows the governed `guest-services-concierge` skill for business procedures and tool calls, and mock hotel data powers amenity answers and service requests. Validate the voice-session/tool bridge against the chosen Foundry deployment before expanding the app. Every turn traces latency, interruption, skill version, and escalation.
+
+Selecting this playbook adopts **Real-Time Conversations** and **Human-in-the-Loop** for service-action confirmations and staff escalation, not the standalone **Text to Speech** or **Speech to Text** capabilities. For a synthesis-only scenario, select Text to Speech with **MAI-Voice-2.1 or GPT-Audio**. For a transcription-only scenario, select Speech to Text with **MAI-transcribe-2 or GPT-transcribe**. Those independent features do not imply this full voice-first playbook. Validate model availability, quota, protocols and feature support in the chosen Foundry project; do not silently substitute another model or a chained pipeline.
 
 ```mermaid
 flowchart LR
   Mic[User microphone] --> Stream[Real-time audio stream]
-  Stream --> Voice[Azure AI Voice Live]
-  Voice -->|streaming STT| Agent[Foundry Hosted Agent]
+  Stream <--> Voice[gpt-live-1 native speech-to-speech]
+  Voice <-->|business tool calls and results| Agent[Foundry Hosted Agent]
   Agent --> Skill[guest-services-concierge skill]
   Skill --> SkillsAPI[Foundry Skills API]
   Agent --> Model[Foundry Model]
   Agent --> Tools[MCP tools]
-  Agent -->|streaming text| Voice
-  Voice -->|streaming TTS| Speaker[User speaker]
+  Voice -->|native audio output| Speaker[User speaker]
   Bargein[Barge-in / interrupt] --> Voice
   Voice --> Insights[Application Insights + OTel]
   Agent --> Insights
@@ -44,7 +45,7 @@ flowchart LR
 |---|---|---|
 | Frontend | React + Vite on Azure Container Apps | Captures mic audio and plays streamed speech. |
 | Backend API | Python + FastAPI on Azure Container Apps | Bridges the audio stream and the agent session. |
-| Voice | Azure AI Voice Live (streaming STT + TTS) | Low-latency, real-time speech in and out with barge-in. |
+| Voice | gpt-live-1 native speech-to-speech | Direct audio input/output with streaming and barge-in; no chained STT/TTS pipeline. |
 | Agent | Copilot SDK hosted in Microsoft Foundry | Governed runtime that streams partial results. |
 | Runtime skill | Foundry Skills API | Versions and distributes `guest-services-concierge`. |
 | Model | Foundry Models | Frontier reasoning on the Foundry platform. |
@@ -55,7 +56,7 @@ flowchart LR
 **Done means:**
 
 - A user can speak and hear a spoken reply in real time.
-- Speech-to-text and text-to-speech stream, rather than waiting for full turns.
+- Audio streams into and out of a true speech-to-speech model, rather than passing through separate STT/TTS models.
 - The user can barge in and interrupt the agent mid-response.
 - The agent follows the promoted concierge skill and escalates restricted scenarios.
 - End-to-end turn latency is measured and visible.
@@ -71,33 +72,63 @@ flowchart LR
 
 ### Setup
 
-You will need:
+<!-- shared-playbook-setup:start -->
+**Shared prerequisites for every playbook**
 
-- Azure subscription with Contributor permissions, plus a GitHub Copilot plan.
-- GitHub Copilot installed and logged in — use the [Copilot App](http://gh.io/app) (recommended), the [Copilot CLI](https://github.com/features/copilot/cli/), or [Visual Studio Code](https://code.visualstudio.com/download).
-- [GitHub CLI (`gh`)](https://cli.github.com/) installed and logged in.
-- [Azure CLI (`az`)](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) and [Azure Developer CLI (`azd`)](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/install-azd) installed and authenticated.
-- A microphone and speaker (or headset) to exercise the voice loop.
-- Git, Node.js, Python 3.13 and azd Foundry extensions. Approve any readiness-check installation separately.
-- The **foundry-agentic-loop** plugin: in Copilot App use **Customize → Plugins → foundry-agentic-loop → Install**. It bundles the skill, canvas and SDD workflow.
+- An Azure subscription with resource-creation, role-assignment and Foundry data-plane permissions. Preflight checks all required scopes before resources are created; subscription Owner alone does not grant every Foundry data-plane role.
+- A GitHub Copilot plan and the [GitHub Copilot App](https://gh.io/app), installed and signed in. Use App Chat for the build; the [Copilot CLI](https://github.com/features/copilot/cli/) is an alternative execution environment.
+- [GitHub CLI (`gh`)](https://cli.github.com/) v2.90.0+ with `gh skill` available, [Azure CLI (`az`)](https://learn.microsoft.com/cli/azure/install-azure-cli), [Azure Developer CLI (`azd`)](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd) with its Foundry extensions, Git, Node.js and Python 3.13. Approve missing-tool installations separately.
 
-> Install the [published Foundry Agentic Loop plugin](https://github.com/github/awesome-copilot/tree/main/plugins/foundry-agentic-loop). No separate lean plugin, policy-skill installation or Cockpit import is needed. If a bundled component is missing, Copilot asks before reinstalling the plugin. It never installs extensions from a URL or edits Copilot settings. Re-enable disabled extensions in your extension settings and continue in a new session. Without the canvas, continue in Chat; without the workflow, SDD cannot start. Switching to Rapid requires confirmation and an existing Foundry project.
+**Install once; reuse across playbooks.** In Copilot App, choose **Customize → Plugins**, find **foundry-agentic-loop**, then **Install**. The [published Foundry Agentic Loop plugin](https://github.com/github/awesome-copilot/tree/main/plugins/foundry-agentic-loop) bundles the build skill, canvas and SDD workflow. Do not separately install the bundled build skill, legacy policy skill, lean plugin or Cockpit.
 
-Install the published plugin from Copilot CLI if preferred:
-
-  ```bash
-  copilot plugin install foundry-agentic-loop@awesome-copilot
-  ```
-
-Sanity check before you go further:
+Alternatively, install the plugin from Copilot CLI:
 
 ```bash
-az account show                 # confirm the correct tenant and subscription
-azd auth login --check-status   # confirm you are signed in to azd
-copilot plugin list             # expect foundry-agentic-loop
+copilot plugin install foundry-agentic-loop@awesome-copilot
 ```
 
-> **Heads up on cost.** This playbook provisions billable Azure resources (Container Apps, a Foundry/AI Services account, Voice Live, and Application Insights). Leaving them running incurs charges — see [Clean up](#clean-up) to remove everything when you are done.
+The **microsoft-foundry** companion skill is also required. Reuse an existing installation, including one supplied by the Azure plugin. Ask **open the agentic loop** in your project session; Copilot checks for the companion and asks before installing it if missing. For an approved manual installation, run this from your project folder, then reload skills or start a new session:
+
+```bash
+gh skill list
+gh skill install microsoft/azure-skills microsoft-foundry --agent github-copilot --scope project
+```
+
+Run the install command only when the companion is missing. Build skills guide Copilot; runtime domain skills are separate and selected per playbook.
+
+**Authenticate in the execution environment**, including when using a sandbox:
+
+```bash
+gh auth login
+az login
+azd auth login
+```
+
+Check the account, target subscription and tooling before building:
+
+```bash
+gh --version
+gh auth status
+gh skill list
+az account show
+azd version
+azd auth login --check-status
+```
+
+**Open the bundled canvas.** Add your local folder or repository in Copilot App, start a project session and ask **open the agentic loop**. Check **Start** readiness and choose the intended mode. SDD starts from a subscription; Rapid requires an existing Foundry project. Alternative delivery playbooks such as Threadlight retain their own additional prerequisites and workflow. The canvas does not grant deployment permissions or replace Azure sign-in.
+
+The screenshots show this portal's shared setup and project hand-off guidance, not proof that your local tools, plugin or Azure subscription are ready.
+
+![Workshop environment checklist: plugin, companion skill and authentication guidance](../shared/images/environment-setup.png)
+
+![Workshop project setup: add a project and open the bundled Agentic Loop canvas](../shared/images/project-setup.png)
+
+> Important: If a bundled component is missing, Copilot asks before reinstalling the plugin. It never installs extensions from a URL or edits Copilot settings. Re-enable disabled extensions in your extension settings and continue in a new session. Without the canvas, continue in Chat; without the workflow, SDD cannot start. Switching to Rapid requires confirmation and an existing Foundry project.
+
+> Warning: Builds can create billable Azure resources. Confirm the scope, target, model availability and cost before provisioning or deployment. Review each playbook's scenario-specific prerequisites and cleanup instructions; do not delete pre-existing resources.
+<!-- shared-playbook-setup:end -->
+
+**Scenario-specific prerequisites:** A microphone and speaker/headset, gpt-live-1 availability, supported native audio/session protocols, a verified hosted-agent tool bridge, and agreed latency and escalation requirements. See [Clean up](#clean-up) for billable resources.
 
 ## Build
 
@@ -151,7 +182,7 @@ Create realistic mock content under data/woodgrove-hotel: property facts, amenit
 
 Create an immutable guest-services-concierge version through the Foundry Skills API, verify it with spoken-turn evals, promote the passing version to default_version, attach it to the versioned concierge toolbox, and download it into a writable runtime directory before each Copilot SDK voice session. Configure skill_directories to the downloaded folder and trace the skill name/version on every turn.
 
-Stream speech-to-text and text-to-speech through Azure AI Voice Live, support barge-in, and measure time-to-first-audio plus end-to-end latency. Trace audio stages, skill loading, tool calls, escalation, and interruption without storing raw guest audio or sensitive transcripts.
+Use gpt-live-1 for true speech-to-speech: stream audio input and native audio output in the same real-time conversation, support barge-in, and bridge business tool calls to the hosted Copilot SDK agent. Do not replace this with a chained speech-to-text, reasoning and text-to-speech pipeline. Verify model availability, quota, supported audio/session protocols and the tool bridge in the chosen Foundry project; report blockers and confirm any model substitution rather than silently falling back. Measure time-to-first-audio plus end-to-end latency. Trace audio stages, skill loading, tool calls, escalation, and interruption without storing raw guest audio or sensitive transcripts.
 ```
 
 > Foundry Skills are a preview capability. Opt in explicitly (for example, `allow_preview=True`) and fail visibly if publication, promotion, or runtime download does not succeed.
@@ -165,14 +196,14 @@ Use these recommended answers if Copilot asks clarifying questions:
 | Question area | Recommended answer |
 |---|---|
 | Channel | Browser microphone/speaker first; telephony later. |
-| Voice service | Azure AI Voice Live for streaming STT and TTS. |
+| Voice model | gpt-live-1 for native audio input/output, not separate transcription and synthesis models. |
 | Interruption | Support barge-in; the agent stops speaking when the user talks. |
 | Streaming | Stream partial STT and TTS rather than whole turns. |
 | Latency target | Set a per-turn latency budget and display it. |
 | Identity | Managed identity, keyless RBAC. |
 | Runtime skill | `guest-services-concierge`, governed by the Foundry Skills API. |
 
-When the skill finishes, review `docs/spec.md` for these must-have requirements: Woodgrove mock data, streaming STT/TTS, barge-in, Foundry skill versioning/promotion/download, runtime skill consumption, staff escalation, latency measurement, and skill-version tracing.
+When the skill finishes, review `docs/spec.md` for these must-have requirements: Woodgrove mock data, gpt-live-1 native speech-to-speech, a verified hosted-agent tool bridge, barge-in, Foundry skill versioning/promotion/download, runtime skill consumption, staff escalation, latency measurement, and skill-version tracing.
 
 ---
 
@@ -188,9 +219,9 @@ The deployment plan should include:
 
 | Section | What good looks like |
 |---|---|
-| Resource graph | Foundry project, hosted agent, model deployment, Voice Live/Speech, versioned toolbox, governed skill, managed identity, Application Insights, ACA apps. |
-| RBAC | Least-privilege roles for Foundry, Voice/Speech, and telemetry. |
-| Audio pipeline | Streaming transport, STT/TTS wiring, and barge-in handling. |
+| Resource graph | Foundry project, hosted agent, reasoning model where needed, gpt-live-1 speech-to-speech deployment, versioned toolbox, governed skill, managed identity, Application Insights, ACA apps. |
+| RBAC | Least-privilege roles for Foundry model/session access and telemetry. |
+| Audio pipeline | Native speech-to-speech streaming transport, hosted-agent tool bridge, and barge-in handling. |
 | Latency | Per-turn budget, measurement points, and displayed metrics. |
 | Toolbox | MCP servers registered as versioned tools on a Foundry toolbox. |
 | Skill lifecycle | Author, version, evaluate, promote, attach, download, consume, trace, and roll back `guest-services-concierge`. |
@@ -229,9 +260,9 @@ Expected generated artifacts:
 
 The implementation should wire:
 
-1. **Streaming STT** — mic audio streams to Voice Live and returns partial transcripts.
+1. **Native audio input** — mic audio streams directly into the gpt-live-1 conversation.
 2. **Governed skill** — create and promote `guest-services-concierge`, then download it before the Copilot SDK session starts.
-3. **Streaming TTS** — the skill-guided reply streams back without waiting for full turns.
+3. **Native audio output** — the model's spoken reply streams back without a separate TTS stage.
 4. **Barge-in and escalation** — new speech stops playback; restricted scenarios route to staff.
 5. **Telemetry** — each turn emits latency, interruption, escalation, and skill-version spans.
 
@@ -254,9 +285,9 @@ Validate locally against real Azure dependencies.
 
 | Test | Action | Expected result |
 |---|---|---|
-| Speak a turn | Say a short prompt. | Streaming transcript appears and the agent replies in speech. |
-| Streaming | Watch partials. | STT and TTS stream rather than waiting for full turns. |
-| Barge-in | Interrupt mid-reply. | TTS stops and the new turn is captured. |
+| Speak a turn | Say a short prompt. | The speech-to-speech session receives audio and replies in speech. |
+| Streaming | Inspect session events and audio playback. | Native audio streams both ways without separate STT/TTS deployments. |
+| Barge-in | Interrupt mid-reply. | Audio generation/playback stops and the new turn is captured. |
 | Tool call | Ask something that needs a tool. | The tool runs within the spoken turn. |
 | Concierge procedure | Request towels without enough details. | Harbor confirms the required details before the tool call. |
 | Escalation | Report a safety or billing issue. | Harbor routes to staff instead of resolving it. |
@@ -277,8 +308,8 @@ Deploy after local verification passes.
 Deployment readiness checklist:
 
 - [ ] Hosted agent has a valid `agent.yaml` and, where used, `code_configuration`.
-- [ ] Voice Live/Speech access uses managed identity, not keys.
-- [ ] STT and TTS stream; the pipeline does not buffer whole turns.
+- [ ] Foundry model/session access uses managed identity, not keys.
+- [ ] gpt-live-1 streams native audio input/output; no chained STT/TTS fallback is present.
 - [ ] Barge-in stops playback reliably.
 - [ ] `guest-services-concierge` has an immutable version, promoted `default_version`, and rollback target.
 - [ ] Runtime downloads the governed skill to writable storage and configures `skill_directories`.
@@ -294,16 +325,16 @@ After approved deployment, Copilot reports the verified frontend URL. Use Explor
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| Replies feel delayed | Audio is buffered by whole turn | Stream partial STT and TTS and measure time-to-first-audio. |
-| Barge-in does not stop playback | Cancellation is not propagated | Cancel the active TTS stream when new speech is detected. |
+| Replies feel delayed | Audio is buffered by whole turn | Stream native audio input/output and measure time-to-first-audio. |
+| Barge-in does not stop playback | Cancellation is not propagated | Cancel the active audio response/playback when new speech is detected. |
 | Browser has no microphone audio | Permission or secure-context issue | Grant microphone permission and use HTTPS outside localhost. |
-| Voice spans are disconnected | Trace context is lost in the stream bridge | Propagate context across the audio, agent, and TTS pipeline. |
+| Voice spans are disconnected | Trace context is lost in the session/tool bridge | Propagate context across the native audio session, agent, and business tools. |
 
 ## Run
 
 ### Run the voice agent
 
-Open Harbor, grant microphone access, and exercise amenity, accessibility, transport, service-request, and staff-escalation scenarios. Confirm that the promoted concierge skill is traced, partial transcripts and audio stream, barge-in stops playback, and latency remains visible.
+Open Harbor, grant microphone access, and exercise amenity, accessibility, transport, service-request, and staff-escalation scenarios. Confirm that the promoted concierge skill is traced, native audio streams in both directions, barge-in stops playback, and latency remains visible.
 
 ---
 
@@ -313,10 +344,10 @@ Use telemetry to understand whether the experience feels responsive and turns fl
 
 Track:
 
-- End-to-end turn latency (p50/p95) and its breakdown (STT, reasoning, TTS).
+- End-to-end turn latency (p50/p95) and its breakdown (audio input, model response, business tools, audio output).
 - Time-to-first-audio for each reply.
 - Barge-in frequency and how cleanly playback stops.
-- STT accuracy signals and re-prompts.
+- Spoken-intent understanding and re-prompts.
 - Dropped or reconnected audio streams.
 
 Useful Application Insights questions:
@@ -324,7 +355,7 @@ Useful Application Insights questions:
 | Question | Signal |
 |---|---|
 | Does it feel real-time? | p95 turn latency and time-to-first-audio. |
-| Where is latency spent? | STT vs. reasoning vs. TTS span durations. |
+| Where is latency spent? | Native session, model response, business-tool and audio-output span durations. |
 | Are interruptions clean? | Barge-in count and playback-stop latency. |
 | Is audio stable? | Stream drop/reconnect rate. |
 
@@ -337,7 +368,7 @@ Create a small evaluation set focused on the spoken experience.
 | Latency | Representative spoken turns | p95 turn latency within budget. |
 | Time-to-first-audio | Representative turns | First audio arrives within target. |
 | Barge-in | Interrupt scenarios | Playback stops promptly and the new turn is handled. |
-| Transcription | Reference utterances | STT matches intent closely enough to answer. |
+| Spoken understanding | Reference utterances | The speech-to-speech session understands the intended request. |
 | Answer quality | Spoken question, reference answer | Reply matches reference intent. |
 | Skill adherence | Spoken hotel scenario, expected procedure | Harbor follows confirmation and escalation rules. |
 
@@ -361,7 +392,7 @@ git commit -m "chore: tune voice latency and barge-in"
 
 ### Add languages and voices
 
-Start with one locale and voice. Add more once latency is solid, and re-run latency and transcription evals per locale before promoting.
+Start with one locale and voice. Add more once latency is solid, and re-run latency and spoken-understanding evals per locale before promoting.
 
 ---
 
@@ -410,8 +441,7 @@ azd down --purge --force
 
 ### References
 
-- [What is the Voice Live API?](https://learn.microsoft.com/azure/ai-services/speech-service/voice-live)
-- [Voice Live API quickstart](https://learn.microsoft.com/azure/ai-services/speech-service/voice-live-quickstart)
-- [Speech to text overview](https://learn.microsoft.com/azure/ai-services/speech-service/speech-to-text)
-- [Text to speech overview](https://learn.microsoft.com/azure/ai-services/speech-service/text-to-speech)
+- [Foundry model catalog](https://ai.azure.com/explore/models) — validate gpt-live-1 availability and the supported real-time audio/session API in your project.
+- [Standalone speech to text overview](https://learn.microsoft.com/azure/ai-services/speech-service/speech-to-text) — separate from this speech-to-speech playbook.
+- [Standalone text to speech overview](https://learn.microsoft.com/azure/ai-services/speech-service/text-to-speech) — separate from this speech-to-speech playbook.
 - [Observability for generative AI applications](https://learn.microsoft.com/azure/ai-foundry/concepts/observability)
