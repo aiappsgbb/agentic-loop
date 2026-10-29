@@ -2703,11 +2703,160 @@
   gap: 8px;
 }
 
+.architecture-configurator {
+  margin: 18px 0;
+  background: var(--bg-1);
+  overflow: visible;
+}
+.architecture-configurator::before { display: none; }
+.architecture-configurator .architecture-strip-head h2 {
+  margin-top: 0;
+  font-size: 21px;
+}
+.architecture-configurator .architecture-system-flow {
+  grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr) 76px minmax(0, 1fr);
+}
+.architecture-choice {
+  position: relative;
+  display: block;
+  padding: 0;
+  transition: border-color 0.16s, background 0.16s;
+}
+.architecture-configurator .architecture-node-spine { min-height: 0; }
+.architecture-choice:has(.architecture-choice-popover) { z-index: 3; }
+.architecture-choice:hover { transform: none; box-shadow: none; }
+.architecture-choice.is-available {
+  background: transparent;
+  border-style: dashed;
+}
+.architecture-choice.is-included {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--accent) 65%, var(--border-strong));
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-1));
+  box-shadow: none;
+}
+.architecture-choice-control {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  padding: 10px 38px 10px 10px;
+  cursor: pointer;
+}
+.architecture-choice-control:has(input:disabled) { cursor: default; }
+.architecture-choice:has(.architecture-choice-control input:focus-visible) {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 3px;
+}
+.architecture-choice-control input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+.architecture-configurator .architecture-node-icon,
+.architecture-configurator .architecture-node-icon.is-brand {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+}
+.architecture-configurator .architecture-brand-svg,
+.architecture-configurator .architecture-brand-img { width: 28px; height: 28px; }
+.architecture-configurator .architecture-node-label { font-size: 13px; overflow-wrap: anywhere; }
+.architecture-configurator .architecture-node-copy { gap: 2px; }
+.architecture-choice-state { color: var(--text-dim); font-size: 11px; font-weight: 600; }
+.architecture-choice.is-included .architecture-choice-state { color: var(--text); }
+.architecture-choice-help {
+  position: absolute;
+  top: 5px;
+  right: 3px;
+}
+.architecture-choice-info {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 32px;
+  color: var(--text-dim);
+  border-radius: 6px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.architecture-choice-info:hover { color: var(--text); background: var(--surface-strong); }
+.architecture-choice-info:focus-visible,
+.architecture-choice-popover a:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.architecture-choice-popover {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: min(280px, calc(100vw - 48px));
+  padding: 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--bg-1);
+  box-shadow: var(--shadow-1);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.architecture-choice-popover p { margin: 8px 0 12px; color: var(--text-dim); }
+.architecture-choice-popover a { display: inline-block; color: var(--accent-2); font-weight: 600; }
+.architecture-model-choice { margin: 0 10px 10px; }
+.architecture-model-choice label { display: block; margin-bottom: 5px; color: var(--text-dim); font-size: 12px; }
+.architecture-model-choice select {
+  width: 100%;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--bg-1);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+}
+.architecture-configurator .architecture-service-column { padding: 10px; }
+.architecture-configurator .architecture-service-column h3,
+.architecture-configurator .architecture-layer-label,
+.architecture-configurator .architecture-foundation-label {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.architecture-configurator .architecture-foundation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.architecture-selection-summary {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.architecture-selection-summary p { margin: 0; color: var(--text-dim); font-size: 12px; line-height: 1.6; }
+.architecture-selection-summary p[role='status'] { margin-bottom: 5px; color: var(--text); font-weight: 600; }
+.workshop-included-guides { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0; color: var(--text-dim); font-size: 12px; }
+.workshop-guide-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
+.workshop-guide-chip:hover { background: var(--surface-strong); }
+.workshop-guide-chip:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.workshop-required-note { display: block; margin-top: 3px; font-weight: 600; }
+@media (prefers-reduced-motion: reduce) {
+  .architecture-choice { transition: none; }
+}
+
 :root[data-theme='light'] .architecture-node-spine {
   background: linear-gradient(135deg, rgba(107,70,255,0.13), rgba(14,165,233,0.10), rgba(255,255,255,0.88));
 }
 :root[data-theme='light'] .architecture-node-spine .architecture-node-icon {
   color: #fff;
+}
+:root[data-theme='light'] .architecture-configurator .architecture-node-icon.is-brand {
+  color: var(--text);
 }
 
 @media (max-width: 960px) {
@@ -2717,6 +2866,8 @@
   .architecture-service-grid {
     grid-template-columns: 1fr;
   }
+  .architecture-configurator .architecture-system-flow { grid-template-columns: 1fr; }
+  .architecture-configurator .architecture-foundation-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .architecture-model-connector {
     justify-self: center;
     width: 2px;
@@ -2764,6 +2915,9 @@
   .architecture-strip {
     padding: 18px;
   }
+  .architecture-configurator .architecture-foundation-grid { grid-template-columns: 1fr; }
+  .architecture-configurator .architecture-layer,
+  .architecture-configurator .architecture-foundation { padding: 10px; }
 }
 
 /* ---------- FAQ ---------- */
@@ -4620,9 +4774,15 @@ select:focus-visible,
 .workshop-technical { margin: 24px 0; text-align: left; }
 .workshop-technical h3 { margin: 0 0 6px; font-size: 17px; }
 .workshop-technical > p { margin: 0 0 18px; font-size: 13px; }
-.workshop-options-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.workshop-options-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.workshop-pattern-note { margin-top: 12px; font-size: 12px; }
+.workshop-architecture-review { margin: 18px 0; padding: 14px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.workshop-architecture-review h4 { margin: 0 0 8px; }
+.workshop-architecture-review p { font-size: 13px; line-height: 1.7; }
+.workshop-architecture-review small { color: var(--text-dim); }
 .workshop-option-column { min-width: 0; margin: 0; padding: 16px 12px 10px; border: 1px solid var(--border); border-radius: 12px; }
 .workshop-option-column legend { display: flex; align-items: center; gap: 8px; padding: 0 6px; font-size: 14px; font-weight: 700; }
+.workshop-option-help { margin: 0 8px 8px; color: var(--text-dim); font-size: 12px; line-height: 1.6; }
 .workshop-option { display: flex; gap: 10px; align-items: flex-start; padding: 10px 8px; border-radius: 8px; cursor: pointer; }
 .workshop-option:has(input:checked) { background: var(--gradient-soft); }
 .workshop-option:hover { background: var(--surface); }

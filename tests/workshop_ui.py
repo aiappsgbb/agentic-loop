@@ -42,7 +42,7 @@ class WorkshopJourneys(unittest.TestCase):
         self.page.goto(base + path)
         self.page.wait_for_load_state("networkidle")
 
-    def prepare(self, brief):
+    def prepare(self, brief, include_guides=True):
         self.page.get_by_label("What should the customer be able to do?").fill(brief)
         for checkbox in self.page.locator(".workshop-technical input").all():
             if checkbox.is_enabled():
@@ -50,6 +50,10 @@ class WorkshopJourneys(unittest.TestCase):
         self.page.get_by_role("checkbox", name="Identity & Access", exact=False).check()
         self.page.get_by_role("checkbox", name="Observability", exact=False).check()
         self.page.get_by_role("button", name="Prepare workshop", exact=True).click()
+        if include_guides:
+            for checkbox in self.page.locator(".workshop-include input").all():
+                if checkbox.is_enabled():
+                    checkbox.check()
 
     def scope(self, resolutions=""):
         self.page.get_by_label("Who will use the pilot?", exact=True).fill("Customer HR staff")
@@ -199,7 +203,7 @@ class WorkshopJourneys(unittest.TestCase):
         expect(brief).to_have_value("")
         expect(brief).to_have_attribute("placeholder", "Enter the customer brief here...")
         expect(self.page.get_by_label("Use an industry example")).to_have_count(0)
-        frontier = self.page.get_by_role("checkbox", name="Frontier Models", exact=False)
+        frontier = self.page.get_by_role("checkbox", name="Foundry Models", exact=True)
         expect(frontier).to_be_checked()
         expect(frontier).to_be_disabled()
         for theme in ["Light", "Dark"]:
@@ -233,16 +237,16 @@ class WorkshopJourneys(unittest.TestCase):
                 brief = page.get_by_label("What should the customer be able to do?")
                 expect(brief).to_have_value(expected)
                 expect(page.get_by_text("Sample customer brief. Edit or replace it with your own.", exact=True)).to_be_visible()
-                expect(page.get_by_role("checkbox", name="Frontier Models", exact=False)).to_be_checked()
-                expect(page.get_by_role("checkbox", name="Frontier Models", exact=False)).to_be_disabled()
+                expect(page.get_by_role("checkbox", name="Foundry Models", exact=True)).to_be_checked()
+                expect(page.get_by_role("checkbox", name="Foundry Models", exact=True)).to_be_disabled()
                 expect(page.get_by_role("checkbox", name="Identity & Access", exact=False)).to_be_checked()
                 expect(page.get_by_role("checkbox", name="Observability", exact=False)).to_be_checked()
                 selected_name = "Foundry IQ" if index < 2 else "Human-in-the-Loop"
                 expect(page.get_by_role("checkbox", name=selected_name, exact=False)).to_be_checked()
                 expect(page.locator(".workshop-technical textarea")).to_have_count(0)
-                expect(page.get_by_role("group")).to_have_count(3)
+                expect(page.get_by_role("group")).to_have_count(2)
                 column_positions = page.locator(".workshop-option-column").evaluate_all("elements => elements.map(element => element.getBoundingClientRect().x)")
-                self.assertEqual(len(set(column_positions)), 3)
+                self.assertEqual(len(set(column_positions)), 2)
                 for text in [expected, "My customer's editable brief"]:
                     brief.fill(text)
                     page.get_by_role("link", name="Playbook library", exact=True).click()
@@ -270,7 +274,7 @@ class WorkshopJourneys(unittest.TestCase):
         expect(guide.get_by_text("What you can reuse", exact=True)).to_be_visible()
         expect(proposal.get_by_text("Learn while building.", exact=True)).to_be_visible()
         expect(guide.get_by_text("What you'll explore", exact=True)).to_be_visible()
-        expect(guide.get_by_text("Foundry IQ; Agentic Retrieval; Storage.", exact=False)).to_be_visible()
+        expect(guide.get_by_text("Frontier Models; Foundry IQ; Identity & Access; Observability; Evaluations.", exact=False)).to_be_visible()
         expect(guide.get_by_text("What needs adapting", exact=True)).to_be_visible()
         expect(guide.get_by_text("Confirm before building:", exact=True)).to_be_visible()
         expect(guide.get_by_text("Not included:", exact=True)).to_be_visible()
@@ -329,7 +333,7 @@ class WorkshopJourneys(unittest.TestCase):
         self.page.get_by_role("link", name="Start a technical workshop", exact=True).click()
         expect(self.page.get_by_label("Scope notes and decisions", exact=True)).to_have_value("Changed customer constraint")
         self.assertIn("Changed customer constraint", self.approved_spec())
-        self.page.get_by_role("checkbox", name="Storage", exact=False).check()
+        self.page.get_by_role("checkbox", name="Private Networking", exact=True).check()
         expect(self.page.get_by_label("Review workshop")).to_have_count(0)
         self.page.get_by_role("button", name="Prepare workshop", exact=True).click()
         expect(self.page.get_by_role("button", name="Open build prompt", exact=True)).to_have_count(0)
@@ -362,6 +366,8 @@ class WorkshopJourneys(unittest.TestCase):
         policy.get_by_role("link", name="reference architecture", exact=True).click()
         self.page.wait_for_url("**/concepts/platform")
         expect(self.page.get_by_role("heading", name="The reference architecture for the Agentic Loop.", exact=True)).to_be_visible()
+        expect(self.page.locator(".architecture-choice")).to_have_count(0)
+        expect(self.page.locator(".architecture-strip-full .architecture-node")).to_have_count(14)
         self.page.get_by_role("link", name="Start a technical workshop", exact=True).first.click()
         expect(self.page.get_by_label("Scope notes and decisions", exact=True)).to_have_value("Teach citations using approved policy samples.")
         dialog = self.open_prompt()
@@ -403,7 +409,7 @@ class WorkshopJourneys(unittest.TestCase):
         workflow.select_option("threadlight-pipeline")
         pipeline = self.page.get_by_role("article", name="Idea to Production", exact=True)
         expect(pipeline).to_be_visible()
-        expect(pipeline.get_by_role("checkbox", name="Include Idea to Production in build prompt", exact=True)).to_be_disabled()
+        expect(pipeline.get_by_role("checkbox", name="Include Idea to Production in build prompt", exact=True)).to_be_enabled()
         expect(self.continue_button()).to_be_disabled()
         workflow.select_option("agentic-loop")
         expect(pipeline).to_have_count(0)
@@ -458,7 +464,7 @@ class WorkshopJourneys(unittest.TestCase):
         self.prepare("Schedule telescope usage fairly for volunteer teams.")
         expect(self.page.get_by_text("Recommendations use curated rules in your browser, not AI analysis.", exact=False)).to_be_visible()
         expect(self.page.get_by_role("button", name="Propose only gaps with Copilot SDK")).to_have_count(0)
-        self.page.get_by_role("checkbox", name="Frontier Models", exact=False).check()
+        self.page.get_by_role("checkbox", name="Foundry Models", exact=True).check()
         self.page.get_by_role("checkbox", name="Human-in-the-Loop", exact=False).check()
         self.page.get_by_role("button", name="Prepare workshop", exact=True).click()
         self.scope("Customer validated a manual MVP with synthetic scheduling data; live integrations excluded. Fair telescope allocation with manual approval.")
@@ -486,10 +492,10 @@ class WorkshopJourneys(unittest.TestCase):
         expect(self.page.get_by_role("dialog")).to_have_count(0)
         self.page.get_by_role("link", name="Start a technical workshop").last.click()
         expect(self.page.get_by_label("What should the customer be able to do?")).not_to_have_value("")
-        for field, group in [("capabilities", "Capabilities"), ("buildingBlocks", "Building blocks"), ("patterns", "Candidate patterns")]:
+        for field in ["capabilities", "buildingBlocks", "patterns"]:
             for label in demo.get(field, []):
-                name = "Foundry IQ" if label == "Knowledge" else label
-                expect(self.page.get_by_role("group", name=group, exact=True).get_by_role("checkbox", name=name, exact=False)).to_be_checked()
+                name = {"Knowledge": "Foundry IQ", "Frontier Models": "Foundry Models"}.get(label, label)
+                expect(self.page.get_by_role("checkbox", name=name, exact=False)).to_be_checked()
         self.go("/workshop?guide=enterprise-knowledge-grounding")
         self.prepare(HR)
         expect(self.page.get_by_text("Reusable starting point", exact=True)).to_be_visible()
@@ -526,6 +532,363 @@ class WorkshopJourneys(unittest.TestCase):
         self.page.get_by_role("button", name="Open menu").click()
         self.page.get_by_role("link", name="Show an industry demo", exact=True).click()
         expect(self.page.locator(".app-shell")).not_to_have_class(re.compile(r".*is-mobile-open.*"))
+
+    def test_architecture_is_explicit_accessible_and_preserved_in_the_prompt(self):
+        self.go()
+        self.prepare(HR, include_guides=False)
+        architecture = self.page.get_by_role("region", name="Select your architecture", exact=True)
+        for label in ["GitHub Copilot SDK", "Hosted Agent", "Foundry Models"]:
+            expect(architecture.get_by_role("checkbox", name=label, exact=True)).to_be_checked()
+            expect(architecture.get_by_role("checkbox", name=label, exact=True)).to_be_disabled()
+        expect(architecture.locator(".architecture-choice.is-included")).to_have_count(6)
+        expect(architecture.get_by_role("status")).to_have_text("3 core components + 3 optional components included")
+        # Text and unlinked behavior choices never select architecture components.
+        self.page.get_by_label("What should the customer be able to do?").fill(
+            "Use Work IQ, Fabric IQ, AI Search, private networking, tools and multi-agent orchestration.")
+        self.page.get_by_role("checkbox", name="Multi-Agent Orchestration", exact=False).check()
+        expect(architecture.locator(".architecture-choice.is-included")).to_have_count(6)
+        self.page.get_by_label("What should the customer be able to do?").fill(HR)
+        self.page.get_by_role("checkbox", name="Multi-Agent Orchestration", exact=False).uncheck()
+        before = architecture.locator(".architecture-choice").evaluate_all(
+            "elements => elements.map(element => ({x: element.offsetLeft, y: element.offsetTop}))")
+        knowledge = architecture.get_by_role("checkbox", name="Foundry IQ", exact=True)
+        knowledge.focus()
+        self.page.keyboard.press("Space")
+        expect(knowledge).to_be_checked()
+        expect(knowledge).to_have_css("opacity", "0")
+        expect(knowledge.locator("../..")).to_have_css("outline-style", "solid")
+        knowledge.locator("..").click()
+        expect(knowledge).not_to_be_checked()
+        knowledge.locator("..").click()
+        expect(knowledge).to_be_checked()
+        expect(knowledge.locator("..").locator(".architecture-choice-state")).to_have_text("Included")
+        for label in ["Evaluations", "Toolbox", "Skills"]:
+            expect(architecture.get_by_role("checkbox", name=label, exact=True)).not_to_be_checked()
+        for label in ["Content Safety", "Key Vault", "AI Search", "Data Persistence", "Storage"]:
+            expect(architecture.get_by_role("checkbox", name=label, exact=True)).to_have_count(0)
+        expect(architecture.get_by_role("checkbox", name="App Insights", exact=True)).to_be_checked()
+        expect(architecture.get_by_role("checkbox", name="App Insights", exact=True)).to_be_disabled()
+        after = architecture.locator(".architecture-choice").evaluate_all(
+            "elements => elements.map(element => ({x: element.offsetLeft, y: element.offsetTop}))")
+        self.assertEqual(before, after, "Selections must not rearrange the map")
+        self.page.get_by_role("checkbox", name="Image Generation", exact=False).check()
+        expect(architecture.locator(".architecture-choice.is-included")).to_have_count(7)
+        architecture.get_by_role("button", name="About Foundry IQ", exact=True).hover()
+        architecture.get_by_role("link", name="Learn more about Foundry IQ", exact=True).click()
+        self.page.wait_for_url("**/concepts/platform/foundry#foundry-iq")
+        self.page.get_by_role("link", name="Start a technical workshop", exact=True).first.click()
+        expect(knowledge).to_be_checked()
+        self.page.get_by_role("button", name="Prepare workshop", exact=True).click()
+        self.scope("Pilot scope reviewed; image generation uses approved sample inputs.")
+        expect(self.page.locator(".workshop-architecture-review")).to_contain_text("Foundry IQ")
+        dialog = self.open_prompt()
+        prompt = dialog.locator(".prompt-preview pre").inner_text()
+        selected = prompt.split("### Selected reference architecture\n\n")[1].split("\n\n###")[0]
+        self.assertEqual(selected, "- GitHub Copilot SDK\n- Hosted Agent\n- Foundry Models\n- Foundry IQ\n- Observability\n- Identity & Access\n- App Insights")
+        self.assertIn("- Image Generation", prompt)
+        self.assertIn("Do not silently add optional components", prompt)
+        self.page.keyboard.press("Escape")
+        architecture.get_by_role("checkbox", name="Private Networking", exact=True).check()
+        expect(self.page.get_by_label("Review workshop")).to_have_count(0)
+        self.page.get_by_role("button", name="Prepare workshop", exact=True).click()
+        expect(self.page.get_by_role("button", name="Open build prompt", exact=True)).to_have_count(0)
+        self.assertIn("- Private Networking", self.approved_spec())
+        self.page.get_by_role("link", name="Agentic Loop home", exact=True).click()
+        backbone = self.page.locator(".architecture-strip-backbone")
+        expect(backbone.locator("a.architecture-node")).to_have_count(3)
+        expect(backbone.locator("input")).to_have_count(0)
+        expect(self.page.get_by_role("checkbox", name="Private Networking", exact=True)).to_be_checked()
+
+    def test_architecture_info_is_compact_accessible_and_does_not_change_selections(self):
+        for width, theme in [(1440, "Light"), (1440, "Dark"), (1024, "Light"), (768, "Light"), (390, "Light"), (390, "Dark")]:
+            with self.subTest(width=width, theme=theme):
+                self.page.set_viewport_size({"width": width, "height": 900})
+                self.go()
+                menu_visible = self.page.get_by_role("button", name="Open menu", exact=True).is_visible()
+                if menu_visible:
+                    self.page.get_by_role("button", name="Open menu", exact=True).click()
+                self.page.get_by_role("button", name=theme, exact=True).click()
+                if menu_visible:
+                    self.page.get_by_role("button", name="Close menu", exact=True).click()
+                architecture = self.page.get_by_role("region", name="Select your architecture", exact=True)
+                nodes = architecture.locator(".architecture-choice")
+                for checkbox in architecture.get_by_role("checkbox").all():
+                    expect(checkbox).to_have_css("opacity", "0")
+                before = nodes.evaluate_all("nodes => nodes.map(node => node.querySelector('input').checked)")
+                expect(architecture.locator(".architecture-node-caption")).to_have_count(0)
+                if width == 1440:
+                    self.assertLessEqual(nodes.filter(has=self.page.get_by_role("checkbox", name="Foundry IQ", exact=True))
+                                         .bounding_box()["height"], 76)
+                for info in architecture.get_by_role("button", name=re.compile(r"^About ")).all():
+                    info.hover()
+                    expect(info).to_have_attribute("aria-expanded", "true")
+                    panel = architecture.get_by_role("region", name=info.get_attribute("aria-label"), exact=True)
+                    expect(panel).to_be_visible()
+                    expect(panel.locator("p").first).not_to_be_empty()
+                    expect(panel.get_by_role("link")).to_have_text("Learn more")
+                    bounds = panel.bounding_box()
+                    self.assertGreaterEqual(bounds["x"], 0)
+                    self.assertLessEqual(bounds["x"] + bounds["width"], width)
+                    panel.get_by_role("link").hover()
+                    expect(panel).to_be_visible()
+                    architecture.get_by_role("heading", name="Select your architecture", exact=True).hover()
+                    expect(panel).to_have_count(0)
+
+                info = architecture.get_by_role("button", name="About Foundry IQ", exact=True)
+                info.focus()
+                panel = architecture.get_by_role("region", name="About Foundry IQ", exact=True)
+                expect(panel).to_contain_text("Grounded knowledge, connectors, and retrieval.")
+                self.page.keyboard.press("Tab")
+                expect(panel.get_by_role("link")).to_be_focused()
+                self.page.keyboard.press("Escape")
+                expect(info).to_be_focused()
+                expect(info).to_have_attribute("aria-expanded", "false")
+                expect(panel).to_have_count(0)
+                info.click()
+                expect(panel).to_be_visible()
+                self.snapshot(f"compact-info-{width}-{theme.lower()}.png")
+                architecture.get_by_role("heading", name="Select your architecture", exact=True).click()
+                expect(panel).to_have_count(0)
+                expect(info).to_have_attribute("aria-expanded", "false")
+                self.assertEqual(before, nodes.evaluate_all("nodes => nodes.map(node => node.querySelector('input').checked)"))
+                self.assertLessEqual(self.page.evaluate("document.documentElement.scrollWidth"), width)
+
+    def test_architecture_info_opens_and_links_on_touch_devices(self):
+        with self.browser.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True) as context:
+            page = context.new_page()
+            page.on("pageerror", lambda error: self.errors.append(str(error)))
+            page.goto(BASE + "/workshop")
+            architecture = page.get_by_role("region", name="Select your architecture", exact=True)
+            expect(architecture.get_by_role("checkbox")).to_have_count(14)
+            before = architecture.get_by_role("checkbox").evaluate_all("inputs => inputs.map(input => input.checked)")
+            info = architecture.get_by_role("button", name="About Foundry IQ", exact=True)
+            panel = architecture.get_by_role("region", name="About Foundry IQ", exact=True)
+            info.tap()
+            expect(panel).to_be_visible()
+            architecture.get_by_role("heading", name="Select your architecture", exact=True).tap()
+            expect(panel).to_have_count(0)
+            info.tap()
+            expect(panel).to_contain_text("Grounded knowledge, connectors, and retrieval.")
+            self.assertEqual(before, architecture.get_by_role("checkbox").evaluate_all("inputs => inputs.map(input => input.checked)"))
+            panel.get_by_role("link", name="Learn more about Foundry IQ", exact=True).tap()
+            page.wait_for_url("**/concepts/platform/foundry#foundry-iq")
+
+    def test_every_optional_architecture_component_toggles_in_both_themes_and_on_mobile(self):
+        for width, theme in [(1440, "Light"), (1440, "Dark"), (390, "Light"), (390, "Dark")]:
+            with self.subTest(width=width, theme=theme):
+                self.page.set_viewport_size({"width": width, "height": 900})
+                self.go()
+                self.prepare(HR, include_guides=False)
+                if width < 720:
+                    self.page.get_by_role("button", name="Open menu", exact=True).click()
+                self.page.get_by_role("button", name=theme, exact=True).click()
+                if width < 720:
+                    self.page.get_by_role("button", name="Close menu", exact=True).click()
+                architecture = self.page.get_by_role("region", name="Select your architecture", exact=True)
+                nodes = architecture.locator(".architecture-choice")
+                positions = nodes.evaluate_all(
+                    "elements => elements.map(element => ({x: element.offsetLeft, y: element.offsetTop}))")
+                for checkbox in architecture.get_by_role("checkbox").all():
+                    if checkbox.is_enabled():
+                        checkbox.check()
+                        expect(checkbox).to_be_checked()
+                expect(architecture.get_by_role("status")).to_have_text("3 core components + 11 optional components included")
+                self.assertEqual(positions, nodes.evaluate_all(
+                    "elements => elements.map(element => ({x: element.offsetLeft, y: element.offsetTop}))"))
+                for checkbox in architecture.get_by_role("checkbox").all():
+                    if checkbox.is_enabled():
+                        checkbox.uncheck()
+                        expect(checkbox).not_to_be_checked()
+                expect(architecture.get_by_role("status")).to_have_text("3 core components + 0 optional components included")
+                self.assertLessEqual(self.page.evaluate("document.documentElement.scrollWidth"), width)
+                self.snapshot(f"architecture-{width}-{theme.lower()}.png")
+
+    def test_preselected_playbooks_adopt_and_lock_the_shared_catalogue_requirements(self):
+        catalogue = json.loads(Path("src/data/playbooks.json").read_text())
+        agent_labels = {"Human-in-the-Loop", "Domain-Specific Agents", "Knowledge Grounding", "Multi-Agent Orchestration"}
+        for guide in catalogue:
+            if guide["role"] == "onboarding":
+                continue
+            with self.subTest(guide=guide["slug"]):
+                self.go("/workshop?guide=" + guide["slug"])
+                for label in guide.get("capabilities", []) + guide.get("building_blocks", []) + [
+                    label for label in guide["patterns"] if label in agent_labels]:
+                    checkbox = self.page.get_by_role("checkbox", name="Foundry Models" if label == "Frontier Models" else label, exact=True)
+                    expect(checkbox).to_be_checked()
+                    expect(checkbox).to_be_disabled()
+                expect(self.page.get_by_role("checkbox", name="App Insights", exact=True)).to_be_checked()
+                expect(self.page.get_by_role("checkbox", name="App Insights", exact=True)).to_be_disabled()
+                self.page.get_by_role("button", name="Remove " + guide["name"] + " playbook", exact=True).click()
+                expect(self.page.get_by_role("checkbox", name="Evaluations", exact=True)).to_be_enabled()
+                expect(self.page.get_by_role("checkbox", name="Real-Time Conversations", exact=True)).not_to_be_checked()
+                expect(self.page.get_by_role("checkbox", name="Foundry IQ", exact=True)).not_to_be_checked()
+                expect(self.page.get_by_role("checkbox", name="Observability", exact=True)).to_be_checked()
+
+    def test_suggested_guides_do_not_change_architecture_and_inherited_requirements_do_not_recommend_more_guides(self):
+        self.go()
+        self.prepare(HR, include_guides=False)
+        iq = self.page.get_by_role("checkbox", name="Foundry IQ", exact=True)
+        evaluations = self.page.get_by_role("checkbox", name="Evaluations", exact=True)
+        include = self.page.get_by_role("checkbox", name="Include Enterprise Knowledge Grounding in build prompt", exact=True)
+        expect(include).not_to_be_checked()
+        expect(iq).not_to_be_checked()
+        expect(evaluations).not_to_be_checked()
+        include.check()
+        expect(iq).to_be_checked()
+        expect(iq).to_be_disabled()
+        expect(evaluations).to_be_checked()
+        expect(evaluations).to_be_disabled()
+        expect(self.page.get_by_role("article", name="Continuous Evaluation Loop", exact=True)).to_have_count(0)
+        self.page.get_by_label("Add another guide (optional)", exact=False).select_option("bring-your-own-skills")
+        self.page.get_by_role("button", name="Remove Enterprise Knowledge Grounding playbook", exact=True).click()
+        expect(iq).not_to_be_checked()
+        expect(evaluations).to_be_disabled()
+        self.page.get_by_role("button", name="Remove Bring Your Own Skills playbook", exact=True).click()
+        expect(evaluations).not_to_be_checked()
+        expect(evaluations).to_be_enabled()
+
+        iq.check()
+        self.page.get_by_role("button", name="Prepare workshop", exact=True).click()
+        self.page.get_by_role("checkbox", name="Include Enterprise Knowledge Grounding in build prompt", exact=True).check()
+        self.page.get_by_role("button", name="Remove Enterprise Knowledge Grounding playbook", exact=True).click()
+        expect(iq).to_be_checked()
+        expect(iq).to_be_enabled()
+
+    def test_voice_first_is_native_speech_to_speech_and_standalone_audio_stays_independent(self):
+        for label in ["Text to Speech", "Speech to Text"]:
+            self.go()
+            self.prepare("Process approved sample inputs for a customer pilot.", include_guides=False)
+            self.page.get_by_role("checkbox", name=label, exact=True).check()
+            self.page.get_by_role("button", name="Prepare workshop", exact=True).click()
+            expect(self.page.get_by_role("article", name="Voice-First Agent Blueprint", exact=True)).to_have_count(0)
+            expect(self.page.get_by_role("checkbox", name="Real-Time Conversations", exact=True)).not_to_be_checked()
+
+        self.go("/workshop?guide=voice-first-agent-blueprint")
+        realtime = self.page.get_by_role("checkbox", name="Real-Time Conversations", exact=True)
+        expect(realtime).to_be_checked()
+        expect(realtime).to_be_disabled()
+        human_review = self.page.get_by_role("checkbox", name="Human-in-the-Loop", exact=True)
+        expect(human_review).to_be_checked()
+        expect(human_review).to_be_disabled()
+        for label in ["Text to Speech", "Speech to Text"]:
+            expect(self.page.get_by_role("checkbox", name=label, exact=True)).not_to_be_checked()
+            expect(self.page.get_by_role("checkbox", name=label, exact=True)).to_be_enabled()
+        self.prepare("Provide a voice-first concierge with barge-in.", include_guides=False)
+        self.scope("Use approved synthetic hotel scenarios and validate native audio and the hosted-agent tool bridge.")
+        prompt = self.open_prompt().locator(".prompt-preview pre").inner_text()
+        self.assertIn("- Real-Time Conversations: gpt-live-1", prompt)
+        self.assertIn("- Human-in-the-Loop", prompt)
+        self.assertIn("Do not substitute a chained speech-to-text, reasoning and text-to-speech pipeline", prompt)
+        for model in ["MAI-Voice-2.1", "GPT-Audio", "MAI-transcribe-2", "GPT-transcribe"]:
+            self.assertNotIn(model, prompt)
+
+    def test_model_capability_mappings_are_visible_and_reach_the_build_prompt(self):
+        self.go()
+        self.prepare(HR)
+        mappings = {
+            "Image Generation": "GPT-Image-2.5 or MAI-Image-2.6",
+            "Text to Speech": "MAI-Voice-2.1 or GPT-Audio",
+            "Speech to Text": "MAI-transcribe-2 or GPT-transcribe",
+            "Real-Time Conversations": "gpt-live-1",
+        }
+        for label, models in mappings.items():
+            checkbox = self.page.get_by_role("checkbox", name=label, exact=True)
+            expect(checkbox).to_have_accessible_description(models)
+            expect(checkbox.locator("..").locator("small")).to_have_text(models)
+            checkbox.check()
+        expect(self.page.get_by_label("Foundry model", exact=True)).to_have_value("auto")
+        self.page.get_by_role("button", name="Prepare workshop", exact=True).click()
+        self.scope("Validate the listed image and speech model candidates using approved synthetic inputs; exclude production use.")
+        prompt = self.open_prompt().locator(".prompt-preview pre").inner_text()
+        self.assertIn("### Capability model candidates", prompt)
+        for label, models in mappings.items():
+            self.assertIn(f"- {label}: {models}", prompt)
+        self.assertIn("confirm any substitution before proceeding", prompt)
+
+    def test_model_choice_is_explicit_persistent_and_included_in_the_confirmed_prompt(self):
+        self.go()
+        model = self.page.get_by_label("Foundry model", exact=True)
+        expect(model).to_have_value("auto")
+        self.assertEqual(model.locator("option").all_text_contents(), [
+            "Auto", "GPT-6.1 Sol", "GPT-6 Luna", "Claude Sonnet 5.5",
+        ])
+        self.page.get_by_label("What should the customer be able to do?").fill("Use Claude Sonnet 5.5 for a customer pilot.")
+        expect(model).to_have_value("auto")
+        self.prepare(HR)
+        expect(self.page.get_by_role("heading", name="Microsoft IQ", exact=True)).to_be_visible()
+        model_capabilities = self.page.get_by_role("group", name="Model capabilities", exact=True)
+        self.assertEqual(model_capabilities.get_by_role("checkbox").count(), 4)
+        for removed in ["Forms Recognition", "Workflow Automation"]:
+            expect(self.page.get_by_role("checkbox", name=removed, exact=False)).to_have_count(0)
+        agents = self.page.get_by_role("group", name="Agent capabilities", exact=True)
+        self.assertEqual(agents.locator(".workshop-option-label").all_text_contents(), [
+            "Human-in-the-Loop", "Domain-Specific Agents", "Knowledge Grounding", "Multi-Agent Orchestration",
+        ])
+        self.page.get_by_role("button", name="About Skills", exact=True).hover()
+        expect(self.page.get_by_role("region", name="About Skills", exact=True)).to_contain_text("domain-specific agent tasks")
+        self.page.get_by_role("heading", name="Select your architecture", exact=True).hover()
+        for value, label in [
+            ("gpt-6.1-sol", "GPT-6.1 Sol"), ("gpt-6-luna", "GPT-6 Luna"),
+            ("claude-sonnet-5.5", "Claude Sonnet 5.5"), ("auto", "Auto"),
+        ]:
+            model.select_option(value)
+            expect(self.page.get_by_label("Review workshop")).to_have_count(0)
+            self.page.get_by_role("button", name="Prepare workshop", exact=True).click()
+            self.scope()
+            expect(self.page.locator(".workshop-architecture-review")).to_contain_text("Foundry model: " + label)
+            dialog = self.open_prompt()
+            self.assertIn(f"### Foundry model\n\n{label} ({value})", dialog.locator(".prompt-preview pre").inner_text())
+            self.assertIn("### Agent capabilities", dialog.locator(".prompt-preview pre").inner_text())
+            self.page.keyboard.press("Escape")
+            expect(self.page.get_by_role("button", name="Open build prompt", exact=True)).to_be_enabled()
+        model.select_option("gpt-6-luna")
+        self.page.get_by_role("link", name="Playbook library", exact=True).click()
+        self.page.get_by_role("link", name="Start a technical workshop", exact=True).click()
+        expect(model).to_have_value("gpt-6-luna")
+        self.assertLessEqual(self.page.evaluate("document.documentElement.scrollWidth"), self.page.viewport_size["width"])
+
+    def test_agent_capabilities_share_map_choices_and_observability_requires_app_insights(self):
+        self.go()
+        self.prepare(HR, include_guides=False)
+        architecture = self.page.get_by_role("region", name="Select your architecture", exact=True)
+        agents = self.page.get_by_role("group", name="Agent capabilities", exact=True)
+        for capability, component in [("Knowledge Grounding", "Foundry IQ"), ("Domain-Specific Agents", "Skills")]:
+            behavior = agents.get_by_role("checkbox", name=capability, exact=False)
+            node = architecture.get_by_role("checkbox", name=component, exact=True)
+            behavior.check()
+            expect(node).to_be_checked()
+            node.uncheck()
+            expect(behavior).not_to_be_checked()
+            node.check()
+            expect(behavior).to_be_checked()
+            behavior.uncheck()
+            expect(node).not_to_be_checked()
+        observability = architecture.get_by_role("checkbox", name="Observability", exact=True)
+        app_insights = architecture.get_by_role("checkbox", name="App Insights", exact=True)
+        expect(app_insights).to_be_checked()
+        expect(app_insights).to_be_disabled()
+        expect(app_insights.locator("..")).to_contain_text("Required by Observability")
+        architecture.get_by_role("checkbox", name="AI Gateway", exact=True).check()
+        observability.uncheck()
+        expect(app_insights).not_to_be_checked()
+        expect(app_insights).to_be_enabled()
+        app_insights.check()
+        observability.check()
+        expect(app_insights).to_be_checked()
+        expect(app_insights).to_be_disabled()
+        observability.uncheck()
+        expect(app_insights).to_be_checked()
+        expect(app_insights).to_be_enabled()
+        agents.get_by_role("checkbox", name="Domain-Specific Agents", exact=False).check()
+        self.page.get_by_role("button", name="Prepare workshop", exact=True).click()
+        self.scope("Customer scope reviewed; domain skills and AI Gateway included.")
+        data = self.approved_spec()
+        self.assertIn("- Domain-Specific Agents", data)
+        self.assertIn("- Skills", data)
+        self.assertIn("- App Insights", data)
+        architecture.get_by_role("checkbox", name="Skills", exact=True).uncheck()
+        expect(agents.get_by_role("checkbox", name="Domain-Specific Agents", exact=False)).not_to_be_checked()
+        expect(self.page.get_by_label("Review workshop")).to_have_count(0)
 
 
 if __name__ == "__main__":

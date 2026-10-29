@@ -5,13 +5,17 @@ import { playbooks } from '../src/data/catalog';
 import {
   recommendWorkshop,
   approvalIsCurrent, formatWorkshopSpec, formatWorkshopSpecMarkdown, canApproveSpec, type WorkshopSpec,
-  withRequiredCapabilities,
+  withRequiredCapabilities, resolvePlaybookSelections,
 } from '../src/data/workshop';
 import { buildAdvisorPackage, inferRequirementsFromSelections } from '../src/data/advisor';
 import workshopBriefs from '../src/data/workshop-briefs.json';
 import { newWorkshopDraft } from '../src/components/WorkshopContext';
 import { FOUNDRY_LOOP } from '../src/data/buildWorkflow';
 import { getBuildSkill, skillInstallCommand, skillRawUrl, skillRepoUrl } from '../src/data/skills';
+import {
+  ARCHITECTURE_NODES, ARCHITECTURE_OPTIONS, SPINE_NODES, selectedArchitecture,
+  FOUNDRY_MODELS, MODEL_CAPABILITY_OPTIONS, isFoundryModelId, normalizeWorkshopSelections, withObservability,
+} from '../src/data/architecture';
 
 const hr = 'Employees need HR policy answers grounded in approved documents with citations.';
 test('production hosting serves playbook deep links through the SPA fallback', () => {
@@ -32,12 +36,13 @@ test('three sample briefs cover reuse, gaps and a custom outcome without preappr
     assert.equal(draft.brief, brief);
     assert.equal(draft.prepared, false);
     assert.equal(draft.approved, null);
+    assert.equal(draft.model, 'auto');
     assert.ok(draft.capabilities.includes('frontier-models'));
     assert.deepEqual(draft.buildingBlocks, ['identity', 'observability']);
     assert.ok(!draft.patterns.includes('multi-agent'));
   }
   assert.deepEqual(newWorkshopDraft(workshopBriefs[0]).capabilities, ['frontier-models', 'knowledge']);
-  assert.deepEqual(newWorkshopDraft(workshopBriefs[1]).patterns, ['knowledge-grounding']);
+  assert.deepEqual(newWorkshopDraft(workshopBriefs[1]).patterns, []);
   assert.deepEqual(newWorkshopDraft(workshopBriefs[2]).patterns, ['human-in-the-loop']);
   assert.deepEqual(newWorkshopDraft('A customer-authored brief').capabilities, ['frontier-models']);
   assert.deepEqual(workshopBriefs.map(brief => {
@@ -50,6 +55,83 @@ test('frontier models are a required capability for fresh, empty and existing se
   assert.deepEqual(withRequiredCapabilities([]), ['frontier-models']);
   assert.deepEqual(withRequiredCapabilities(['knowledge']), ['frontier-models', 'knowledge']);
   assert.deepEqual(withRequiredCapabilities(['frontier-models', 'knowledge', 'frontier-models']), ['frontier-models', 'knowledge']);
+});
+test('architecture has a fixed backbone and one explicit selection per optional node', () => {
+  const core = SPINE_NODES.map(node => node.label);
+  assert.deepEqual(selectedArchitecture({ capabilities: [], buildingBlocks: [] }), core);
+  assert.equal(new Set(ARCHITECTURE_NODES.map(node => node.id)).size, ARCHITECTURE_NODES.length);
+  assert.equal(new Set(ARCHITECTURE_OPTIONS.map(option => `${option.field}:${option.id}`)).size, ARCHITECTURE_OPTIONS.length);
+  assert.equal(ARCHITECTURE_OPTIONS.length, ARCHITECTURE_NODES.length - SPINE_NODES.length);
+  for (const option of ARCHITECTURE_OPTIONS) {
+    const values = { capabilities: [], buildingBlocks: [], [option.field]: [option.id] };
+    assert.deepEqual(selectedArchitecture(values), [...core, option.label, ...(option.id === 'observability' ? ['App Insights'] : [])]);
+    assert.ok(option.description && option.link.startsWith('/concepts/'));
+  }
+});
+test('architecture choices include only selected components and the explicit observability dependency', () => {
+  const values = {
+    capabilities: ['frontier-models', 'knowledge'],
+    buildingBlocks: ['identity', 'observability'],
+  };
+  const architecture = selectedArchitecture(values);
+  assert.deepEqual(architecture, [
+    'GitHub Copilot SDK', 'Hosted Agent', 'Foundry Models', 'Foundry IQ', 'Observability', 'Identity & Access', 'App Insights',
+  ]);
+  for (const excluded of ['AI Search', 'Storage', 'Key Vault', 'Evaluations', 'Toolbox', 'Skills']) {
+    assert.ok(!architecture.includes(excluded));
+  }
+  assert.deepEqual(selectedArchitecture({ ...values, buildingBlocks: ['data'] }), [
+    'GitHub Copilot SDK', 'Hosted Agent', 'Foundry Models', 'Foundry IQ',
+  ]);
+  assert.deepEqual(values.buildingBlocks, ['identity', 'observability']);
+});
+test('observability requires App Insights without persisting an automatically added selection', () => {
+  const raw = ['identity', 'observability'];
+  assert.deepEqual(withObservability(raw), ['identity', 'observability', 'app-insights']);
+  assert.deepEqual(raw, ['identity', 'observability']);
+  assert.deepEqual(withObservability(raw.filter(id => id !== 'observability')), ['identity']);
+  assert.deepEqual(withObservability(['app-insights']), ['app-insights']);
+  assert.deepEqual(withObservability(['observability', 'app-insights']), ['observability', 'app-insights']);
+  assert.deepEqual(inferRequirementsFromSelections(['observability']), ['observability']);
+});
+test('existing linked capabilities normalize to one canonical selection and removed choices do not linger', () => {
+  const original = {
+    capabilities: ['frontier-models', 'forms', 'knowledge'],
+    buildingBlocks: ['identity', 'content-safety', 'key-vault', 'ai-search', 'data', 'storage'],
+    patterns: ['workflow', 'knowledge-grounding', 'domain', 'human-in-the-loop'],
+  };
+  const normalized = normalizeWorkshopSelections(original);
+  assert.deepEqual(normalized, {
+    capabilities: ['frontier-models', 'knowledge'],
+    buildingBlocks: ['identity', 'agent-skills'],
+    patterns: ['human-in-the-loop'],
+  });
+  assert.deepEqual(normalizeWorkshopSelections(normalized), normalized);
+  assert.ok(original.patterns.includes('domain'));
+  assert.ok(!normalized.patterns.includes('knowledge-grounding'));
+  assert.deepEqual(normalizeWorkshopSelections({ ...normalized, capabilities: [], buildingBlocks: [] }), {
+    capabilities: [], buildingBlocks: [], patterns: ['human-in-the-loop'],
+  });
+});
+test('the model shortlist is explicit, defaults to Auto and rejects unsupported identifiers', () => {
+  assert.deepEqual(Object.keys(FOUNDRY_MODELS), ['auto', 'gpt-6.1-sol', 'gpt-6-luna', 'claude-sonnet-5.5']);
+  for (const id of Object.keys(FOUNDRY_MODELS)) assert.ok(isFoundryModelId(id));
+  assert.ok(!isFoundryModelId('unknown'));
+  assert.ok(!isFoundryModelId('__proto__'));
+  assert.equal(newWorkshopDraft('Use GPT-6 Luna for the customer pilot.').model, 'auto');
+});
+test('explicit architecture choices participate in existing guide coverage without adding components', () => {
+  for (const [selection, requirement] of [
+    ['evals', 'evals'], ['toolbox', 'integration'],
+    ['work-iq', 'integration'], ['fabric-iq', 'integration'], ['knowledge', 'knowledge-grounding'],
+  ]) {
+    const result = recommendWorkshop('A customer workshop pilot.', [selection]);
+    assert.ok(result.requirements.some(r => r.id === requirement));
+  }
+  const values = { capabilities: ['work-iq'], buildingBlocks: ['evals'] };
+  const before = selectedArchitecture(values);
+  recommendWorkshop(hr, [...values.capabilities, ...values.buildingBlocks]);
+  assert.deepEqual(selectedArchitecture(values), before);
 });
 test('HR citations reuse maintained grounding, never onboarding or wildcard workflows', () => {
   const result = recommendWorkshop(hr);
@@ -115,14 +197,77 @@ test('manually authored technical selections remain explicit uncovered requireme
   assert.equal(result.guides[0].playbook.slug, 'enterprise-knowledge-grounding');
 });
 
+test('every playbook uses the shared workshop catalogue for required capabilities and building blocks', () => {
+  for (const guide of playbooks) {
+    const raw = { capabilities: [], buildingBlocks: [], patterns: [] };
+    const result = resolvePlaybookSelections(raw, [guide]);
+    assert.ok(result.selections.capabilities.includes('frontier-models'));
+    assert.deepEqual(raw, { capabilities: [], buildingBlocks: [], patterns: [] });
+    for (const sources of Object.values(result.requiredBy)) {
+      for (const names of Object.values(sources)) assert.deepEqual(names, [guide.name]);
+    }
+  }
+  assert.throws(() => resolvePlaybookSelections({ capabilities: [], buildingBlocks: [], patterns: [] },
+    [{ ...playbooks[1], building_blocks: ['Invalid requirement'] }]), /Unknown buildingBlocks requirement/);
+});
+test('playbook requirements are derived, shared, and released without losing independent choices', () => {
+  const raw = { capabilities: ['knowledge'], buildingBlocks: ['agent-skills'], patterns: [] };
+  const grounding = playbooks.find(p => p.slug === 'enterprise-knowledge-grounding')!;
+  const voice = playbooks.find(p => p.slug === 'voice-first-agent-blueprint')!;
+  const both = resolvePlaybookSelections(raw, [grounding, voice]);
+  assert.deepEqual(both.requiredBy.buildingBlocks.observability, [grounding.name, voice.name]);
+  assert.deepEqual(both.requiredBy.buildingBlocks['app-insights'], [grounding.name, voice.name]);
+  assert.ok(both.selections.capabilities.includes('realtime'));
+  assert.ok(both.selections.buildingBlocks.includes('app-insights'));
+  const remaining = resolvePlaybookSelections(raw, [voice]);
+  assert.deepEqual(remaining.requiredBy.buildingBlocks.observability, [voice.name]);
+  assert.ok(remaining.selections.capabilities.includes('knowledge'));
+  assert.equal(remaining.requiredBy.capabilities.knowledge, undefined);
+  const removed = resolvePlaybookSelections(raw, []);
+  assert.deepEqual(removed.selections, { ...raw, capabilities: ['frontier-models', 'knowledge'] });
+});
+test('linked agent capabilities inherit one canonical locked requirement', () => {
+  const guide = playbooks.find(p => p.slug === 'multi-agent-orchestration')!;
+  const result = resolvePlaybookSelections({ capabilities: [], buildingBlocks: [], patterns: [] }, [guide]);
+  assert.ok(result.selections.patterns.includes('multi-agent'));
+  assert.ok(result.selections.buildingBlocks.includes('agent-skills'));
+  assert.ok(!result.selections.patterns.includes('domain'));
+  assert.deepEqual(result.requiredBy.patterns['multi-agent'], [guide.name]);
+  assert.deepEqual(result.requiredBy.buildingBlocks['agent-skills'], [guide.name]);
+});
+test('voice-first uses native speech-to-speech while standalone audio never recommends the voice playbook', () => {
+  const voice = playbooks.find(p => p.slug === 'voice-first-agent-blueprint')!;
+  const result = resolvePlaybookSelections({ capabilities: [], buildingBlocks: [], patterns: [] }, [voice]);
+  assert.ok(result.selections.capabilities.includes('realtime'));
+  assert.ok(result.selections.patterns.includes('human-in-the-loop'));
+  assert.deepEqual(result.requiredBy.patterns['human-in-the-loop'], [voice.name]);
+  assert.ok(!result.selections.capabilities.includes('text-to-speech'));
+  assert.ok(!result.selections.capabilities.includes('speech-to-text'));
+  for (const [brief, selected] of [
+    ['Convert approved text to speech.', ['text-to-speech']],
+    ['Transcribe approved audio clips.', ['speech-to-text']],
+    ['Provide transcription and text to speech.', ['text-to-speech', 'speech-to-text']],
+  ] as const) {
+    const coverage = recommendWorkshop(brief, [...selected]);
+    assert.ok(!coverage.guides.some(g => g.playbook.slug === voice.slug));
+    assert.ok(!coverage.requirements.some(r => r.id === 'voice'));
+    assert.ok(!inferRequirementsFromSelections([...selected]).includes('voice'));
+  }
+  assert.ok(recommendWorkshop('Build a voice-first concierge with barge-in.').guides.some(g => g.playbook.slug === voice.slug));
+  const readme = readFileSync('playbooks/voice-first-agent-blueprint/README.md', 'utf8');
+  assert.match(readme, /gpt-live-1 native speech-to-speech/);
+  assert.ok(!readme.includes('Stream speech-to-text and text-to-speech through Azure AI Voice Live'));
+});
+
 const spec: WorkshopSpec = {
-  brief: hr, outcome: 'Answer the customer HR policies with cited evidence', users: 'HR staff',
+  brief: hr, model: 'auto', outcome: 'Answer the customer HR policies with cited evidence', users: 'HR staff',
   inScope: ['Policy Q&A'], outOfScope: ['Production rollout', 'Payroll writes'],
   constraints: ['EU data residency', 'Approved sample documents only'],
   assumptions: ['Corpus owner supplies approved samples'], successCriteria: ['Every supported answer cites a source'],
   evidence: ['20 policy/refusal cases and access-boundary results'],
-  capabilities: ['Foundry IQ'], buildingBlocks: ['Identity & Access', 'Observability'],
-  candidatePatterns: ['Knowledge Grounding'], execution: 'agentic-loop',
+  capabilities: ['Foundry IQ'], buildingBlocks: ['Identity & Access', 'Observability', 'App Insights'],
+  agentCapabilities: ['Knowledge Grounding'], execution: 'agentic-loop',
+  architecture: selectedArchitecture({ capabilities: ['knowledge'], buildingBlocks: ['identity', 'observability'] }),
   guides: [{ slug: 'enterprise-knowledge-grounding', reason: 'Citations required by the brief' }],
   gaps: [], openQuestions: [], resolutions: '',
 };
@@ -132,12 +277,65 @@ test('approval snapshots invalidate when any upstream source of truth changes', 
   assert.ok(canApproveSpec(spec));
   for (const changed of [
     { ...spec, brief: 'A different brief' }, { ...spec, constraints: ['Different residency'] },
-    { ...spec, successCriteria: ['Different criterion'] }, { ...spec, candidatePatterns: ['Workflow Automation'] },
+    { ...spec, successCriteria: ['Different criterion'] }, { ...spec, agentCapabilities: ['Human-in-the-Loop'] },
+    { ...spec, architecture: [...spec.architecture, 'Toolbox'] },
+    { ...spec, model: 'gpt-6.1-sol' as const },
   ]) assert.ok(!approvalIsCurrent(changed, approved));
   assert.ok(!canApproveSpec({ ...spec, users: '' }));
   assert.ok(!canApproveSpec({ ...spec, openQuestions: ['Unresolved access?'] }));
   assert.ok(!canApproveSpec({ ...spec, gaps: ['Customer integration'] }));
   assert.ok(canApproveSpec({ ...spec, gaps: ['Customer integration'], resolutions: 'Use approved sample data; exclude the live integration.' }));
+});
+test('selected architecture survives approval and build hand-off without inferred additions', () => {
+  const architecture = selectedArchitecture({ capabilities: [], buildingBlocks: ['toolbox'] });
+  const workshopSpec = { ...spec, architecture };
+  const result = buildAdvisorPackage({
+    path: 'idea', intent: 'Add private networking, grounding, evals and Microsoft Teams.',
+    requirementIds: ['private-networking', 'knowledge-grounding', 'evals', 'm365-graph'],
+    workshopSpec,
+  });
+  assert.deepEqual(result.runArchitecture, architecture);
+  assert.ok(result.copilotPrompt.includes(`### Selected reference architecture\n\n${architecture.map(label => `- ${label}`).join('\n')}`));
+  assert.match(result.copilotPrompt, /Do not silently add optional components from the brief or guide examples/);
+  assert.match(result.copilotPrompt, /confirm the scope change first/);
+  assert.ok(!result.runArchitecture.includes('Foundry IQ'));
+  assert.ok(!result.runArchitecture.includes('Private Networking'));
+});
+test('every model choice and agent capability survives all build workflow prompts', () => {
+  for (const model of ['auto', 'gpt-6.1-sol', 'gpt-6-luna', 'claude-sonnet-5.5'] as const) {
+    for (const execution of ['agentic-loop', 'agentic-loop-rapid', 'threadlight-pipeline'] as const) {
+      const workshopSpec = { ...spec, model, execution, agentCapabilities: ['Human-in-the-Loop', 'Domain-Specific Agents'] };
+      const result = buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [], workshopSpec });
+      assert.match(result.copilotPrompt, /### Foundry model/);
+      assert.ok(result.copilotPrompt.includes(`${FOUNDRY_MODELS[model]} (${model})`));
+      assert.ok(result.copilotPrompt.includes('### Agent capabilities\n\n- Human-in-the-Loop\n- Domain-Specific Agents'));
+      assert.ok(!result.copilotPrompt.includes('### Candidate patterns'));
+      assert.match(result.copilotPrompt, /never silently substitute an explicit choice/);
+      assert.match(result.copilotPrompt, /Validate model availability, quota and requested image\/speech capabilities/);
+    }
+  }
+});
+test('model capability candidates match the workshop mappings and only selected capabilities reach the prompt', () => {
+  assert.deepEqual(MODEL_CAPABILITY_OPTIONS.map(({ id, label, models }) => ({ id, label, models })), [
+    { id: 'image-generation', label: 'Image Generation', models: ['GPT-Image-2.5', 'MAI-Image-2.6'] },
+    { id: 'text-to-speech', label: 'Text to Speech', models: ['MAI-Voice-2.1', 'GPT-Audio'] },
+    { id: 'speech-to-text', label: 'Speech to Text', models: ['MAI-transcribe-2', 'GPT-transcribe'] },
+    { id: 'realtime', label: 'Real-Time Conversations', models: ['gpt-live-1'] },
+  ]);
+  assert.ok(!formatWorkshopSpecMarkdown(spec).includes('### Capability model candidates'));
+  for (const execution of ['agentic-loop', 'agentic-loop-rapid', 'threadlight-pipeline'] as const) {
+    for (const selected of [...MODEL_CAPABILITY_OPTIONS.map(option => [option]), MODEL_CAPABILITY_OPTIONS]) {
+      const workshopSpec = { ...spec, execution, capabilities: selected.map(option => option.label) };
+      const result = buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [], workshopSpec });
+      assert.match(result.copilotPrompt, /### Capability model candidates/);
+      assert.match(result.copilotPrompt, /confirm any substitution before proceeding/);
+      for (const option of MODEL_CAPABILITY_OPTIONS) {
+        for (const model of option.models) {
+          assert.equal(result.copilotPrompt.includes(model), selected.includes(option));
+        }
+      }
+    }
+  }
 });
 test('full approved scope, selections, criteria and constraints survive the copied build prompt', () => {
   const result = buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [], workshopSpec: spec });
@@ -203,7 +401,7 @@ test('playbooks retain teaching context and repeatable customer-specific build g
     const result = buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [], workshopSpec: { ...spec, execution } });
     assert.match(result.copilotPrompt, /## Learn while building/);
     assert.match(result.copilotPrompt, /Solution Engineer can teach the customer/);
-    assert.match(result.copilotPrompt, /Platform focus: Foundry IQ; Agentic Retrieval; Storage/);
+    assert.match(result.copilotPrompt, /Platform focus: Frontier Models; Foundry IQ; Identity & Access; Observability; Evaluations/);
     assert.match(result.copilotPrompt, /connect each chosen platform capability to a confirmed customer requirement/);
     assert.match(result.copilotPrompt, /without repeating every tutorial step/);
     assert.match(result.copilotPrompt, /Preserve scope and permission reviews on every build/);

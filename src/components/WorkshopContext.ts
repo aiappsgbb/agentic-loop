@@ -2,9 +2,11 @@ import { createContext } from 'react';
 import { withRequiredCapabilities } from '../data/workshop';
 import workshopBriefs from '../data/workshop-briefs.json';
 import type { BuildExecution } from '../data/buildWorkflow';
+import type { FoundryModelId } from '../data/architecture';
 
 export interface WorkshopDraft {
   brief: string;
+  model: FoundryModelId;
   capabilities: string[];
   buildingBlocks: string[];
   patterns: string[];
@@ -32,9 +34,10 @@ export function newWorkshopDraft(brief = ''): WorkshopDraft {
   const groundedSample = sampleIndex === 0 || sampleIndex === 1;
   return {
     brief,
+    model: 'auto',
     capabilities: withRequiredCapabilities(groundedSample ? ['knowledge'] : []),
     buildingBlocks: ['identity', 'observability'],
-    patterns: groundedSample ? ['knowledge-grounding'] : sampleIndex === 2 ? ['human-in-the-loop'] : [],
+    patterns: sampleIndex === 2 ? ['human-in-the-loop'] : [],
     customCapabilities: '', customBlocks: '', customPatterns: '',
     outcome: '', users: '', inScope: '', outOfScope: 'Production rollout and production-readiness certification',
     constraints: 'Use approved sample data. Enforce authorized access and least-privilege identity. Minimize sensitive data.',

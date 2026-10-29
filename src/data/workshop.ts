@@ -1,5 +1,10 @@
 import { playbooks, type Playbook } from './catalog';
 import { buildWorkflowLabel, type BuildExecution } from './buildWorkflow';
+import {
+  FOUNDRY_MODELS, MODEL_CAPABILITY_OPTIONS, AGENT_CAPABILITY_OPTIONS, AGENT_CAPABILITY_LINKS,
+  ARCHITECTURE_OPTIONS, WORKSHOP_CAPABILITY_OPTIONS, normalizeWorkshopSelections, withObservability,
+  type FoundryModelId, type WorkshopSelections,
+} from './architecture';
 
 export type CoverageState = 'strong' | 'partial' | 'none' | 'clarification' | 'unsupported';
 export function withRequiredCapabilities(ids: readonly string[]): string[] {
@@ -17,15 +22,17 @@ export interface Coverage {
 }
 
 const RULES: Array<{ id: string; label: string; pattern: RegExp; selections: string[] }> = [
-  { id: 'knowledge-grounding', label: 'Grounded answers with citations', pattern: /\b(citations?|cited|rag|grounded|grounding|knowledge|documents?|policy answers|hr.polic(?:y|ies))\b/i, selections: ['knowledge', 'knowledge-grounding'] },
-  { id: 'voice', label: 'Real-time voice interaction', pattern: /\b(voice|speech|spoken|barge.in)\b/i, selections: ['realtime', 'text-to-speech', 'speech-to-text'] },
+  { id: 'knowledge-grounding', label: 'Grounded answers with citations', pattern: /\b(citations?|cited|rag|grounded|grounding|knowledge|documents?|policy answers|hr.polic(?:y|ies))\b/i, selections: ['knowledge', 'knowledge-grounding', 'ai-search'] },
+  { id: 'voice', label: 'Real-time speech-to-speech interaction', pattern: /\b(voice.first|real.time (?:voice|audio|conversations?)|speech.to.speech|barge.in|spoken conversations?)\b/i, selections: ['realtime'] },
+  { id: 'text-to-speech', label: 'Text to speech', pattern: /\b(text.to.speech|tts|speech synthesis|read aloud|read .{0,80} aloud)\b/i, selections: ['text-to-speech'] },
+  { id: 'speech-to-text', label: 'Speech to text', pattern: /\b(speech.to.text|stt|transcri(?:be|ption|bing))\b/i, selections: ['speech-to-text'] },
   { id: 'multi-agent', label: 'Heterogeneous agents with typed hand-offs', pattern: /\b(multi.agent|heterogeneous agents|agent.to.agent)\b/i, selections: ['multi-agent'] },
-  { id: 'governance', label: 'Policy boundaries and safety controls', pattern: /\b(safety controls|regulated|red.team|sensitive data|claims assistant|policy enforcement)\b/i, selections: [] },
-  { id: 'evals', label: 'Continuous evaluation and regression gates', pattern: /\b(evals?|regression|continuous evaluation|trace mining)\b/i, selections: [] },
+  { id: 'governance', label: 'Policy boundaries and safety controls', pattern: /\b(safety controls|regulated|red.team|sensitive data|claims assistant|policy enforcement)\b/i, selections: ['content-safety'] },
+  { id: 'evals', label: 'Continuous evaluation and regression gates', pattern: /\b(evals?|regression|continuous evaluation|trace mining)\b/i, selections: ['evals'] },
   { id: 'reusable-skills', label: 'Govern existing agent skills', pattern: /\b(existing skills|own skills|versioned skills|governed skills)\b/i, selections: [] },
   { id: 'ai-gateway', label: 'Governed shared AI gateway', pattern: /\b(ai gateway|apim|shared foundry capacity|citadel)\b/i, selections: ['ai-gateway'] },
   { id: 'delivery', label: 'Opinionated end-to-end delivery pipeline', pattern: /\b(threadlight|opinionated pipeline|production scorecard|eu ai act evidence pack)\b/i, selections: [] },
-  { id: 'integration', label: 'Customer-specific system integration', pattern: /\b(integrat(?:e|es|ion|ing)|connectors?|connect(?:ing)? (?:to|with)|sap|salesforce|servicenow|m365|microsoft graph|microsoft teams|teams (?:bot|channel)|outlook|sharepoint|mcp)\b/i, selections: [] },
+  { id: 'integration', label: 'Customer-specific system integration', pattern: /\b(integrat(?:e|es|ion|ing)|connectors?|connect(?:ing)? (?:to|with)|sap|salesforce|servicenow|m365|microsoft graph|microsoft teams|teams (?:bot|channel)|outlook|sharepoint|mcp)\b/i, selections: ['toolbox', 'work-iq', 'fabric-iq'] },
   { id: 'image-generation', label: 'Image generation', pattern: /\b(image generation|generate images?|create images?)\b/i, selections: ['image-generation'] },
   { id: 'forms', label: 'Structured document extraction', pattern: /\b(extract|form recognition|document intelligence|ocr)\b/i, selections: ['forms'] },
   { id: 'private-networking', label: 'Private networking', pattern: /\b(private network|private endpoint|vnet)\b/i, selections: ['private-net'] },
@@ -82,8 +89,42 @@ export function recommendWorkshop(brief: string, selections: string[] = [], cust
   return { state, requirements, guides, gaps, questions, unsupported };
 }
 
+export type WorkshopRequirementSources = Record<keyof WorkshopSelections, Record<string, string[]>>;
+
+export function resolvePlaybookSelections(raw: WorkshopSelections, guides: readonly Playbook[]) {
+  const selections = normalizeWorkshopSelections(raw);
+  const requiredBy: WorkshopRequirementSources = { capabilities: {}, buildingBlocks: {}, patterns: {} };
+  function requireSelection(field: keyof WorkshopSelections, id: string, name: string) {
+    const linked = field === 'patterns' ? AGENT_CAPABILITY_LINKS[id] : undefined;
+    const target = linked?.field ?? field;
+    const targetId = linked?.id ?? id;
+    selections[target] = [...new Set([...selections[target], targetId])];
+    requiredBy[target][targetId] = [...new Set([...(requiredBy[target][targetId] ?? []), name])];
+    if (target === 'buildingBlocks' && targetId === 'observability') requireSelection('buildingBlocks', 'app-insights', name);
+  }
+  for (const guide of guides) {
+    for (const [field, values, options] of [
+      ['capabilities', guide.capabilities ?? [], WORKSHOP_CAPABILITY_OPTIONS],
+      ['buildingBlocks', guide.building_blocks ?? [], ARCHITECTURE_OPTIONS.filter(option => option.field === 'buildingBlocks')],
+    ] as const) {
+      for (const value of values) {
+        const option = options.find(option => option.id === value || option.label === value);
+        if (!option) throw new Error(`Unknown ${field} requirement "${value}" in playbook ${guide.slug}`);
+        requireSelection(field, option.id, guide.name);
+      }
+    }
+    for (const option of AGENT_CAPABILITY_OPTIONS) {
+      if (guide.patterns.includes(option.label) || guide.patterns.includes(option.id)) requireSelection('patterns', option.id, guide.name);
+    }
+  }
+  selections.capabilities = withRequiredCapabilities(selections.capabilities);
+  selections.buildingBlocks = withObservability(selections.buildingBlocks);
+  return { selections, requiredBy };
+}
+
 export interface WorkshopSpec {
   brief: string;
+  model: FoundryModelId;
   outcome: string;
   users: string;
   inScope: string[];
@@ -94,7 +135,8 @@ export interface WorkshopSpec {
   evidence: string[];
   capabilities: string[];
   buildingBlocks: string[];
-  candidatePatterns: string[];
+  agentCapabilities: string[];
+  architecture: string[];
   execution: BuildExecution;
   guides: Array<{ slug: string; reason: string }>;
   gaps: string[];
@@ -110,6 +152,7 @@ export function formatWorkshopSpec(spec: WorkshopSpec): string {
   return JSON.stringify(spec, null, 2);
 }
 export function formatWorkshopSpecMarkdown(spec: WorkshopSpec): string {
+  const modelCapabilities = MODEL_CAPABILITY_OPTIONS.filter(option => spec.capabilities.includes(option.label));
   const referenceBrief = (text: string) =>
     spec.brief.trim() && text.trim() === spec.brief.trim() ? 'See Customer brief.' : text;
   const section = (title: string, content: string | string[]) =>
@@ -127,9 +170,20 @@ export function formatWorkshopSpecMarkdown(spec: WorkshopSpec): string {
     section('Assumptions', spec.assumptions),
     section('Success criteria', spec.successCriteria),
     section('Verification evidence', spec.evidence),
+    section('Foundry model', `${FOUNDRY_MODELS[spec.model]} (${spec.model}). ${spec.model === 'auto'
+      ? 'Copilot selects a suitable model during the build based on scope and availability in the chosen Foundry project.'
+      : 'Use this requested model; validate availability and quota in the chosen Foundry project before deployment. Do not silently substitute another model.'}`),
     section('Capabilities', spec.capabilities),
+    ...(modelCapabilities.length ? [
+      section('Capability model candidates', modelCapabilities.map(option => `${option.label}: ${option.models.join(' or ')}`)),
+      'Use one of the listed models for each selected capability, alongside the reasoning model where needed. Validate availability, quota and feature support in the chosen Foundry project; report blockers and confirm any substitution before proceeding.',
+      ...(modelCapabilities.some(option => option.id === 'realtime')
+        ? ['Real-Time Conversations requires true speech-to-speech using gpt-live-1. Do not substitute a chained speech-to-text, reasoning and text-to-speech pipeline. Standalone TTS or STT models are required only when those separate capabilities are selected.']
+        : []),
+    ] : []),
     section('Building blocks', spec.buildingBlocks),
-    section('Candidate patterns', spec.candidatePatterns),
+    section('Agent capabilities', spec.agentCapabilities),
+    section('Selected reference architecture', spec.architecture),
     section('Build workflow', buildWorkflowLabel(spec.execution)),
     section('Selected guides', spec.guides.map(guide => `${guide.slug}: ${guide.reason}`)),
     section('Remaining gaps', spec.gaps),

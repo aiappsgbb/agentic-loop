@@ -2,13 +2,15 @@ import { useContext, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Sparkles, Brain, ImageIcon, Volume2, Headphones, MessagesSquare,
-  FileSearch, BookOpen, Eye, ShieldCheck, Network, Database, Workflow,
-  Building2, GraduationCap, Wrench, Rocket,
-  Plug, KeyRound, HardDrive, Users, UserCheck, ArrowRight,
+  Sparkles, Brain, Workflow, Wrench, Rocket, ArrowRight, X,
 } from 'lucide-react';
 import type { PickerOption } from './CapabilityPicker';
 import MakeItRealModal from './MakeItRealModal';
+import ArchitectureStrip from './ArchitectureStrip';
+import {
+  ARCHITECTURE_OPTIONS, AGENT_CAPABILITY_LINKS, AGENT_CAPABILITY_OPTIONS, FOUNDRY_MODELS, MODEL_CAPABILITY_OPTIONS,
+  WORKSHOP_CAPABILITY_OPTIONS, normalizeWorkshopSelections, selectedArchitecture,
+} from '../data/architecture';
 import {
   buildAdvisorPackage,
   inferRequirementsFromSelections,
@@ -17,38 +19,18 @@ import { playbooks, ROLE_LABELS, type Scenario } from '../data/catalog';
 import workshopBriefs from '../data/workshop-briefs.json';
 import {
   recommendWorkshop, formatWorkshopSpec, approvalIsCurrent, canApproveSpec,
-  withRequiredCapabilities, type WorkshopSpec,
+  withRequiredCapabilities, resolvePlaybookSelections, type WorkshopSpec,
 } from '../data/workshop';
 import { WorkshopContext, newWorkshopDraft, type WorkshopDraft } from './WorkshopContext';
 
-const CAPABILITIES: PickerOption[] = [
-  { id: 'frontier-models', label: 'Frontier Models', description: 'GPT, Claude, Llama, Phi', icon: Brain, link: '/concepts/platform/foundry#frontier-models' },
-  { id: 'image-generation', label: 'Image Generation', description: 'GPT Image 2, MAI-Image-2.5', icon: ImageIcon, link: '/concepts/platform/foundry#image-generation' },
-  { id: 'text-to-speech', label: 'Text to Speech', description: 'Neural voices', icon: Volume2, link: '/concepts/platform/foundry#text-to-speech' },
-  { id: 'speech-to-text', label: 'Speech to Text', description: 'Real-time transcription', icon: Headphones, link: '/concepts/platform/foundry#speech-to-text' },
-  { id: 'realtime', label: 'Real-Time Conversations', description: 'Voice-first agents', icon: MessagesSquare, link: '/concepts/platform/foundry#realtime' },
-  { id: 'forms', label: 'Forms Recognition', description: 'Document intelligence', icon: FileSearch, link: '/concepts/platform/foundry#forms' },
-  { id: 'knowledge', label: 'Foundry IQ', description: 'Grounded knowledge & retrieval', icon: BookOpen, link: '/concepts/platform/foundry#foundry-iq' },
-];
+const CAPABILITIES: PickerOption[] = WORKSHOP_CAPABILITY_OPTIONS;
 
-const BUILDING_BLOCKS: PickerOption[] = [
-  { id: 'observability', label: 'Observability', description: 'Traces, evals, monitoring', icon: Eye, link: '/concepts/platform/azure#observability' },
-  { id: 'ai-gateway', label: 'AI Gateway', description: 'Routing, quotas, policies', icon: Plug, link: '/concepts/platform/azure#ai-gateway' },
-  { id: 'identity', label: 'Identity & Access', description: 'Entra, RBAC, scopes', icon: KeyRound, link: '/concepts/platform/azure#identity' },
-  { id: 'private-net', label: 'Private Networking', description: 'VNet, Private Endpoints', icon: Network, link: '/concepts/platform/azure#private-net' },
-  { id: 'data', label: 'Data Persistence', description: 'Cosmos DB, Postgres', icon: Database, link: '/concepts/platform/azure#data' },
-  { id: 'storage', label: 'Storage', description: 'Blobs, files, vectors', icon: HardDrive, link: '/concepts/platform/azure#storage' },
-];
+const BUILDING_BLOCKS: PickerOption[] = ARCHITECTURE_OPTIONS.filter(option => option.field === 'buildingBlocks');
+const MODEL_CAPABILITIES = CAPABILITIES.filter(option => MODEL_CAPABILITY_OPTIONS.some(model => model.id === option.id));
 
-const THEMES: PickerOption[] = [
-  { id: 'workflow', label: 'Workflow Automation', description: 'Multi-step orchestration', icon: Workflow },
-  { id: 'domain', label: 'Domain-Specific Agents', description: 'Vertical specialization', icon: Building2 },
-  { id: 'knowledge-grounding', label: 'Knowledge Grounding', description: 'Trusted enterprise data', icon: GraduationCap },
-  { id: 'multi-agent', label: 'Multi-Agent Orchestration', description: 'Coordinated agent teams', icon: Users },
-  { id: 'human-in-the-loop', label: 'Human-in-the-Loop', description: 'Review & approval gates', icon: UserCheck },
-];
+const AGENT_CAPABILITIES: PickerOption[] = AGENT_CAPABILITY_OPTIONS;
 
-const labelMap = new Map([...CAPABILITIES, ...BUILDING_BLOCKS, ...THEMES].map(o => [o.id, o.label]));
+const labelMap = new Map([...CAPABILITIES, ...BUILDING_BLOCKS, ...AGENT_CAPABILITIES].map(o => [o.id, o.label]));
 const lines = (value: string) => value.split('\n').map(line => line.trim()).filter(Boolean);
 const COVERAGE_LABELS = {
   strong: 'Reusable starting point',
@@ -78,19 +60,19 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
         .map(option => option.id);
       draft.capabilities = withRequiredCapabilities(matchOptions(scenario.capabilities ?? [], CAPABILITIES));
       draft.buildingBlocks = [...new Set([...draft.buildingBlocks, ...matchOptions(scenario.buildingBlocks ?? [], BUILDING_BLOCKS)])];
-      draft.patterns = matchOptions(scenario.patterns ?? [], THEMES);
+      draft.patterns = matchOptions(scenario.patterns ?? [], AGENT_CAPABILITIES);
     }
     if (guideSlug && playbooks.some(p => p.slug === guideSlug && p.role !== 'onboarding')) {
       draft.manualGuideIds = [guideSlug];
       if (guideSlug === 'threadlight-pipeline') draft.execution = 'threadlight-pipeline';
     }
-    return draft;
+    return { ...draft, ...normalizeWorkshopSelections(draft) };
   }, [scenario, guideSlug]);
   const draft = drafts[key] ?? seed;
   const [modalOpen, setModalOpen] = useState(false);
 
   function patch(values: Partial<WorkshopDraft>, upstream = false) {
-    const next = { ...draft, ...values, approved: null };
+    const next = { ...draft, ...normalizeWorkshopSelections(draft), ...values, approved: null };
     if (upstream) {
       next.prepared = false;
       if ('brief' in values) { next.outcome = ''; next.inScope = ''; next.resolutions = ''; }
@@ -98,26 +80,30 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
     update(key, next);
   }
 
-  const capabilities = withRequiredCapabilities(draft.capabilities);
-  const buildingBlocks = draft.buildingBlocks;
-  const patterns = draft.patterns;
-  const selectedIds = [...capabilities, ...buildingBlocks, ...patterns];
-  const coverage = recommendWorkshop(draft.brief, selectedIds,
+  const selections = normalizeWorkshopSelections(draft);
+  const model = draft.model ?? 'auto';
+  const coverage = recommendWorkshop(draft.brief, [...selections.capabilities, ...selections.buildingBlocks, ...selections.patterns],
     [...lines(draft.customCapabilities), ...lines(draft.customBlocks), ...lines(draft.customPatterns)]);
   const chosenGuides = playbooks.filter(p => p.role !== 'onboarding' &&
     ((!draft.removedGuideIds.includes(p.slug) &&
-      (draft.manualGuideIds.includes(p.slug) || coverage.guides.some(g => g.playbook.slug === p.slug))) ||
+      draft.manualGuideIds.includes(p.slug)) ||
       draft.execution === 'threadlight-pipeline' && p.slug === 'threadlight-pipeline'));
+  const { selections: effective, requiredBy } = resolvePlaybookSelections(selections, chosenGuides);
+  const { capabilities, buildingBlocks } = effective;
+  const patterns = [...effective.patterns, ...Object.entries(AGENT_CAPABILITY_LINKS).flatMap(([id, linked]) =>
+    linked && effective[linked.field].includes(linked.id) ? [id] : [])];
+  const selectedIds = [...capabilities, ...buildingBlocks, ...patterns];
   const proposedGuides = playbooks.filter(p => chosenGuides.includes(p) || coverage.guides.some(g => g.playbook.slug === p.slug));
   const otherGuides = playbooks.filter(p => p.role !== 'onboarding' && !proposedGuides.includes(p));
   const spec: WorkshopSpec = {
-    brief: draft.brief, outcome: draft.outcome, users: draft.users,
+    brief: draft.brief, model, outcome: draft.outcome, users: draft.users,
     inScope: lines(draft.inScope), outOfScope: lines(draft.outOfScope),
     constraints: lines(draft.constraints), assumptions: lines(draft.assumptions),
     successCriteria: lines(draft.criteria), evidence: lines(draft.evidence),
     capabilities: [...capabilities.map(id => labelMap.get(id) ?? id), ...lines(draft.customCapabilities)],
     buildingBlocks: [...buildingBlocks.map(id => labelMap.get(id) ?? id), ...lines(draft.customBlocks)],
-    candidatePatterns: [...patterns.map(id => labelMap.get(id) ?? id), ...lines(draft.customPatterns)],
+    agentCapabilities: [...AGENT_CAPABILITIES.filter(option => patterns.includes(option.id)).map(option => option.label), ...lines(draft.customPatterns)],
+    architecture: selectedArchitecture({ capabilities, buildingBlocks }),
     execution: draft.execution,
     guides: chosenGuides.map(p => ({
       slug: p.slug,
@@ -141,7 +127,7 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
   const advisorPackage = draft.prepared ? buildAdvisorPackage({
     path: scenario ? 'scenario' : 'idea',
     intent: draft.brief, scenario,
-    requirementIds: inferRequirementsFromSelections(selectedIds, draft.brief),
+    requirementIds: inferRequirementsFromSelections(selectedIds),
     workshopSpec: spec,
   }) : null;
 
@@ -159,8 +145,24 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
     }
   }
   function changeSelection(field: 'capabilities' | 'buildingBlocks' | 'patterns', ids: string[]) {
-    const selections = field === 'capabilities' ? withRequiredCapabilities(ids) : ids;
-    patch({ [field]: selections }, true);
+    patch({ ...selections, [field]: field === 'capabilities' ? withRequiredCapabilities(ids) : ids }, true);
+  }
+  function toggleSelection(field: 'capabilities' | 'buildingBlocks' | 'patterns', id: string) {
+    if (requirementLabel(field, id)) return;
+    const selected = selections[field];
+    changeSelection(field, selected.includes(id) ? selected.filter(value => value !== id) : [...selected, id]);
+  }
+  function requirementLabel(field: 'capabilities' | 'buildingBlocks' | 'patterns', id: string) {
+    const linked = field === 'patterns' ? AGENT_CAPABILITY_LINKS[id] : undefined;
+    const sources = requiredBy[linked?.field ?? field][linked?.id ?? id];
+    return sources?.length ? `Required by ${sources.join(', ')}` : undefined;
+  }
+  function setGuideIncluded(slug: string, included: boolean) {
+    patch({
+      manualGuideIds: included ? [...new Set([...draft.manualGuideIds, slug])] : draft.manualGuideIds.filter(id => id !== slug),
+      removedGuideIds: included ? draft.removedGuideIds.filter(id => id !== slug) : [...new Set([...draft.removedGuideIds, slug])],
+      ...(slug === 'threadlight-pipeline' ? { execution: included ? 'threadlight-pipeline' : 'agentic-loop' } : {}),
+    });
   }
 
   return (
@@ -190,30 +192,48 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
       </div>
       <section className="workshop-technical" aria-labelledby={`technical-${key}`}>
         <h3 id={`technical-${key}`}>Technical requirements</h3>
-        <p className="muted">Adjust the starting selections for your pilot. Patterns are candidates, not a final architecture.</p>
+        <p className="muted">Adjust the starting selections for your pilot. The map records your choices; it does not infer an architecture from the customer brief.</p>
+        {chosenGuides.length > 0 && <div className="workshop-included-guides" aria-label="Included playbooks">
+          <span>Requirements from:</span>
+          {chosenGuides.map(guide => <button key={guide.slug} type="button" className="workshop-guide-chip"
+            aria-label={`Remove ${guide.name} playbook`} onClick={() => setGuideIncluded(guide.slug, false)}>
+            {guide.name} <X size={13} aria-hidden="true" />
+          </button>)}
+        </div>}
+        <ArchitectureStrip variant="full" selection={{
+          values: { capabilities, buildingBlocks },
+          model, onModelChange: model => patch({ model }, true),
+          onToggle: toggleSelection, requiredBy: requirementLabel,
+        }} />
         <div className="workshop-options-grid">
           {([
-            ['capabilities', 'Capabilities', CAPABILITIES, capabilities, Brain],
-            ['buildingBlocks', 'Building blocks', BUILDING_BLOCKS, buildingBlocks, ShieldCheck],
-            ['patterns', 'Candidate patterns', THEMES, patterns, Workflow],
+            ['capabilities', 'Model capabilities', MODEL_CAPABILITIES, capabilities, Brain],
+            ['patterns', 'Agent capabilities', AGENT_CAPABILITIES, patterns, Workflow],
           ] as const).map(([field, label, options, selected, Icon]) => (
             <fieldset className="workshop-option-column" key={field}>
               <legend><Icon size={16} /> {label}</legend>
+              <p className="workshop-option-help">{field === 'capabilities'
+                ? 'Image and speech features may use dedicated models alongside the reasoning model. Support is validated during the build.'
+                : 'Choose how the agent works. Grounding and domain expertise share the selections on the map above.'}</p>
               {options.map(option => (
                 <label className="workshop-option" key={option.id}>
-                  <input type="checkbox" checked={selected.includes(option.id)} disabled={option.id === 'frontier-models'}
-                    aria-describedby={option.id === 'frontier-models' ? `frontier-help-${key}` : undefined} onChange={e =>
-                    changeSelection(field, e.target.checked ? [...selected, option.id] : selected.filter(id => id !== option.id))
-                  } />
-                  <span><span className="workshop-option-label">{option.label}{option.id === 'frontier-models' && <span className="workshop-required">Required</span>}</span>
-                    <small>{option.description}</small>
-                    {option.id === 'frontier-models' && <small id={`frontier-help-${key}`}>The model foundation for every pilot.</small>}
+                  <input type="checkbox" checked={selected.includes(option.id)} aria-label={option.label}
+                    disabled={Boolean(requirementLabel(field, option.id))}
+                    aria-describedby={`${key}-${field}-${option.id}-help`} onChange={() => {
+                    const linked = field === 'patterns' ? AGENT_CAPABILITY_LINKS[option.id] : undefined;
+                    toggleSelection(linked?.field ?? field, linked?.id ?? option.id);
+                  }} />
+                  <span><span className="workshop-option-label">{option.label}</span>
+                    <small id={`${key}-${field}-${option.id}-help`}>{option.description}
+                      {requirementLabel(field, option.id) && <span className="workshop-required-note">{requirementLabel(field, option.id)}</span>}
+                    </small>
                   </span>
                 </label>
               ))}
             </fieldset>
           ))}
         </div>
+        <p className="workshop-pattern-note muted">Knowledge Grounding and Foundry IQ are one shared choice, as are Domain-Specific Agents and Skills. Human-in-the-Loop and Multi-Agent Orchestration describe behavior, not additional Azure services.</p>
       </section>
       <div className="prompt-actions">
         <button className="craft-btn primary" onClick={prepare} disabled={!draft.brief.trim()}>
@@ -231,7 +251,7 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
             <p>{coverage.state === 'strong'
               ? 'We found existing implementation guidance for your requirements. Adapt it to your customer instead of starting from scratch.'
               : 'Use existing guidance where it fits and define a customer-specific approach for the remaining requirements.'}</p>
-            <p className="workshop-proposal-explanation">This is a proposal, not a built or deployed app. Recommendations use curated rules in your browser, not AI analysis. Including a guide adds a link to its implementation instructions and recommended build skills to your Copilot prompt; it does not add a new capability automatically.</p>
+            <p className="workshop-proposal-explanation">This is a proposal, not a built or deployed app. Recommendations use curated rules in your browser, not AI analysis. Suggested playbooks are not selected automatically. Including a playbook adopts and locks its required architecture and capabilities, and adds its implementation guidance to your build prompt. Remove the playbook to release those requirements; nothing is deployed here.</p>
             <p className="workshop-proposal-explanation"><strong>Learn while building.</strong> Playbooks provide context and a guided example so the Solution Engineer can explain the approach and teach the customer. On your first build, follow the relevant playbook; on later workshops, reuse the approach through a customer-specific prompt without repeating every step. Curated examples help demonstrate meaningful platform capabilities, not generic apps.</p>
             {coverage.questions.map(q => <p key={q} className="workshop-warning">{q}</p>)}
             {coverage.unsupported.map(q => <p key={q} className="workshop-warning">{q}</p>)}
@@ -244,10 +264,7 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
                     <div><span className="workshop-guide-type">{guide.role === 'capability' ? 'Reusable implementation guide' : ROLE_LABELS[guide.role]}</span><h4>{guide.name}</h4></div>
                     <label className="workshop-include">
                       <input type="checkbox" aria-label={`Include ${guide.name} in build prompt`} checked={included}
-                        disabled={draft.execution === 'threadlight-pipeline' && guide.slug === 'threadlight-pipeline'} onChange={e => patch({
-                        removedGuideIds: e.target.checked ? draft.removedGuideIds.filter(id => id !== guide.slug) : [...draft.removedGuideIds, guide.slug],
-                        manualGuideIds: e.target.checked ? [...new Set([...draft.manualGuideIds, guide.slug])] : draft.manualGuideIds.filter(id => id !== guide.slug),
-                      })} />
+                        onChange={e => setGuideIncluded(guide.slug, e.target.checked)} />
                       {included ? 'Included in build prompt' : 'Include in build prompt'}
                     </label>
                   </div>
@@ -271,10 +288,7 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
               <label htmlFor={`add-guide-${key}`}>Add another guide (optional)</label>
               <select id={`add-guide-${key}`} aria-describedby={`add-guide-help-${key}`} value="" onChange={e => {
                 const slug = e.target.value;
-                if (otherGuides.some(guide => guide.slug === slug)) patch({
-                  manualGuideIds: [...new Set([...draft.manualGuideIds, slug])],
-                  removedGuideIds: draft.removedGuideIds.filter(id => id !== slug),
-                });
+                if (otherGuides.some(guide => guide.slug === slug)) setGuideIncluded(slug, true);
               }}>
                 <option value="">Choose a guide to review</option>
                 {otherGuides.map(guide => <option key={guide.slug} value={guide.slug}>{guide.name}</option>)}
@@ -294,6 +308,12 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
               <h4>Pilot brief</h4>
               <p>{draft.brief}</p>
               <small>Approved sample data, authorized access and recorded scenario/access tests are required. Production rollout is excluded.</small>
+            </div>
+            <div className="workshop-architecture-review">
+              <h4>Selected architecture</h4>
+              <p>{spec.architecture.join(' \u00b7 ')}</p>
+              <p><strong>Foundry model:</strong> {FOUNDRY_MODELS[model]}{model === 'auto' ? ' (chosen during the build)' : ''}</p>
+              <small>Included in your build prompt. Component details, model support and agent capabilities still need validation during the build.</small>
             </div>
             <div className="workshop-fields">
               {([
@@ -319,7 +339,15 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
             <div className="workshop-workflow">
               <label htmlFor={`workflow-${key}`}>Build workflow</label>
               <select id={`workflow-${key}`} value={draft.execution} onChange={e => {
-                if (e.target.value === 'agentic-loop' || e.target.value === 'agentic-loop-rapid' || e.target.value === 'threadlight-pipeline') patch({ execution: e.target.value });
+                if (e.target.value === 'agentic-loop' || e.target.value === 'agentic-loop-rapid' || e.target.value === 'threadlight-pipeline') patch({
+                  execution: e.target.value,
+                  manualGuideIds: e.target.value === 'threadlight-pipeline'
+                    ? [...new Set([...draft.manualGuideIds, 'threadlight-pipeline'])]
+                    : draft.manualGuideIds.filter(id => id !== 'threadlight-pipeline'),
+                  removedGuideIds: e.target.value === 'threadlight-pipeline'
+                    ? draft.removedGuideIds.filter(id => id !== 'threadlight-pipeline')
+                    : [...new Set([...draft.removedGuideIds, 'threadlight-pipeline'])],
+                });
               }}>
                 <option value="agentic-loop">Foundry Agentic Loop — SDD (new project, azd deployment)</option>
                 <option value="agentic-loop-rapid">Foundry Agentic Loop — Rapid (existing Foundry project)</option>

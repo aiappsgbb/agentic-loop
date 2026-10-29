@@ -71,10 +71,10 @@ export const ADVISOR_REQUIREMENTS: AdvisorRequirement[] = [
     label: 'Voice',
     description: 'Real-time speech-to-speech or voice-first interactions.',
     techniques: ['Real-Time Conversations', 'Frontier Models'],
-    buildSkills: ['azure-ai-voicelive-py', 'agent-framework-azure-ai-py'],
+    buildSkills: ['microsoft-foundry', 'copilot-sdk'],
     deploymentSkills: ['containerization', 'aigbb-observability'],
-    tools: ['Azure AI Voice Live', 'function tools for actions'],
-    architecture: ['Azure AI Voice Live', 'Foundry model deployment', 'WebSocket-capable app host'],
+    tools: ['gpt-live-1 speech-to-speech', 'function tools for actions'],
+    architecture: ['gpt-live-1 speech-to-speech model', 'Foundry hosted agent', 'WebSocket-capable app host'],
   },
   {
     id: 'private-networking',
@@ -212,12 +212,15 @@ const requirementById = new Map(ADVISOR_REQUIREMENTS.map(r => [r.id, r]));
 
 const selectionRequirementMap: Record<string, AdvisorRequirementId[]> = {
   'frontier-models': ['containerized-agent'],
-  'text-to-speech': ['voice'],
-  'speech-to-text': ['voice'],
   realtime: ['voice'],
   forms: ['knowledge-grounding', 'storage'],
   knowledge: ['knowledge-grounding'],
-  observability: ['observability', 'evals'],
+  'work-iq': ['m365-graph'],
+  toolbox: ['mcp-tools'],
+  evals: ['evals'],
+  'ai-search': ['knowledge-grounding'],
+  'app-insights': ['observability'],
+  observability: ['observability'],
   integration: ['mcp-tools', 'api-backend'],
   'ai-gateway': ['ai-gateway'],
   identity: ['identity-rbac'],
@@ -226,12 +229,13 @@ const selectionRequirementMap: Record<string, AdvisorRequirementId[]> = {
   storage: ['storage'],
   workflow: ['mcp-tools', 'human-approval'],
   domain: ['containerized-agent'],
+  'human-in-the-loop': ['human-approval'],
   'knowledge-grounding': ['knowledge-grounding'],
 };
 
 const textRequirementHints: Array<[RegExp, AdvisorRequirementId]> = [
   [/\b(eval|quality|regression|test)\b/i, 'evals'],
-  [/\b(voice|speech|audio)\b/i, 'voice'],
+  [/\b(voice.first|real.time (?:voice|audio|conversations?)|speech.to.speech|barge.in)\b/i, 'voice'],
   [/\b(private|vnet|network|endpoint)\b/i, 'private-networking'],
   [/\b(trace|monitor|observability|telemetry|logging)\b/i, 'observability'],
   [/\b(rag|ground|knowledge|document|citation|search)\b/i, 'knowledge-grounding'],
@@ -290,7 +294,7 @@ export function buildAdvisorPackage(args: {
     ...selectedPlaybooks.flatMap(p => p.runSkills ?? []),
   ]);
   const tools = unique(requirements.flatMap(r => r.tools));
-  const runArchitecture = unique([
+  const runArchitecture = unique(args.workshopSpec?.architecture ?? [
     'Microsoft Foundry Hosted Agents',
     'Foundry Models',
     ...requirements.flatMap(r => r.architecture),
@@ -311,7 +315,11 @@ export function buildAdvisorPackage(args: {
         : 'SDD with foundry-agentic-loop-workflow: Specify → Implement → Verify → Deploy. Planning is part of Specify, not a separate Plan phase. Start with an Azure subscription and create the Foundry project through the workflow. Require spec approval and always pause before azd up; portal scope confirmation is not deployment approval'}.\n\n` +
         `Respect any existing AGENTS.md mode lock. Confirm a mode switch before rewriting it, preserve unrelated instructions, and keep Azure target settings only in .azure/deployment-plan.md.\n\n`) +
     `Run the skill-owned read-only RBAC and placement preflight before creating resources. Report all permission gaps together and stop on BLOCKED or ERROR; do not grant permissions to bypass this gate. Confirm billable changes before making them.\n\n` +
-    `Freeze the implementation contract before parallel work and prove the minimal hosted integration before expanding the app. Use Foundry hosted agents with the Responses API, a governed toolbox for tools and skills, Foundry IQ when private knowledge needs grounding, managed identities and least-privilege RBAC, and OpenTelemetry into one Application Insights. Use Copilot SDK for runtime skills; use Microsoft Agent Framework for basic agents and explicit workflows. Clarify a workflow that also needs skills. Add complementary services only when the confirmed scope needs them.\n\n` +
+    `Freeze the implementation contract before parallel work and prove the minimal hosted integration before expanding the app. ` +
+    (args.workshopSpec
+      ? `Use the selected Agentic Backbone: GitHub Copilot SDK, Foundry Hosted Agents with the Responses API, and Foundry Models. The selected reference architecture records explicit workshop choices, including linked agent capabilities and App Insights for Observability, not services inferred from the brief. Do not silently add optional components from the brief or guide examples. If implementation needs an additional component or a different harness, explain why and confirm the scope change first. Respect the Foundry model choice: Auto delegates selection to Copilot during the build; never silently substitute an explicit choice. Validate model availability, quota and requested image/speech capabilities, using dedicated models where needed; report blockers or confirm scope changes before deployment. Preserve managed identities and least-privilege RBAC regardless of optional service selections. `
+      : `Use Foundry hosted agents with the Responses API, a governed toolbox for tools and skills, Foundry IQ when private knowledge needs grounding, managed identities and least-privilege RBAC, and OpenTelemetry into one Application Insights. Use Copilot SDK for runtime skills; use Microsoft Agent Framework for basic agents and explicit workflows. Clarify a workflow that also needs skills. `) +
+    `Add complementary services only when the confirmed scope needs them.\n\n` +
     (execution === 'agentic-loop'
       ? `Each SDD phase needs a lead and an independent fresh-context reviewer, evidence-based gates and bounded fix rounds. Pause with evidence when a gate cannot pass; never silently waive it. Preserve flight records in .agentic-loop/runs/ and verified lessons in docs/LOOP.md. Resume journaled work rather than rerunning completed steps.\n\n`
       : `Record verified lessons in docs/LOOP.md and retain scenario, access and failure-path evidence. Do not claim a successful build or deployment from status codes alone.\n\n`);
@@ -348,7 +356,7 @@ export function buildAdvisorPackage(args: {
           `  Adaptation: ${p.adaptation}\n  Prerequisites: ${p.prerequisites.join('; ')}\n  Exclusions: ${p.exclusions.join('; ')}`
         ).join('\n') || '- No packaged guidance chosen. Use the approved custom scope, not a random catalog default.'}\n\n` +
         teachingInstructions +
-        `Reuse the chosen maintained guidance and preserve covered requirements. Generate only approved gaps. Candidate patterns remain provisional until validated against these constraints. Do not substitute canned examples for the customer brief.\n\n` +
+        `Reuse the chosen maintained guidance and preserve covered requirements. Generate only approved gaps. Validate the selected agent capabilities against these constraints. Do not substitute canned examples for the customer brief.\n\n` +
         `Respect the existing repository. Review the specification and implementation contract against this confirmed scope before implementation. Stop for unresolved questions or unsupported requirements, rather than fabricating support.\n\n` +
         `## MVP safeguards\n\n${ESSENTIAL_SAFEGUARDS.map(s => `- ${s}`).join('\n')}\n\n` +
         `Optional development deployment only after explicit scope/permission/model/data readiness review. Use the existing supported build loop; no automatic production rollout. Capture verification evidence and production next steps. A generated or deployed pilot is not production-ready.\n` +
