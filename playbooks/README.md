@@ -12,6 +12,8 @@ Use [Getting Started](./getting-started/README.md) as the golden content pattern
 
 Every playbook must be independently runnable. Its **Setup** slide lists all required accounts, permissions, CLIs, authentication steps, plugins, preview features, devices, and scenario-specific dependencies. Never require readers to finish setup in another playbook or in this directory README.
 
+The common prerequisites live in [`SETUP.md`](./SETUP.md) and are embedded verbatim between `shared-playbook-setup` markers in every playbook and the authoring template. After changing them, run `node scripts/sync-playbook-setup.mjs` from the repository root. Tests reject drift. Keep devices, preview access, extra workflow plugins and other scenario-specific prerequisites outside the shared markers. The build plugin bundles its build skill, canvas and workflow; check for `microsoft-foundry` separately and install it only when missing and approved.
+
 ## Images
 
 Place images in `playbooks/<playbook-name>/images/` and reference them in the README as:
@@ -25,3 +27,5 @@ Images are bundled automatically by Vite via `import.meta.glob` in
 `./images/...` paths are rewritten to hashed, base-path-aware asset URLs at
 build time (works both locally and on GitHub Pages). This directory is the
 single source of truth; **do not** copy images into `public/`.
+
+The shared setup screenshots live in `playbooks/shared/images/` and are referenced as `../shared/images/<file>`. The renderer rewrites these to bundled, base-path-aware URLs too. They depict the portal's environment and project hand-off instructions, not a local readiness verdict.

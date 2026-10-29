@@ -44,26 +44,31 @@ The mode lock lives in root `AGENTS.md`. SDD flight records live in `.agentic-lo
 
 ### Setup
 
-You will need:
+<!-- shared-playbook-setup:start -->
+**Shared prerequisites for every playbook**
 
-- Azure subscription with resource-creation, role-assignment and Foundry data-plane permissions, plus a GitHub Copilot plan. Preflight checks all required scopes before creating resources.
-- [GitHub Copilot App](https://gh.io/app) installed and signed in with your Copilot-enabled GitHub account. Use the App as the build tool throughout this guide.
-- [GitHub CLI (`gh`)](https://cli.github.com/) installed and logged in.
-- [Azure CLI (`az`)](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) and [Azure Developer CLI (`azd`)](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/install-azd) installed and authenticated to your Azure subscription.
-- Git, Node.js, Python 3.13 and the azd Foundry extensions. The canvas readiness check helps identify missing tools; approve installation separately.
-- The `foundry-agentic-loop` plugin. In Copilot App, choose **Customize → Plugins**, find **foundry-agentic-loop**, then **Install**.
+- An Azure subscription with resource-creation, role-assignment and Foundry data-plane permissions. Preflight checks all required scopes before resources are created; subscription Owner alone does not grant every Foundry data-plane role.
+- A GitHub Copilot plan and the [GitHub Copilot App](https://gh.io/app), installed and signed in. Use App Chat for the build; the [Copilot CLI](https://github.com/features/copilot/cli/) is an alternative execution environment.
+- [GitHub CLI (`gh`)](https://cli.github.com/) v2.90.0+ with `gh skill` available, [Azure CLI (`az`)](https://learn.microsoft.com/cli/azure/install-azure-cli), [Azure Developer CLI (`azd`)](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd) with its Foundry extensions, Git, Node.js and Python 3.13. Approve missing-tool installations separately.
 
-> Install the [published Foundry Agentic Loop plugin](https://github.com/github/awesome-copilot/tree/main/plugins/foundry-agentic-loop). No separate lean plugin, policy-skill installation or Cockpit import is needed. If a bundled component is missing, Copilot asks before reinstalling the plugin. It never installs extensions from a URL or edits Copilot settings. Re-enable disabled extensions in your extension settings and continue in a new session. Without the canvas, continue in Chat; without the workflow, SDD cannot start. Switching to Rapid requires confirmation and an existing Foundry project.
+**Install once; reuse across playbooks.** In Copilot App, choose **Customize → Plugins**, find **foundry-agentic-loop**, then **Install**. The [published Foundry Agentic Loop plugin](https://github.com/github/awesome-copilot/tree/main/plugins/foundry-agentic-loop) bundles the build skill, canvas and SDD workflow. Do not separately install the bundled build skill, legacy policy skill, lean plugin or Cockpit.
 
-Alternatively, install the published plugin from Copilot CLI:
+Alternatively, install the plugin from Copilot CLI:
 
 ```bash
 copilot plugin install foundry-agentic-loop@awesome-copilot
 ```
 
-**Open the bundled canvas.** In your project session, ask **open the agentic loop**. No separate lean plugin, policy-skill install or Cockpit import is needed. The canvas does not grant deployment permissions or replace Azure sign-in.
+The **microsoft-foundry** companion skill is also required. Reuse an existing installation, including one supplied by the Azure plugin. Ask **open the agentic loop** in your project session; Copilot checks for the companion and asks before installing it if missing. For an approved manual installation, run this from your project folder, then reload skills or start a new session:
 
-Sign in to the supporting tools in the terminal of the environment where Copilot executes the build, including when using a sandbox. These commands are identical on Windows, macOS, and Linux:
+```bash
+gh skill list
+gh skill install microsoft/azure-skills microsoft-foundry --agent github-copilot --scope project
+```
+
+Run the install command only when the companion is missing. Build skills guide Copilot; runtime domain skills are separate and selected per playbook.
+
+**Authenticate in the execution environment**, including when using a sandbox:
 
 ```bash
 gh auth login
@@ -71,15 +76,31 @@ az login
 azd auth login
 ```
 
-Check the correct account and subscription:
+Check the account, target subscription and tooling before building:
 
 ```bash
-az account show       # confirm the correct tenant and subscription
-azd auth login --check-status   # confirm you are signed in to azd
-gh auth status       # confirm GitHub CLI authentication
+gh --version
+gh auth status
+gh skill list
+az account show
+azd version
+azd auth login --check-status
 ```
 
-> **Heads up on cost.** This playbook provisions billable Azure resources (Container Apps, a Foundry/AI Services account, and Application Insights). Leaving them running incurs charges — see [Clean up](#clean-up) to remove everything when you are done.
+**Open the bundled canvas.** Add your local folder or repository in Copilot App, start a project session and ask **open the agentic loop**. Check **Start** readiness and choose the intended mode. SDD starts from a subscription; Rapid requires an existing Foundry project. Alternative delivery playbooks such as Threadlight retain their own additional prerequisites and workflow. The canvas does not grant deployment permissions or replace Azure sign-in.
+
+The screenshots show this portal's shared setup and project hand-off guidance, not proof that your local tools, plugin or Azure subscription are ready.
+
+![Workshop environment checklist: plugin, companion skill and authentication guidance](../shared/images/environment-setup.png)
+
+![Workshop project setup: add a project and open the bundled Agentic Loop canvas](../shared/images/project-setup.png)
+
+> Important: If a bundled component is missing, Copilot asks before reinstalling the plugin. It never installs extensions from a URL or edits Copilot settings. Re-enable disabled extensions in your extension settings and continue in a new session. Without the canvas, continue in Chat; without the workflow, SDD cannot start. Switching to Rapid requires confirmation and an existing Foundry project.
+
+> Warning: Builds can create billable Azure resources. Confirm the scope, target, model availability and cost before provisioning or deployment. Review each playbook's scenario-specific prerequisites and cleanup instructions; do not delete pre-existing resources.
+<!-- shared-playbook-setup:end -->
+
+> **Heads up on cost.** This playbook provisions Container Apps, Foundry/AI Services and Application Insights. See [Clean up](#clean-up) before leaving resources running.
 
 ## Build
 

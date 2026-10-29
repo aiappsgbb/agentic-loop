@@ -763,6 +763,28 @@ class WorkshopJourneys(unittest.TestCase):
         self.assertIn("Azure Container Apps is not selected", prompt)
         self.assertNotIn("- Azure Container Apps", prompt)
 
+    def test_shared_setup_images_render_in_every_playbook_on_static_hosting(self):
+        catalogue = json.loads(Path("src/data/playbooks.json").read_text())
+        for guide in catalogue:
+            with self.subTest(guide=guide["slug"]):
+                chapter = {"threadlight-pipeline": "get-started", "citadel-governance-hub": "build-the-hub"}.get(guide["slug"], "intro")
+                self.go("/playbooks/" + guide["slug"] + "#" + chapter + "-setup", base=STATIC)
+                expect(self.page.get_by_text("Shared prerequisites for every playbook", exact=True)).to_be_visible()
+                expect(self.page.locator(".md-code pre").filter(has_text="gh skill install microsoft/azure-skills microsoft-foundry")).to_have_count(1)
+                for alt in [
+                    "Workshop environment checklist: plugin, companion skill and authentication guidance",
+                    "Workshop project setup: add a project and open the bundled Agentic Loop canvas",
+                ]:
+                    image = self.page.get_by_role("img", name=alt, exact=True)
+                    expect(image).to_have_count(1)
+                    expect(image).to_have_attribute("src", re.compile(r"^/agentic-loop/assets/"))
+                    self.page.wait_for_function(
+                        "alt => Array.from(document.images).some(image => image.alt === alt && image.complete && image.naturalWidth > 0)", arg=alt)
+        self.page.set_viewport_size({"width": 390, "height": 844})
+        self.go("/playbooks/getting-started#intro-setup", base=STATIC)
+        expect(self.page.get_by_text("Shared prerequisites for every playbook", exact=True)).to_be_visible()
+        self.assertLessEqual(self.page.evaluate("document.documentElement.scrollWidth"), 390)
+        self.snapshot("shared-playbook-setup-mobile.png")
 
     def test_suggested_guides_do_not_change_architecture_and_inherited_requirements_do_not_recommend_more_guides(self):
         self.go()

@@ -3813,6 +3813,7 @@
 .playbook-missing h1 { margin-bottom: 8px; }
 
 @media (max-width: 720px) {
+  .playbook-topbar { flex-wrap: wrap; }
   .chapter-pill-label { display: none; }
   .playbook-title-strip { display: none; }
   .playbook-nav-hint { display: none; }
