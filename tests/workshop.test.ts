@@ -38,7 +38,7 @@ test('three sample briefs cover reuse, gaps and a custom outcome without preappr
     assert.equal(draft.approved, null);
     assert.equal(draft.model, 'auto');
     assert.ok(draft.capabilities.includes('frontier-models'));
-    assert.deepEqual(draft.buildingBlocks, ['identity', 'observability']);
+    assert.deepEqual(draft.buildingBlocks, ['identity', 'observability', 'container-apps']);
     assert.ok(!draft.patterns.includes('multi-agent'));
   }
   assert.deepEqual(newWorkshopDraft(workshopBriefs[0]).capabilities, ['frontier-models', 'knowledge']);
@@ -75,9 +75,9 @@ test('architecture choices include only selected components and the explicit obs
   };
   const architecture = selectedArchitecture(values);
   assert.deepEqual(architecture, [
-    'GitHub Copilot SDK', 'Hosted Agent', 'Foundry Models', 'Foundry IQ', 'Observability', 'Identity & Access', 'App Insights',
+    'GitHub Copilot SDK', 'Hosted Agent', 'Foundry Models', 'Foundry IQ', 'Tracing', 'Identity & Access', 'App Insights',
   ]);
-  for (const excluded of ['AI Search', 'Storage', 'Key Vault', 'Evaluations', 'Toolbox', 'Skills']) {
+  for (const excluded of ['AI Search', 'Storage', 'Key Vault', 'Evaluations', 'MCP', 'Skills']) {
     assert.ok(!architecture.includes(excluded));
   }
   assert.deepEqual(selectedArchitecture({ ...values, buildingBlocks: ['data'] }), [
@@ -226,6 +226,35 @@ test('playbook requirements are derived, shared, and released without losing ind
   const removed = resolvePlaybookSelections(raw, []);
   assert.deepEqual(removed.selections, { ...raw, capabilities: ['frontier-models', 'knowledge'] });
 });
+test('renamed architecture labels preserve legacy selections and playbook metadata', () => {
+  const guide = playbooks.find(p => p.slug === 'bring-your-own-skills')!;
+  const legacy = { ...guide, patterns: [], building_blocks: ['Toolbox', 'Observability'] };
+  const result = resolvePlaybookSelections({ capabilities: [], buildingBlocks: [], patterns: [] }, [legacy]);
+  assert.deepEqual(result.selections.buildingBlocks, ['toolbox', 'observability', 'app-insights']);
+  assert.deepEqual(selectedArchitecture(result.selections), [
+    'GitHub Copilot SDK', 'Hosted Agent', 'Foundry Models', 'MCP', 'Tracing', 'App Insights',
+  ]);
+  assert.equal(ARCHITECTURE_NODES.find(node => node.id === 'ai-gateway')?.weight, 'foundation');
+});
+test('ACA is a removable starting default, not an inherited or normalized mandatory choice', () => {
+  const draft = newWorkshopDraft();
+  assert.ok(draft.buildingBlocks.includes('container-apps'));
+  const raw = { ...draft, buildingBlocks: draft.buildingBlocks.filter(id => id !== 'container-apps') };
+  const normalized = normalizeWorkshopSelections(raw);
+  assert.ok(!normalized.buildingBlocks.includes('container-apps'));
+  assert.ok(!resolvePlaybookSelections(normalized, playbooks).selections.buildingBlocks.includes('container-apps'));
+  assert.ok(!selectedArchitecture(normalized).includes('Azure Container Apps'));
+});
+test('new advisor selections keep WebIQ distinct from generic web search and optional optimization tools', () => {
+  assert.deepEqual(inferRequirementsFromSelections(['web-iq', 'agent-optimizer', 'agent-insights']), [
+    'web-iq', 'agent-optimizer', 'agent-insights',
+  ]);
+  const result = buildAdvisorPackage({
+    path: 'idea', intent: hr, requirementIds: inferRequirementsFromSelections(['web-iq']),
+  });
+  assert.ok(result.tools.includes('Microsoft Web IQ MCP connection'));
+  assert.ok(!result.tools.includes('Foundry web search tool'));
+});
 test('linked agent capabilities inherit one canonical locked requirement', () => {
   const guide = playbooks.find(p => p.slug === 'multi-agent-orchestration')!;
   const result = resolvePlaybookSelections({ capabilities: [], buildingBlocks: [], patterns: [] }, [guide]);
@@ -265,7 +294,7 @@ const spec: WorkshopSpec = {
   constraints: ['EU data residency', 'Approved sample documents only'],
   assumptions: ['Corpus owner supplies approved samples'], successCriteria: ['Every supported answer cites a source'],
   evidence: ['20 policy/refusal cases and access-boundary results'],
-  capabilities: ['Foundry IQ'], buildingBlocks: ['Identity & Access', 'Observability', 'App Insights'],
+  capabilities: ['Foundry IQ'], buildingBlocks: ['Identity & Access', 'Tracing', 'App Insights'],
   agentCapabilities: ['Knowledge Grounding'], execution: 'agentic-loop',
   architecture: selectedArchitecture({ capabilities: ['knowledge'], buildingBlocks: ['identity', 'observability'] }),
   guides: [{ slug: 'enterprise-knowledge-grounding', reason: 'Citations required by the brief' }],
@@ -278,13 +307,45 @@ test('approval snapshots invalidate when any upstream source of truth changes', 
   for (const changed of [
     { ...spec, brief: 'A different brief' }, { ...spec, constraints: ['Different residency'] },
     { ...spec, successCriteria: ['Different criterion'] }, { ...spec, agentCapabilities: ['Human-in-the-Loop'] },
-    { ...spec, architecture: [...spec.architecture, 'Toolbox'] },
+    { ...spec, architecture: [...spec.architecture, 'MCP'] },
     { ...spec, model: 'gpt-6.1-sol' as const },
   ]) assert.ok(!approvalIsCurrent(changed, approved));
   assert.ok(!canApproveSpec({ ...spec, users: '' }));
   assert.ok(!canApproveSpec({ ...spec, openQuestions: ['Unresolved access?'] }));
   assert.ok(!canApproveSpec({ ...spec, gaps: ['Customer integration'] }));
   assert.ok(canApproveSpec({ ...spec, gaps: ['Customer integration'], resolutions: 'Use approved sample data; exclude the live integration.' }));
+});
+test('new architecture components contribute scoped guidance in every build mode', () => {
+  for (const execution of ['agentic-loop', 'agentic-loop-rapid', 'threadlight-pipeline'] as const) {
+    const selections = { capabilities: ['web-iq'], buildingBlocks: ['agent-optimizer', 'agent-insights', 'toolbox', 'container-apps'] };
+    const selected: WorkshopSpec = {
+      ...spec, execution, guides: [],
+      capabilities: ['WebIQ'],
+      buildingBlocks: ['Agent Optimizer', 'Agent Insights', 'MCP', 'Azure Container Apps'],
+      architecture: selectedArchitecture(selections),
+    };
+    const prompt = buildAdvisorPackage({
+      path: 'idea', intent: hr, requirementIds: inferRequirementsFromSelections([...selections.capabilities, ...selections.buildingBlocks]), workshopSpec: selected,
+    }).copilotPrompt;
+    for (const label of ['WebIQ', 'Agent Optimizer', 'Agent Insights', 'MCP', 'Azure Container Apps']) {
+      assert.match(prompt, new RegExp(`- ${label}:`));
+    }
+    assert.match(prompt, /Applying a candidate or redeploying requires approval/i);
+    assert.match(prompt, /Reading existing insights is read-only/);
+    assert.match(prompt, /not a change to direct|does not request direct/);
+    assert.match(prompt, /Use the selected Azure Container Apps for frontend\/backend hosting/);
+    const without = buildAdvisorPackage({
+      path: 'idea', intent: hr, requirementIds: [], workshopSpec: {
+        ...selected, capabilities: [], buildingBlocks: [], architecture: SPINE_NODES.map(n => n.label),
+      },
+    });
+    assert.ok(!without.copilotPrompt.includes('### Selected component guidance'));
+    assert.match(without.copilotPrompt, /Azure Container Apps is not selected/);
+    if (execution === 'agentic-loop-rapid') {
+      assert.equal(without.deploymentCommand, null);
+      assert.ok(!without.copilotPrompt.includes('using az containerapp up'));
+    }
+  }
 });
 test('selected architecture survives approval and build hand-off without inferred additions', () => {
   const architecture = selectedArchitecture({ capabilities: [], buildingBlocks: ['toolbox'] });
@@ -300,6 +361,25 @@ test('selected architecture survives approval and build hand-off without inferre
   assert.match(result.copilotPrompt, /confirm the scope change first/);
   assert.ok(!result.runArchitecture.includes('Foundry IQ'));
   assert.ok(!result.runArchitecture.includes('Private Networking'));
+});
+test('Agent Memory is opt-in and contributes Foundry memory instructions in every build mode', () => {
+    const selections = { capabilities: [], buildingBlocks: [], patterns: ['agent-memory'] };
+    assert.deepEqual(normalizeWorkshopSelections(selections).patterns, ['agent-memory']);
+    assert.ok(recommendWorkshop(hr, ['agent-memory']).requirements.some(item => item.id === 'agent-memory'));
+    for (const execution of ['agentic-loop', 'agentic-loop-rapid', 'threadlight-pipeline'] as const) {
+      for (const enabled of [false, true]) {
+        const workshopSpec = { ...spec, execution, agentCapabilities: enabled ? ['Agent Memory'] : [] };
+        const prompt = buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [], workshopSpec }).copilotPrompt;
+        assert.equal(prompt.includes('### Selected agent capability guidance'), enabled);
+        assert.equal(prompt.includes('https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/memory-usage'), enabled);
+        if (enabled) {
+          assert.match(prompt, /chat and embedding model deployments/);
+          assert.match(prompt, /authenticated identity on the trusted backend/);
+          assert.match(prompt, /retention\/TTL and explicit remember\/forget/);
+          assert.match(prompt, /recall across separate conversations, cross-user isolation, expiration and deletion/);
+        }
+      }
+    }
 });
 test('every model choice and agent capability survives all build workflow prompts', () => {
   for (const model of ['auto', 'gpt-6.1-sol', 'gpt-6-luna', 'claude-sonnet-5.5'] as const) {
@@ -401,7 +481,7 @@ test('playbooks retain teaching context and repeatable customer-specific build g
     const result = buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [], workshopSpec: { ...spec, execution } });
     assert.match(result.copilotPrompt, /## Learn while building/);
     assert.match(result.copilotPrompt, /Solution Engineer can teach the customer/);
-    assert.match(result.copilotPrompt, /Platform focus: Frontier Models; Foundry IQ; Identity & Access; Observability; Evaluations/);
+    assert.match(result.copilotPrompt, /Platform focus: Frontier Models; Foundry IQ; Identity & Access; Tracing; Evaluations/);
     assert.match(result.copilotPrompt, /connect each chosen platform capability to a confirmed customer requirement/);
     assert.match(result.copilotPrompt, /without repeating every tutorial step/);
     assert.match(result.copilotPrompt, /Preserve scope and permission reviews on every build/);
@@ -459,7 +539,7 @@ test('SDD folds planning into Specify and retains review, approval and resume ga
   assert.equal(result.deploymentCommand, 'azd up');
 });
 test('Rapid preserves the existing-project requirement without running SDD', () => {
-  const rapidSpec: WorkshopSpec = { ...spec, execution: 'agentic-loop-rapid' };
+  const rapidSpec: WorkshopSpec = { ...spec, buildingBlocks: [...spec.buildingBlocks, 'Azure Container Apps'], execution: 'agentic-loop-rapid' };
   const result = buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [], workshopSpec: rapidSpec });
   assert.match(result.copilotPrompt, /Rapid prototyping in an existing Foundry project/);
   assert.match(result.copilotPrompt, /Ask for the project if none is established/);

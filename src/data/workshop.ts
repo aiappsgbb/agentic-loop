@@ -2,7 +2,7 @@ import { playbooks, type Playbook } from './catalog';
 import { buildWorkflowLabel, type BuildExecution } from './buildWorkflow';
 import {
   FOUNDRY_MODELS, MODEL_CAPABILITY_OPTIONS, AGENT_CAPABILITY_OPTIONS, AGENT_CAPABILITY_LINKS,
-  ARCHITECTURE_OPTIONS, WORKSHOP_CAPABILITY_OPTIONS, normalizeWorkshopSelections, withObservability,
+  ARCHITECTURE_NODES, ARCHITECTURE_OPTIONS, WORKSHOP_CAPABILITY_OPTIONS, canonicalArchitectureLabel, normalizeWorkshopSelections, withObservability,
   type FoundryModelId, type WorkshopSelections,
 } from './architecture';
 
@@ -27,8 +27,12 @@ const RULES: Array<{ id: string; label: string; pattern: RegExp; selections: str
   { id: 'text-to-speech', label: 'Text to speech', pattern: /\b(text.to.speech|tts|speech synthesis|read aloud|read .{0,80} aloud)\b/i, selections: ['text-to-speech'] },
   { id: 'speech-to-text', label: 'Speech to text', pattern: /\b(speech.to.text|stt|transcri(?:be|ption|bing))\b/i, selections: ['speech-to-text'] },
   { id: 'multi-agent', label: 'Heterogeneous agents with typed hand-offs', pattern: /\b(multi.agent|heterogeneous agents|agent.to.agent)\b/i, selections: ['multi-agent'] },
+  { id: 'agent-memory', label: 'Agent Memory across conversations', pattern: /\bagent memory\b/i, selections: ['agent-memory'] },
   { id: 'governance', label: 'Policy boundaries and safety controls', pattern: /\b(safety controls|regulated|red.team|sensitive data|claims assistant|policy enforcement)\b/i, selections: ['content-safety'] },
   { id: 'evals', label: 'Continuous evaluation and regression gates', pattern: /\b(evals?|regression|continuous evaluation|trace mining)\b/i, selections: ['evals'] },
+  { id: 'web-iq', label: 'WebIQ public-web grounding', pattern: /\bweb\s?iq\b/i, selections: ['web-iq'] },
+  { id: 'agent-optimizer', label: 'Agent Optimizer', pattern: /\bagent optimizer\b/i, selections: ['agent-optimizer'] },
+  { id: 'agent-insights', label: 'Agent Insights', pattern: /\bagent insights\b/i, selections: ['agent-insights'] },
   { id: 'reusable-skills', label: 'Govern existing agent skills', pattern: /\b(existing skills|own skills|versioned skills|governed skills)\b/i, selections: [] },
   { id: 'ai-gateway', label: 'Governed shared AI gateway', pattern: /\b(ai gateway|apim|shared foundry capacity|citadel)\b/i, selections: ['ai-gateway'] },
   { id: 'delivery', label: 'Opinionated end-to-end delivery pipeline', pattern: /\b(threadlight|opinionated pipeline|production scorecard|eu ai act evidence pack)\b/i, selections: [] },
@@ -108,7 +112,7 @@ export function resolvePlaybookSelections(raw: WorkshopSelections, guides: reado
       ['buildingBlocks', guide.building_blocks ?? [], ARCHITECTURE_OPTIONS.filter(option => option.field === 'buildingBlocks')],
     ] as const) {
       for (const value of values) {
-        const option = options.find(option => option.id === value || option.label === value);
+        const option = options.find(option => option.id === value || option.label === canonicalArchitectureLabel(value));
         if (!option) throw new Error(`Unknown ${field} requirement "${value}" in playbook ${guide.slug}`);
         requireSelection(field, option.id, guide.name);
       }
@@ -153,6 +157,11 @@ export function formatWorkshopSpec(spec: WorkshopSpec): string {
 }
 export function formatWorkshopSpecMarkdown(spec: WorkshopSpec): string {
   const modelCapabilities = MODEL_CAPABILITY_OPTIONS.filter(option => spec.capabilities.includes(option.label));
+  const agentGuidance = AGENT_CAPABILITY_OPTIONS.flatMap(option =>
+    spec.agentCapabilities.includes(option.label) && 'buildGuidance' in option
+      ? [`${option.label}: ${option.buildGuidance}`] : []);
+  const componentGuidance = ARCHITECTURE_NODES.filter(node => node.buildGuidance &&
+    (node.selection?.field === 'capabilities' ? spec.capabilities : spec.buildingBlocks).includes(node.label));
   const referenceBrief = (text: string) =>
     spec.brief.trim() && text.trim() === spec.brief.trim() ? 'See Customer brief.' : text;
   const section = (title: string, content: string | string[]) =>
@@ -183,7 +192,11 @@ export function formatWorkshopSpecMarkdown(spec: WorkshopSpec): string {
     ] : []),
     section('Building blocks', spec.buildingBlocks),
     section('Agent capabilities', spec.agentCapabilities),
+    ...(agentGuidance.length ? [section('Selected agent capability guidance', agentGuidance)] : []),
     section('Selected reference architecture', spec.architecture),
+    ...(componentGuidance.length ? [
+      section('Selected component guidance', componentGuidance.map(node => `${node.label}: ${node.buildGuidance}`)),
+    ] : []),
     section('Build workflow', buildWorkflowLabel(spec.execution)),
     section('Selected guides', spec.guides.map(guide => `${guide.slug}: ${guide.reason}`)),
     section('Remaining gaps', spec.gaps),

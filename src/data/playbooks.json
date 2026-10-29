@@ -13,7 +13,7 @@
     "use_when": "You're new to the loop and want the shortest path from zero to a running agent.",
     "patterns": ["*"],
     "capabilities": ["Frontier Models"],
-    "building_blocks": ["Observability"],
+    "building_blocks": ["Tracing"],
     "buildSkills": ["foundry-agentic-loop", "microsoft-foundry", "copilot-sdk", "python-mcp-server-generator", "appinsights-instrumentation"],
     "runSkills": []
   },
@@ -31,7 +31,7 @@
     "use_when": "Answers must be grounded in enterprise knowledge with citations and repeatable ingestion.",
     "patterns": ["Knowledge Grounding", "Employee Onboarding"],
     "capabilities": ["Frontier Models", "Foundry IQ"],
-    "building_blocks": ["Identity & Access", "Observability", "Evaluations"],
+    "building_blocks": ["Identity & Access", "Tracing", "Evaluations"],
     "buildSkills": ["foundry-agentic-loop", "microsoft-foundry", "copilot-sdk", "azure-ai", "azure-storage", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
     "runSkills": []
   },
@@ -49,7 +49,7 @@
     "use_when": "A workflow needs heterogeneous agents collaborating through typed hand-offs and governed skills.",
     "patterns": ["Multi-Agent Orchestration", "Domain-Specific Agents"],
     "capabilities": ["Frontier Models"],
-    "building_blocks": ["Skills", "Toolbox", "Identity & Access", "Observability", "Evaluations"],
+    "building_blocks": ["Skills", "MCP", "Identity & Access", "Tracing", "Evaluations"],
     "buildSkills": ["foundry-agentic-loop", "microsoft-foundry", "microsoft-agent-framework", "copilot-sdk", "python-mcp-server-generator", "azure-aigateway", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
     "runSkills": ["launch-research-synthesizer"]
   },
@@ -67,7 +67,7 @@
     "use_when": "A regulated assistant must minimize sensitive data, enforce decision boundaries, and audit every action.",
     "patterns": ["Governance", "Human-in-the-Loop", "Domain-Specific Agents"],
     "capabilities": ["Frontier Models"],
-    "building_blocks": ["Skills", "Toolbox", "Identity & Access", "AI Gateway", "Observability", "Evaluations"],
+    "building_blocks": ["Skills", "MCP", "Identity & Access", "AI Gateway", "Tracing", "Evaluations"],
     "buildSkills": ["foundry-agentic-loop", "microsoft-foundry", "copilot-sdk", "azure-aigateway", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
     "runSkills": ["claims-compliance"]
   },
@@ -85,7 +85,7 @@
     "use_when": "You need production trace mining, versioned regression sets, and evidence-backed improvement PRs.",
     "patterns": ["Continuous Evaluation", "Domain-Specific Agents"],
     "capabilities": ["Frontier Models"],
-    "building_blocks": ["Skills", "Toolbox", "Identity & Access", "Observability", "Evaluations"],
+    "building_blocks": ["Skills", "MCP", "Identity & Access", "Tracing", "Evaluations"],
     "buildSkills": ["foundry-agentic-loop", "microsoft-foundry", "copilot-sdk", "azure-kusto", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
     "runSkills": ["support-resolution"]
   },
@@ -103,7 +103,7 @@
     "use_when": "A spoken guest experience needs low latency, tool use, and reliable staff escalation.",
     "patterns": ["Voice-First", "Human-in-the-Loop"],
     "capabilities": ["Frontier Models", "Real-Time Conversations"],
-    "building_blocks": ["Skills", "Toolbox", "Identity & Access", "Observability", "Evaluations"],
+    "building_blocks": ["Skills", "MCP", "Identity & Access", "Tracing", "Evaluations"],
     "buildSkills": ["foundry-agentic-loop", "microsoft-foundry", "copilot-sdk", "azure-ai", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
     "runSkills": ["guest-services-concierge"]
   },
@@ -121,7 +121,7 @@
     "use_when": "Proven local or GitHub-hosted skills need enterprise identity, governed distribution, evals, and rollback.",
     "patterns": ["Domain-Specific Agents"],
     "capabilities": ["Frontier Models"],
-    "building_blocks": ["Skills", "Toolbox", "Identity & Access", "Observability", "Evaluations"],
+    "building_blocks": ["Skills", "MCP", "Identity & Access", "Tracing", "Evaluations"],
     "buildSkills": ["foundry-agentic-loop", "microsoft-foundry", "copilot-sdk", "azure-aigateway", "entra-agent-id", "azure-rbac", "appinsights-instrumentation", "azure-prepare", "azure-validate", "azure-deploy"],
     "runSkills": []
   },
@@ -140,7 +140,7 @@
     "use_when": "You want the fast, paved path from a customer brief to a governed pilot and accept strong opinionated defaults in exchange for speed.",
     "patterns": ["*"],
     "capabilities": ["Frontier Models"],
-    "building_blocks": ["Observability", "AI Gateway", "Identity & Access", "Private Networking", "Evaluations"],
+    "building_blocks": ["Tracing", "AI Gateway", "Identity & Access", "Private Networking", "Evaluations"],
     "buildSkills": ["threadlight-design", "threadlight-demo-data-factory", "threadlight-local-test", "threadlight-deploy", "threadlight-safe-check", "threadlight-evals", "threadlight-redteam", "threadlight-govern", "threadlight-consumption-iq", "threadlight-production-ready", "threadlight-cicd", "threadlight-customize", "threadlight-event-triggers", "threadlight-hitl-patterns", "threadlight-workspace-ui", "threadlight-router-bench", "threadlight-auto"],
     "runSkills": []
   },
@@ -159,7 +159,7 @@
     "use_when": "A use case must go to production and many teams need to share Foundry capacity behind one governed, observable, cost-attributed endpoint.",
     "patterns": ["Governance"],
     "capabilities": ["Frontier Models"],
-    "building_blocks": ["AI Gateway", "Identity & Access", "Observability"],
+    "building_blocks": ["AI Gateway", "Identity & Access", "Tracing"],
     "buildSkills": ["citadel-hub-deploy", "citadel-spoke-onboarding", "azure-aigateway", "entra-agent-id", "azure-rbac", "appinsights-instrumentation"],
     "runSkills": ["incident-postmortem"]
   }

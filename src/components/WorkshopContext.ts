@@ -36,7 +36,7 @@ export function newWorkshopDraft(brief = ''): WorkshopDraft {
     brief,
     model: 'auto',
     capabilities: withRequiredCapabilities(groundedSample ? ['knowledge'] : []),
-    buildingBlocks: ['identity', 'observability'],
+    buildingBlocks: ['identity', 'observability', 'container-apps'],
     patterns: sampleIndex === 2 ? ['human-in-the-loop'] : [],
     customCapabilities: '', customBlocks: '', customPatterns: '',
     outcome: '', users: '', inScope: '', outOfScope: 'Production rollout and production-readiness certification',

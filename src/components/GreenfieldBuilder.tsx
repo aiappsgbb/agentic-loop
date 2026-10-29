@@ -9,7 +9,7 @@ import MakeItRealModal from './MakeItRealModal';
 import ArchitectureStrip from './ArchitectureStrip';
 import {
   ARCHITECTURE_OPTIONS, AGENT_CAPABILITY_LINKS, AGENT_CAPABILITY_OPTIONS, FOUNDRY_MODELS, MODEL_CAPABILITY_OPTIONS,
-  WORKSHOP_CAPABILITY_OPTIONS, normalizeWorkshopSelections, selectedArchitecture,
+  WORKSHOP_CAPABILITY_OPTIONS, canonicalArchitectureLabel, normalizeWorkshopSelections, selectedArchitecture,
 } from '../data/architecture';
 import {
   buildAdvisorPackage,
@@ -55,7 +55,7 @@ export default function GreenfieldBuilder({ scenario, eyebrow, heading, intro, g
     const draft = newWorkshopDraft(scenario?.prompt ?? scenario?.description ?? '');
     if (scenario) {
       const matchOptions = (values: string[], options: PickerOption[]) => options
-        .filter(option => values.some(value => value === option.id || value.toLowerCase() === option.label.toLowerCase() ||
+        .filter(option => values.some(value => value === option.id || canonicalArchitectureLabel(value).toLowerCase() === option.label.toLowerCase() ||
           option.id === 'knowledge' && value === 'Knowledge'))
         .map(option => option.id);
       draft.capabilities = withRequiredCapabilities(matchOptions(scenario.capabilities ?? [], CAPABILITIES));

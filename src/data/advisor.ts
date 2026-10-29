@@ -16,6 +16,9 @@ export type AdvisorRequirementId =
   | 'm365-graph'
   | 'mcp-tools'
   | 'web-search'
+  | 'web-iq'
+  | 'agent-optimizer'
+  | 'agent-insights'
   | 'human-approval'
   | 'containerized-agent'
   | 'api-backend';
@@ -43,7 +46,7 @@ export interface AdvisorPackage {
   tools: string[];
   runArchitecture: string[];
   copilotPrompt: string;
-  deploymentCommand: 'azd up' | 'az containerapp up';
+  deploymentCommand: 'azd up' | 'az containerapp up' | null;
   workshopSpec?: WorkshopSpec;
 }
 
@@ -88,7 +91,7 @@ export const ADVISOR_REQUIREMENTS: AdvisorRequirement[] = [
   },
   {
     id: 'observability',
-    label: 'Observability',
+    label: 'Tracing',
     description: 'Traces, metrics, structured logs, health checks, and feedback signals.',
     techniques: ['Observability'],
     buildSkills: ['azure-ai-projects-py'],
@@ -177,6 +180,36 @@ export const ADVISOR_REQUIREMENTS: AdvisorRequirement[] = [
     architecture: ['Foundry hosted web search with citation tracing'],
   },
   {
+    id: 'web-iq',
+    label: 'WebIQ',
+    description: 'Current public-web search and grounding through Microsoft Web IQ, with source provenance.',
+    techniques: ['Public-web grounding'],
+    buildSkills: ['microsoft-foundry'],
+    deploymentSkills: [],
+    tools: ['Microsoft Web IQ MCP connection'],
+    architecture: ['Microsoft Web IQ through the governed Foundry toolbox MCP endpoint'],
+  },
+  {
+    id: 'agent-optimizer',
+    label: 'Agent Optimizer',
+    description: 'Evaluate a baseline and compare supported configuration candidates before approved application.',
+    techniques: ['Evaluations'],
+    buildSkills: ['microsoft-foundry'],
+    deploymentSkills: [],
+    tools: ['Foundry Agent Optimizer'],
+    architecture: ['Foundry Agent Optimizer'],
+  },
+  {
+    id: 'agent-insights',
+    label: 'Agent Insights',
+    description: 'Review evidence-backed findings from Foundry trace analysis; validate preview support.',
+    techniques: ['Tracing'],
+    buildSkills: ['microsoft-foundry'],
+    deploymentSkills: [],
+    tools: ['Foundry Agent Insights'],
+    architecture: ['Foundry Agent Insights'],
+  },
+  {
     id: 'human-approval',
     label: 'Human approval',
     description: 'Add approval gates before sensitive tool calls or production actions.',
@@ -216,6 +249,10 @@ const selectionRequirementMap: Record<string, AdvisorRequirementId[]> = {
   forms: ['knowledge-grounding', 'storage'],
   knowledge: ['knowledge-grounding'],
   'work-iq': ['m365-graph'],
+  'web-iq': ['web-iq'],
+  'agent-optimizer': ['agent-optimizer'],
+  'agent-insights': ['agent-insights'],
+  'container-apps': ['api-backend'],
   toolbox: ['mcp-tools'],
   evals: ['evals'],
   'ai-search': ['knowledge-grounding'],
@@ -311,13 +348,13 @@ export function buildAdvisorPackage(args: {
     (execution === 'threadlight-pipeline'
       ? `The customer chose Threadlight. Reconcile its prerequisites with this scope and the Foundry guidance; do not start the SDD workflow or replace the selected delivery workflow.\n\n`
       : `Use ${execution === 'agentic-loop-rapid'
-        ? 'Rapid prototyping in an existing Foundry project. Ask for the project if none is established; never substitute a saved suggestion without approval. Build and verify locally from Chat; deployment is a separate, explicitly approved action using az containerapp up, not the SDD workflow'
+        ? `Rapid prototyping in an existing Foundry project. Ask for the project if none is established; never substitute a saved suggestion without approval. Build and verify locally from Chat; deployment is a separate, explicitly approved action${!args.workshopSpec || args.workshopSpec.buildingBlocks.includes('Azure Container Apps') ? ' using az containerapp up' : ' using the confirmed alternative hosting target'}, not the SDD workflow`
         : 'SDD with foundry-agentic-loop-workflow: Specify → Implement → Verify → Deploy. Planning is part of Specify, not a separate Plan phase. Start with an Azure subscription and create the Foundry project through the workflow. Require spec approval and always pause before azd up; portal scope confirmation is not deployment approval'}.\n\n` +
         `Respect any existing AGENTS.md mode lock. Confirm a mode switch before rewriting it, preserve unrelated instructions, and keep Azure target settings only in .azure/deployment-plan.md.\n\n`) +
     `Run the skill-owned read-only RBAC and placement preflight before creating resources. Report all permission gaps together and stop on BLOCKED or ERROR; do not grant permissions to bypass this gate. Confirm billable changes before making them.\n\n` +
     `Freeze the implementation contract before parallel work and prove the minimal hosted integration before expanding the app. ` +
     (args.workshopSpec
-      ? `Use the selected Agentic Backbone: GitHub Copilot SDK, Foundry Hosted Agents with the Responses API, and Foundry Models. The selected reference architecture records explicit workshop choices, including linked agent capabilities and App Insights for Observability, not services inferred from the brief. Do not silently add optional components from the brief or guide examples. If implementation needs an additional component or a different harness, explain why and confirm the scope change first. Respect the Foundry model choice: Auto delegates selection to Copilot during the build; never silently substitute an explicit choice. Validate model availability, quota and requested image/speech capabilities, using dedicated models where needed; report blockers or confirm scope changes before deployment. Preserve managed identities and least-privilege RBAC regardless of optional service selections. `
+      ? `Use the selected Agentic Backbone: GitHub Copilot SDK, Foundry Hosted Agents with the Responses API, and Foundry Models. The selected reference architecture records explicit workshop choices, including linked agent capabilities and App Insights for Tracing, not services inferred from the brief. Do not silently add optional components from the brief or guide examples. ${args.workshopSpec.buildingBlocks.includes('Azure Container Apps') ? 'Use the selected Azure Container Apps for frontend/backend hosting, not as a replacement for Foundry agent hosting.' : 'Azure Container Apps is not selected. Do not reintroduce it from plugin defaults or guide examples; confirm alternative frontend/backend hosting and its deployment command before provisioning or deployment.'} If implementation needs an additional component or a different harness, explain why and confirm the scope change first. Respect the Foundry model choice: Auto delegates selection to Copilot during the build; never silently substitute an explicit choice. Validate model availability, quota and requested image/speech capabilities, using dedicated models where needed; report blockers or confirm scope changes before deployment. Preserve managed identities and least-privilege RBAC regardless of optional service selections. `
       : `Use Foundry hosted agents with the Responses API, a governed toolbox for tools and skills, Foundry IQ when private knowledge needs grounding, managed identities and least-privilege RBAC, and OpenTelemetry into one Application Insights. Use Copilot SDK for runtime skills; use Microsoft Agent Framework for basic agents and explicit workflows. Clarify a workflow that also needs skills. `) +
     `Add complementary services only when the confirmed scope needs them.\n\n` +
     (execution === 'agentic-loop'
@@ -341,7 +378,9 @@ export function buildAdvisorPackage(args: {
     runSkills,
     tools,
     runArchitecture,
-    deploymentCommand: execution === 'agentic-loop-rapid' ? 'az containerapp up' : 'azd up',
+    deploymentCommand: execution === 'agentic-loop-rapid'
+      ? !args.workshopSpec || args.workshopSpec.buildingBlocks.includes('Azure Container Apps') ? 'az containerapp up' : null
+      : 'azd up',
     workshopSpec: args.workshopSpec,
     copilotPrompt: args.workshopSpec
       ? (args.workshopSpec.execution === 'threadlight-pipeline'

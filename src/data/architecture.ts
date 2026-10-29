@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   BarChart3, BookOpen, Brain, Building2, Database, Eye, GraduationCap, Headphones, ImageIcon, MessagesSquare, Network,
-  Plug, Sparkles, ShieldCheck, UserCheck, Users, Volume2, Waypoints, Wrench,
+  Activity, Boxes, Globe, Plug, SlidersHorizontal, Sparkles, ShieldCheck, UserCheck, Users, Volume2, Waypoints, Wrench,
 } from 'lucide-react';
 
 export type ArchitectureSelectionField = 'capabilities' | 'buildingBlocks';
@@ -29,6 +29,12 @@ export const MODEL_CAPABILITY_OPTIONS = [
 
 export const AGENT_CAPABILITY_OPTIONS = [
   { id: 'human-in-the-loop', label: 'Human-in-the-Loop', description: 'Approval before sensitive agent actions', icon: UserCheck },
+  {
+    id: 'agent-memory', label: 'Agent Memory',
+    description: 'Retain approved context across sessions with Foundry memory (preview)',
+    icon: Brain,
+    buildGuidance: 'Implement Agent Memory using Foundry Agent Service memory stores (preview) to retain approved context across conversations. Follow https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/memory-usage. Validate preview availability, current SDK/API support, chat and embedding model deployments, managed identity/RBAC and compatibility with the selected hosted-agent harness before implementation; do not silently switch harnesses or invent support. Create a dedicated memory store for the agent and integrate supported memory search/update operations. Derive per-user memory scope from authenticated identity on the trusted backend; never trust a client-supplied user ID or share memory across users. Confirm what may be remembered, retention/TTL and explicit remember/forget behavior; exclude secrets and sensitive data. Verify recall across separate conversations, cross-user isolation, expiration and deletion before pilot use. Confirm billable resources and any required scope changes before provisioning.',
+  },
   { id: 'domain', label: 'Domain-Specific Agents', description: 'Use Skills for domain-specific tasks; linked to Skills above', icon: Building2 },
   { id: 'knowledge-grounding', label: 'Knowledge Grounding', description: 'Ground answers in trusted enterprise data; linked to Foundry IQ above', icon: GraduationCap },
   { id: 'multi-agent', label: 'Multi-Agent Orchestration', description: 'Coordinated agent teams', icon: Users },
@@ -50,6 +56,7 @@ export interface ArchitectureNode {
   href: string;
   icon: LucideIcon;
   weight: 'spine' | 'complementary' | 'foundation';
+  buildGuidance?: string;
   brandIcon?: BrandIconName;
   selection?: {
     field: ArchitectureSelectionField;
@@ -118,13 +125,24 @@ export const COMPLEMENTARY_NODES: ArchitectureNode[] = [
     selection: { field: 'capabilities', id: 'fabric-iq' },
   },
   {
+    id: 'web-iq',
+    label: 'WebIQ',
+    caption: 'Current public-web search and grounding with source citations.',
+    href: '/concepts/platform/foundry#web-iq',
+    icon: Globe,
+    weight: 'complementary',
+    selection: { field: 'capabilities', id: 'web-iq' },
+    buildGuidance: 'Use Microsoft Web IQ for current public-web search and grounding with source URLs and provenance. Validate the paid Azure subscription, service access, Web IQ AppID/Entra authentication and the supported MCP connection; Azure credits do not cover Web IQ. Expose it through the governed Foundry toolbox MCP endpoint. Do not invent an endpoint, transmit private customer data in search queries, or substitute Foundry IQ private-knowledge retrieval. Documentation: https://learn.microsoft.com/web-iq/overview',
+  },
+  {
     id: 'toolbox',
-    label: 'Toolbox',
-    caption: 'APIs, MCP tools, and business actions.',
+    label: 'MCP',
+    caption: 'APIs, MCP tools and business actions through a governed Foundry toolbox.',
     href: '/concepts/tools',
     icon: Wrench,
     weight: 'complementary',
     selection: { field: 'buildingBlocks', id: 'toolbox' },
+    buildGuidance: 'MCP is the workshop label for the existing governed Foundry toolbox integration. Keep versioned connections, centralized authentication and the single toolbox MCP endpoint; this label change does not request direct, ungoverned MCP server connections.',
   },
   {
     id: 'evals',
@@ -136,22 +154,34 @@ export const COMPLEMENTARY_NODES: ArchitectureNode[] = [
     selection: { field: 'buildingBlocks', id: 'evals' },
   },
   {
-    id: 'ai-gateway',
-    label: 'AI Gateway',
-    caption: 'API Management for routing, quotas, caching, and policy.',
-    href: '/concepts/platform/azure#ai-gateway',
-    icon: Waypoints,
-    weight: 'complementary',
-    selection: { field: 'buildingBlocks', id: 'ai-gateway' },
-  },
-  {
     id: 'observability',
-    label: 'Observability',
+    label: 'Tracing',
     caption: 'Telemetry and insight across the full loop.',
     href: '/concepts/platform/azure#observability',
     icon: Eye,
     weight: 'complementary',
     selection: { field: 'buildingBlocks', id: 'observability' },
+    buildGuidance: 'Trace backend requests, hosted-agent turns, model calls and MCP tool calls with OpenTelemetry into the selected Application Insights resource. Preserve correlation and redact sensitive content; do not enable raw prompt, completion or tool-content capture without approval.',
+  },
+  {
+    id: 'agent-optimizer',
+    label: 'Agent Optimizer',
+    caption: 'Compare evaluated configuration candidates against a measured agent baseline.',
+    href: '/concepts/platform/foundry#agent-optimizer',
+    icon: SlidersHorizontal,
+    weight: 'complementary',
+    selection: { field: 'buildingBlocks', id: 'agent-optimizer' },
+    buildGuidance: 'Use Foundry Agent Optimizer with an explicit baseline, representative evaluation dataset, criteria and supported evaluation/optimization models. For hosted agents, validate optimizer-ready configuration and Responses protocol support. Review cost and use safe test tools because evaluations can execute real tool calls. Compare candidate quality and token usage; applying a candidate or redeploying requires approval. Validate current availability before promising support. Documentation: https://learn.microsoft.com/azure/foundry/agents/concepts/agent-optimizer-overview',
+  },
+  {
+    id: 'agent-insights',
+    label: 'Agent Insights',
+    caption: 'Analyze agent traces for evidence-backed issues and proposed improvements.',
+    href: '/concepts/platform/foundry#agent-insights',
+    icon: Activity,
+    weight: 'complementary',
+    selection: { field: 'buildingBlocks', id: 'agent-insights' },
+    buildGuidance: 'Use Foundry Agent Insights (preview) to analyze representative agent traces and review findings with linked evidence. Validate preview access, telemetry, permissions, supported judge models and analysis scope. Reading existing insights is read-only; starting scans, creating monitors, changing status or applying proposed fixes requires separate approval. Confirm findings before making changes and do not silently enable extra services or sensitive content capture. Documentation: https://learn.microsoft.com/azure/foundry/observability/how-to/agent-insights',
   },
 ];
 
@@ -166,6 +196,25 @@ export const SKILLS_NODE: ArchitectureNode = {
 };
 
 export const FOUNDATION_NODES: ArchitectureNode[] = [
+  {
+    id: 'ai-gateway',
+    label: 'AI Gateway',
+    caption: 'API Management for routing, quotas, caching, and policy.',
+    href: '/concepts/platform/azure#ai-gateway',
+    icon: Waypoints,
+    weight: 'foundation',
+    selection: { field: 'buildingBlocks', id: 'ai-gateway' },
+  },
+  {
+    id: 'container-apps',
+    label: 'Azure Container Apps',
+    caption: 'Frontend and backend app hosting; the agent remains hosted in Foundry.',
+    href: '/concepts/platform/azure#container-apps',
+    icon: Boxes,
+    weight: 'foundation',
+    selection: { field: 'buildingBlocks', id: 'container-apps' },
+    buildGuidance: 'Host the frontend and backend on Azure Container Apps (ACA); keep the agent on Foundry Hosted Agents. Validate ingress, streaming, health checks, managed identities, scaling and cost for the confirmed scope. ACA is a removable starting default, not a mandatory agent runtime. If it is deselected, do not reintroduce ACA from a guide example or build-mode default; confirm alternative app hosting before provisioning or deployment.',
+  },
   {
     id: 'entra-rbac',
     label: 'Entra / RBAC',
@@ -196,6 +245,12 @@ export const FOUNDATION_NODES: ArchitectureNode[] = [
 ];
 
 export const ARCHITECTURE_NODES = [...SPINE_NODES, ...COMPLEMENTARY_NODES, SKILLS_NODE, ...FOUNDATION_NODES];
+
+export function canonicalArchitectureLabel(label: string): string {
+  if (label === 'Toolbox') return 'MCP';
+  if (label === 'Observability') return 'Tracing';
+  return label;
+}
 
 export const ARCHITECTURE_OPTIONS = ARCHITECTURE_NODES.flatMap(node => node.selection ? [{
   field: node.selection.field,

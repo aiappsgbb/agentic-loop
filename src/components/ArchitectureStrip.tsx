@@ -130,7 +130,7 @@ function ArchitectureNodeLink({ node, dense = false, selection }: {
           </span>
           <span className="architecture-node-copy">
             <span className="architecture-node-label">{label}</span>
-            <span className="architecture-choice-state">{core ? 'Core \u00b7 Required' : requiredByObservability ? 'Required by Observability' : requirement ? 'Required by playbook' : checked ? 'Included' : 'Not included'}</span>
+            <span className="architecture-choice-state">{core ? 'Core \u00b7 Required' : requiredByObservability ? 'Required by Tracing' : requirement ? 'Required by playbook' : checked ? 'Included' : 'Not included'}</span>
           </span>
         </label>
         {node.id === 'foundry-model' && (
@@ -213,7 +213,7 @@ function FullArchitecture({ selection }: { selection?: ArchitectureSelection }) 
   const serviceColumns = [
     {
       title: 'Microsoft IQ',
-      nodes: COMPLEMENTARY_NODES.filter(node => ['foundry-iq', 'work-iq', 'fabric-iq'].includes(node.id)),
+      nodes: COMPLEMENTARY_NODES.filter(node => ['foundry-iq', 'work-iq', 'fabric-iq', 'web-iq'].includes(node.id)),
     },
     {
       title: 'Skills + Tools',
@@ -221,8 +221,9 @@ function FullArchitecture({ selection }: { selection?: ArchitectureSelection }) 
       note: 'Skills supply domain expertise; tools connect the agent to business actions.',
     },
     {
-      title: 'Control Plane',
-      nodes: COMPLEMENTARY_NODES.filter(node => ['evals', 'ai-gateway', 'observability'].includes(node.id)),
+      title: 'Optimize',
+      nodes: ['observability', 'evals', 'agent-optimizer', 'agent-insights'].flatMap(id =>
+        COMPLEMENTARY_NODES.filter(node => node.id === id)),
     },
   ];
 
@@ -268,7 +269,7 @@ function FullArchitecture({ selection }: { selection?: ArchitectureSelection }) 
           {selection && (
             <div className="architecture-selection-summary">
               <p role="status">{SPINE_NODES.length} core components + {selectedArchitecture(selection.values).length - SPINE_NODES.length} optional components included</p>
-              <p>Selections describe the build scope; nothing is deployed here. Included playbooks lock their required components. Foundry IQ and Skills share their linked agent-capability selections. Observability includes App Insights. The brief and unselected guide recommendations never select components.</p>
+              <p>Selections describe the build scope; nothing is deployed here. Included playbooks lock their required components. Foundry IQ and Skills share their linked agent-capability selections. Tracing includes App Insights. Azure Container Apps starts selected but can be removed. The brief and unselected guide recommendations never select components.</p>
             </div>
           )}
         </div>
