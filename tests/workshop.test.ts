@@ -372,7 +372,10 @@ test('Agent Memory is opt-in and contributes Foundry memory instructions in ever
         const prompt = buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [], workshopSpec }).copilotPrompt;
         assert.equal(prompt.includes('### Selected agent capability guidance'), enabled);
         const documentationUrls = (prompt.match(/https?:\/\/[^\s]+/g) ?? []).map(url => url.replace(/\.$/, ''));
-        assert.equal(documentationUrls.includes('https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/memory-usage'), enabled);
+        const memoryDocumentationUrls = documentationUrls.filter(url =>
+          new URL(url).pathname === '/en-us/azure/foundry/agents/how-to/memory-usage');
+        assert.deepEqual(memoryDocumentationUrls, enabled
+          ? ['https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/memory-usage'] : []);
         if (enabled) {
           assert.match(prompt, /chat and embedding model deployments/);
           assert.match(prompt, /authenticated identity on the trusted backend/);
