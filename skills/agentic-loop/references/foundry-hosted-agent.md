@@ -2,6 +2,21 @@
 
 Reference for the `agentic-loop` skill: runtime concerns for an agent hosted on Microsoft Foundry. Hosted agents should expose the **Responses API** by default; use invocations only when explicitly required for compatibility. `agentic-loop` decides *that* the agent is hosted and *which framework* it uses; this file holds the hosted-agent runtime detail. The reference agent is [`copilot-sdk-with-toolbox.py`](copilot-sdk-with-toolbox.py).
 
+## Required artifact type
+
+The Foundry agents API models the artifact type as **`kind`**. For an agentic-loop spec, the provisioned agent must be `kind: hosted` — anything else is the wrong backbone, even when it carries the right name and answers prompts convincingly in the portal.
+
+| `kind` | What it is | Acceptable for agentic-loop? |
+| --- | --- | --- |
+| `hosted` | **Foundry hosted agent** — your container image and your agent loop, run by Foundry, exposing the Responses API | **Required** |
+| `prompt` | Declarative/prompt agent — instructions + model + tools, no code you own | No |
+| `container_app` | Agent fronted by an external Container App instead of the Foundry hosted runtime | No |
+| `workflow` | Workflow/orchestration agent | No |
+
+What produces which: `azd ai agent init -m <hosted-agent manifest>` plus an `agent.manifest.yaml` deployed as an azd service yields `hosted`. The portal "create agent" flow and a `PromptAgentDefinition` / instructions-only `create_agent(...)` call yield `prompt` — those are the anti-patterns that silently substitute the wrong artifact. A prompt agent and a hosted agent are hard to tell apart in the portal's agent list; `kind` is the distinguishing field.
+
+Confirm the artifact after provisioning and repair it if it is wrong — see [`hosted-agent-guarantee.md`](hosted-agent-guarantee.md).
+
 ## Hosted-agent protocol
 
 Default to the **Responses API** protocol for hosted agents. Responses exposes an OpenAI-compatible `/responses` endpoint, and the platform manages conversation history, streaming, and session lifecycle. Prefer it for new hosted agents and generated plans.
