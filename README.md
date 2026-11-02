@@ -104,6 +104,8 @@ npm run dev
 
 Open `http://127.0.0.1:5173/agentic-loop/workshop`. Development and production static hosting use the same client-side flow. Production deployments build static assets in GitHub Actions; they do not run a Vite development server.
 
+Scenario demo videos live in `public/videos/` and are linked by the `video` filename in `src/data/scenarios.json`. The gallery and scenario pages use this shared mapping for playback and demo availability. Eight scenarios include demos: knowledge discovery, claims processing, fashion retail (AI shopping assistant), lending, grid protection, banking relationship management, insurance underwriting risk analysis, and banking marketing.
+
 ## Use the build loop
 
 The [Foundry Agentic Loop plugin](https://github.com/github/awesome-copilot/tree/main/plugins/foundry-agentic-loop) is available in the awesome-copilot marketplace. It replaces the separate lean/Spec2Cloud setup for new builds.

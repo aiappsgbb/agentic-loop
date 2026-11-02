@@ -576,6 +576,7 @@
     "industry": "Financial Services: Insurance",
     "description": "Automate claims processing, improve insurance fraud detection, and streamline claims management with intelligent workflows for faster, accurate results.",
     "image": "images/automated-claims-processing-fraud-detection.jpg",
+    "video": "automated-claims-processing-fraud-detection.mp4",
     "tags": [
       "Workflow Automation",
       "Predictive Analytics",
@@ -605,6 +606,7 @@
     "industry": "Financial Services: Banking",
     "description": "Learn how AI in customer relationship management boosts engagement in financial services by giving relationship managers insights, summaries, and prep tools.",
     "image": "images/empower-relationship-managers-with-ai.jpg",
+    "video": "empower-relationship-managers-with-ai.mp4",
     "tags": [
       "Domain-Specific Agents",
       "Knowledge Grounding",
@@ -719,6 +721,7 @@
     "industry": "Retail",
     "description": "Learn how to turn browsers into buyers with AI assistants, delivering personalized shopping experiences backed by conversational commerce.",
     "image": "images/empower-shoppers-with-conversational-ai-assistants.jpg",
+    "video": "empower-shoppers-with-conversational-ai-assistants.mp4",
     "tags": [
       "Domain-Specific Agents",
       "Personalization",
@@ -970,6 +973,7 @@
     "industry": "Financial Services: Insurance",
     "description": "Enhance insurance underwriting with AI automation, predictive risk analysis, and improved decision-making to reduce losses and streamline processes.",
     "image": "images/predictive-underwriting-automation-risk-assessment-with-ai.jpg",
+    "video": "predictive-underwriting-automation-risk-assessment-with-ai.mp4",
     "tags": [
       "Workflow Automation",
       "Predictive Analytics"
@@ -1446,6 +1450,7 @@
     "industry": "Financial Services: Banking",
     "description": "Learn how to enhance your financial services marketing with AI-driven personalization and targeted offers that build meaningful customer relationships.",
     "image": "images/enhance-marketing-effectiveness-with-ai.jpg",
+    "video": "enhance-marketing-effectiveness-with-ai.mp4",
     "tags": [
       "Knowledge Grounding",
       "Personalization"
@@ -1504,6 +1509,7 @@
     "industry": "Energy and resources",
     "description": "Explore how AI enables faster threat detection and response, minimizing disruptions and helping keep critical energy systems secure, stable, and online.",
     "image": "images/protect-and-strengthen-infrastructure-and-energy-operations-with-ai.jpg",
+    "video": "protect-and-strengthen-infrastructure-and-energy-operations-with-ai.mp4",
     "tags": [
       "Governance",
       "Observability"
@@ -1556,6 +1562,7 @@
     "industry": "Financial Services: Banking",
     "description": "Learn how AI in financial services can automate data analysis, enhance risk assessment accuracy, and accelerate application approvals for fast lending decisions.",
     "image": "images/modernize-lending-and-mortgage-processes-with-ai.jpg",
+    "video": "modernize-lending-and-mortgage-processes-with-ai.mp4",
     "tags": [
       "Workflow Automation",
       "Knowledge Grounding",
