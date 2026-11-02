@@ -872,7 +872,7 @@ class WorkshopJourneys(unittest.TestCase):
         model = self.page.get_by_label("Foundry model", exact=True)
         expect(model).to_have_value("auto")
         self.assertEqual(model.locator("option").all_text_contents(), [
-            "Auto", "GPT-6.1 Sol", "GPT-6 Luna", "Claude Sonnet 5.5",
+            "Auto", "Model Router", "GPT-6.1 Sol", "GPT-6 Luna", "Claude Sonnet 5.5",
         ])
         self.page.get_by_label("What should the customer be able to do?").fill("Use Claude Sonnet 5.5 for a customer pilot.")
         expect(model).to_have_value("auto")
@@ -890,6 +890,7 @@ class WorkshopJourneys(unittest.TestCase):
         expect(self.page.get_by_role("region", name="About Skills", exact=True)).to_contain_text("domain-specific agent tasks")
         self.page.get_by_role("heading", name="Select your architecture", exact=True).hover()
         for value, label in [
+            ("model-router", "Model Router"),
             ("gpt-6.1-sol", "GPT-6.1 Sol"), ("gpt-6-luna", "GPT-6 Luna"),
             ("claude-sonnet-5.5", "Claude Sonnet 5.5"), ("auto", "Auto"),
         ]:
