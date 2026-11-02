@@ -10,6 +10,7 @@ export type BrandIconName = 'copilot-sdk' | 'hosted-agent' | 'foundry-models';
 
 export const FOUNDRY_MODELS = {
   auto: 'Auto',
+  'model-router': 'Model Router',
   'gpt-6.1-sol': 'GPT-6.1 Sol',
   'gpt-6-luna': 'GPT-6 Luna',
   'claude-sonnet-5.5': 'Claude Sonnet 5.5',

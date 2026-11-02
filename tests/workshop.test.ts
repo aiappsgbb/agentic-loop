@@ -114,7 +114,7 @@ test('existing linked capabilities normalize to one canonical selection and remo
   });
 });
 test('the model shortlist is explicit, defaults to Auto and rejects unsupported identifiers', () => {
-  assert.deepEqual(Object.keys(FOUNDRY_MODELS), ['auto', 'gpt-6.1-sol', 'gpt-6-luna', 'claude-sonnet-5.5']);
+  assert.deepEqual(Object.keys(FOUNDRY_MODELS), ['auto', 'model-router', 'gpt-6.1-sol', 'gpt-6-luna', 'claude-sonnet-5.5']);
   for (const id of Object.keys(FOUNDRY_MODELS)) assert.ok(isFoundryModelId(id));
   assert.ok(!isFoundryModelId('unknown'));
   assert.ok(!isFoundryModelId('__proto__'));
@@ -386,7 +386,7 @@ test('Agent Memory is opt-in and contributes Foundry memory instructions in ever
     }
 });
 test('every model choice and agent capability survives all build workflow prompts', () => {
-  for (const model of ['auto', 'gpt-6.1-sol', 'gpt-6-luna', 'claude-sonnet-5.5'] as const) {
+  for (const model of ['auto', 'model-router', 'gpt-6.1-sol', 'gpt-6-luna', 'claude-sonnet-5.5'] as const) {
     for (const execution of ['agentic-loop', 'agentic-loop-rapid', 'threadlight-pipeline'] as const) {
       const workshopSpec = { ...spec, model, execution, agentCapabilities: ['Human-in-the-Loop', 'Domain-Specific Agents'] };
       const result = buildAdvisorPackage({ path: 'idea', intent: hr, requirementIds: [], workshopSpec });

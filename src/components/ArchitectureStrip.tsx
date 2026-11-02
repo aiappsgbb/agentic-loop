@@ -97,7 +97,7 @@ function ArchitectureNodeInfo({ node, label, requirement }: { node: Architecture
           <strong>{label}</strong>
           <p>{node.selection?.caption ?? node.caption}</p>
           {requirement && <p>{requirement}. Remove the playbook to change this selection.</p>}
-          {node.id === 'foundry-model' && <p>Auto lets Copilot choose a model during the build. Explicit choices are preferences; model availability is validated in your Foundry project.</p>}
+          {node.id === 'foundry-model' && <p>Auto lets Copilot choose a model during the build. Model Router routes model requests at runtime. Explicit choices are preferences; model availability is validated in your Foundry project.</p>}
           <Link to={node.href} aria-label={`Learn more about ${label}`}>Learn more</Link>
         </div>
       )}
